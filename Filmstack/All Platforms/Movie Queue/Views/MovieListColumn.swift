@@ -96,7 +96,54 @@ struct MovieListColumn: View {
         MovieRow(movie: movie, position: position(for: movie))
             .tag(movie)
             .contextMenu { rowMenu(for: movie) }
+            #if os(iOS)
+            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                trailingSwipeActions(for: movie)
+            }
+            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                leadingSwipeActions(for: movie)
+            }
+            #endif
     }
+
+    #if os(iOS)
+    @ViewBuilder
+    private func trailingSwipeActions(for movie: Movie) -> some View {
+        Button(role: .destructive) {
+            deleteMovie(movie)
+        } label: {
+            Label("Delete", systemImage: "trash")
+        }
+        if status != .watched {
+            Button {
+                MovieActions.markWatched(movie, in: context)
+            } label: {
+                Label("Watched", systemImage: "checkmark.circle")
+            }
+            .tint(.green)
+        }
+    }
+
+    @ViewBuilder
+    private func leadingSwipeActions(for movie: Movie) -> some View {
+        if status != .maybeLater {
+            Button {
+                MovieActions.moveToMaybeLater(movie, in: context)
+            } label: {
+                Label("Maybe Later", systemImage: "clock")
+            }
+            .tint(.orange)
+        }
+        if status != .queued {
+            Button {
+                MovieActions.moveBackToQueue(movie, in: context)
+            } label: {
+                Label("Queue", systemImage: "list.bullet")
+            }
+            .tint(.blue)
+        }
+    }
+    #endif
 
     @ViewBuilder
     private func rowMenu(for movie: Movie) -> some View {
@@ -123,11 +170,15 @@ struct MovieListColumn: View {
 
         Divider()
         Button("Delete", role: .destructive) {
-            if selection?.persistentModelID == movie.persistentModelID {
-                selection = nil
-            }
-            MovieActions.delete(movie, in: context)
+            deleteMovie(movie)
         }
+    }
+
+    private func deleteMovie(_ movie: Movie) {
+        if selection?.persistentModelID == movie.persistentModelID {
+            selection = nil
+        }
+        MovieActions.delete(movie, in: context)
     }
 
     private var moveHandler: ((IndexSet, Int) -> Void)? {
