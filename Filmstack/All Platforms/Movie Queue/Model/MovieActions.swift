@@ -67,6 +67,18 @@ enum MovieActions {
         save(context)
     }
 
+    static func moveToMaybeLater(_ movie: Movie, in context: ModelContext) {
+        let wasQueued = movie.status == .queued
+        movie.status = .maybeLater
+        movie.dateWatched = nil
+        movie.queuePosition = nil
+        touch(movie)
+        if wasQueued {
+            renumberQueue(in: context)
+        }
+        save(context)
+    }
+
     // MARK: - Reordering
 
     static func moveToTop(_ movie: Movie, in context: ModelContext) {

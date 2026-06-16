@@ -14,6 +14,7 @@ struct MovieListColumn: View {
     @Binding var selection: Movie?
 
     @Environment(\.modelContext) private var context
+    @Environment(\.openURL) private var openURL
     @Query private var movies: [Movie]
 
     @State private var searchText = ""
@@ -94,6 +95,39 @@ struct MovieListColumn: View {
     private func row(for movie: Movie) -> some View {
         MovieRow(movie: movie, position: position(for: movie))
             .tag(movie)
+            .contextMenu { rowMenu(for: movie) }
+    }
+
+    @ViewBuilder
+    private func rowMenu(for movie: Movie) -> some View {
+        if status == .queued {
+            Button("Move to Top") { MovieActions.moveToTop(movie, in: context) }
+            Button("Move to Bottom") { MovieActions.moveToBottom(movie, in: context) }
+            Divider()
+        }
+
+        if status != .queued {
+            Button("Move to Queue") { MovieActions.moveBackToQueue(movie, in: context) }
+        }
+        if status != .maybeLater {
+            Button("Move to Maybe Later") { MovieActions.moveToMaybeLater(movie, in: context) }
+        }
+        if status != .watched {
+            Button("Mark as Watched") { MovieActions.markWatched(movie, in: context) }
+        }
+
+        Divider()
+        Button("Open in Letterboxd") {
+            if let url = letterboxdURL(for: movie) { openURL(url) }
+        }
+
+        Divider()
+        Button("Delete", role: .destructive) {
+            if selection?.persistentModelID == movie.persistentModelID {
+                selection = nil
+            }
+            MovieActions.delete(movie, in: context)
+        }
     }
 
     private var moveHandler: ((IndexSet, Int) -> Void)? {
