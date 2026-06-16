@@ -54,6 +54,7 @@ enum SampleMovies {
                 releaseYear: 2023,
                 overview: "The commandant of Auschwitz and his wife strive to build a dream "
                     + "life for their family next to the camp.",
+                posterPath: "/hUu9zyZmDd8VZegKi1iK1Vk0RYS.jpg",
                 runtimeMinutes: 106,
                 genres: ["Drama", "History"],
                 userNotes: "Academy Award winner.",
@@ -65,6 +66,7 @@ enum SampleMovies {
                 releaseYear: 1995,
                 overview: "A group of high-end professional thieves start to feel the heat from "
                     + "the LAPD when they unknowingly leave a clue at their latest heist.",
+                posterPath: "/rrBuGu0Pjq7Y2BWSI6teGfZzviY.jpg",
                 runtimeMinutes: 170,
                 genres: ["Crime", "Drama"],
                 userNotes: "Al Pacino and Robert De Niro.",
@@ -76,6 +78,7 @@ enum SampleMovies {
                 releaseYear: 2001,
                 overview: "A young girl wanders into a world ruled by gods, witches and spirits, "
                     + "where humans are changed into beasts.",
+                posterPath: "/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
                 runtimeMinutes: 125,
                 genres: ["Animation", "Fantasy"],
                 userNotes: "Miyazaki classic.",
@@ -87,6 +90,7 @@ enum SampleMovies {
                 releaseYear: 2007,
                 overview: "Violence and mayhem ensue after a hunter stumbles upon a drug deal "
                     + "gone wrong and more than two million dollars in cash.",
+                posterPath: "/bj1v6YKF8yHqA489VFfnQvOJpnc.jpg",
                 runtimeMinutes: 122,
                 genres: ["Crime", "Thriller"],
                 userNotes: "Coen brothers.",
@@ -98,6 +102,7 @@ enum SampleMovies {
                 releaseYear: 2000,
                 overview: "Two neighbours form a strong bond after both suspect extramarital "
                     + "activities of their spouses.",
+                posterPath: "/iYypPT4bhqXfq1b6EnmxvRt6b2Y.jpg",
                 runtimeMinutes: 98,
                 genres: ["Drama", "Romance"],
                 status: .watched,
@@ -110,6 +115,7 @@ enum SampleMovies {
                 overview: "All unemployed, Ki-taek's family takes peculiar interest in the "
                     + "wealthy and glamorous Parks for their livelihood until they get entangled "
                     + "in an unexpected incident.",
+                posterPath: "/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
                 runtimeMinutes: 133,
                 genres: ["Comedy", "Thriller", "Drama"],
                 rating: 5,
