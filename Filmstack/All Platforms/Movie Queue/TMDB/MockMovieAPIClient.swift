@@ -57,7 +57,9 @@ final class MockMovieAPIClient: MovieAPIClient {
             posterPath: result?.posterPath,
             backdropPath: nil,
             runtimeMinutes: 120,
-            genres: ["Drama"]
+            genres: ["Drama"],
+            director: "Sample Director",
+            cast: ["First Actor", "Second Actor", "Third Actor"]
         )
     }
 

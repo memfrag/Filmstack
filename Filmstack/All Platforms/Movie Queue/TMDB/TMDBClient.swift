@@ -53,7 +53,8 @@ final class TMDBClient: MovieAPIClient {
 
     func fetchMovieDetails(tmdbID: Int) async throws -> MovieDetails {
         let data = try await get("movie/\(tmdbID)", queryItems: [
-            URLQueryItem(name: "language", value: "en-US")
+            URLQueryItem(name: "language", value: "en-US"),
+            URLQueryItem(name: "append_to_response", value: "credits")
         ])
 
         let response = try decode(DetailsResponse.self, from: data)
@@ -68,9 +69,14 @@ final class TMDBClient: MovieAPIClient {
             posterPath: response.posterPath,
             backdropPath: response.backdropPath,
             runtimeMinutes: response.runtime.flatMap { $0 > 0 ? $0 : nil },
-            genres: response.genres.map(\.name)
+            genres: response.genres.map(\.name),
+            director: response.credits?.directors,
+            cast: response.credits?.topBilledCast(limit: Self.castLimit) ?? []
         )
     }
+
+    /// Number of top-billed cast members to keep.
+    private static let castLimit = 8
 
     // MARK: - Posters
 
@@ -189,17 +195,47 @@ private struct DetailsResponse: Decodable {
     let runtime: Int?
     let releaseDate: String?
     let genres: [Genre]
+    let credits: Credits?
 
     struct Genre: Decodable {
         let name: String
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, title, overview, runtime, genres
+        case id, title, overview, runtime, genres, credits
         case originalTitle = "original_title"
         case posterPath = "poster_path"
         case backdropPath = "backdrop_path"
         case releaseDate = "release_date"
+    }
+}
+
+private struct Credits: Decodable {
+    let cast: [CastMember]
+    let crew: [CrewMember]
+
+    struct CastMember: Decodable {
+        let name: String
+        let order: Int?
+    }
+
+    struct CrewMember: Decodable {
+        let name: String
+        let job: String?
+    }
+
+    /// All directors, joined (handles co-directors like the Coen brothers).
+    var directors: String? {
+        let names = crew.filter { $0.job == "Director" }.map(\.name)
+        return names.isEmpty ? nil : names.joined(separator: ", ")
+    }
+
+    /// Top-billed cast names, in billing order.
+    func topBilledCast(limit: Int) -> [String] {
+        cast
+            .sorted { ($0.order ?? .max) < ($1.order ?? .max) }
+            .prefix(limit)
+            .map(\.name)
     }
 }
 

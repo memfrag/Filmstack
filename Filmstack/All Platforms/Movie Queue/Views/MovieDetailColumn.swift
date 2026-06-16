@@ -55,6 +55,12 @@ struct MovieDetailColumn: View {
                         section("Overview") { Text(overview) }
                     }
 
+                    if !movie.cast.isEmpty {
+                        section("Cast") {
+                            Text(movie.cast.joined(separator: ", "))
+                        }
+                    }
+
                     if !movie.userNotes.isEmpty {
                         section("My Notes") { Text(movie.userNotes) }
                     }
@@ -104,6 +110,10 @@ struct MovieDetailColumn: View {
                 }
                 .foregroundStyle(.secondary)
 
+                if let director = movie.director, !director.isEmpty {
+                    labeledField("Director", director)
+                        .padding(.top, 4)
+                }
                 if let release = movie.releaseDateText {
                     labeledField("Release Date", release)
                         .padding(.top, 4)

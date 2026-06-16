@@ -33,6 +33,9 @@ enum SampleMovies {
                 posterPath: "/czembW0Rk1Ke7lCJGahbOhdCuhV.jpg",
                 runtimeMinutes: 166,
                 genres: ["Sci-Fi", "Adventure"],
+                director: "Denis Villeneuve",
+                cast: ["Timothée Chalamet", "Zendaya", "Rebecca Ferguson", "Josh Brolin",
+                       "Austin Butler", "Florence Pugh", "Javier Bardem"],
                 userNotes: "Big screen if possible.",
                 streamingLocation: "Max",
                 status: .queued
@@ -45,6 +48,8 @@ enum SampleMovies {
                     + "quiet, structured daily routine.",
                 runtimeMinutes: 123,
                 genres: ["Drama"],
+                director: "Wim Wenders",
+                cast: ["Kōji Yakusho", "Tokio Emoto", "Arisa Nakano", "Aoi Yamada"],
                 userNotes: "Heard a lot of great things.",
                 status: .queued
             ),
@@ -57,6 +62,8 @@ enum SampleMovies {
                 posterPath: "/hUu9zyZmDd8VZegKi1iK1Vk0RYS.jpg",
                 runtimeMinutes: 106,
                 genres: ["Drama", "History"],
+                director: "Jonathan Glazer",
+                cast: ["Christian Friedel", "Sandra Hüller", "Medusa Knopf"],
                 userNotes: "Academy Award winner.",
                 status: .queued
             ),
@@ -69,6 +76,8 @@ enum SampleMovies {
                 posterPath: "/rrBuGu0Pjq7Y2BWSI6teGfZzviY.jpg",
                 runtimeMinutes: 170,
                 genres: ["Crime", "Drama"],
+                director: "Michael Mann",
+                cast: ["Al Pacino", "Robert De Niro", "Val Kilmer", "Jon Voight"],
                 userNotes: "Al Pacino and Robert De Niro.",
                 status: .queued
             ),
@@ -81,6 +90,8 @@ enum SampleMovies {
                 posterPath: "/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
                 runtimeMinutes: 125,
                 genres: ["Animation", "Fantasy"],
+                director: "Hayao Miyazaki",
+                cast: ["Rumi Hiiragi", "Miyu Irino", "Mari Natsuki", "Takashi Naitō"],
                 userNotes: "Miyazaki classic.",
                 status: .queued
             ),
@@ -93,6 +104,8 @@ enum SampleMovies {
                 posterPath: "/bj1v6YKF8yHqA489VFfnQvOJpnc.jpg",
                 runtimeMinutes: 122,
                 genres: ["Crime", "Thriller"],
+                director: "Joel Coen, Ethan Coen",
+                cast: ["Tommy Lee Jones", "Javier Bardem", "Josh Brolin", "Woody Harrelson"],
                 userNotes: "Coen brothers.",
                 status: .maybeLater
             ),
@@ -105,6 +118,8 @@ enum SampleMovies {
                 posterPath: "/iYypPT4bhqXfq1b6EnmxvRt6b2Y.jpg",
                 runtimeMinutes: 98,
                 genres: ["Drama", "Romance"],
+                director: "Wong Kar-wai",
+                cast: ["Tony Leung Chiu-wai", "Maggie Cheung", "Rebecca Pan"],
                 status: .watched,
                 dateWatched: Date(timeIntervalSinceNow: -60 * 60 * 24 * 9)
             ),
@@ -118,6 +133,8 @@ enum SampleMovies {
                 posterPath: "/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
                 runtimeMinutes: 133,
                 genres: ["Comedy", "Thriller", "Drama"],
+                director: "Bong Joon-ho",
+                cast: ["Song Kang-ho", "Lee Sun-kyun", "Cho Yeo-jeong", "Choi Woo-shik"],
                 rating: 5,
                 status: .watched,
                 dateWatched: Date(timeIntervalSinceNow: -60 * 60 * 24 * 30)

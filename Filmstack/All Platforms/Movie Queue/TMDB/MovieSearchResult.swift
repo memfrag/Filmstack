@@ -29,6 +29,9 @@ struct MovieDetails: Codable, Sendable {
     var backdropPath: String?
     var runtimeMinutes: Int?
     var genres: [String]
+    var director: String?
+    /// Top-billed cast member names, in billing order.
+    var cast: [String]
 }
 
 extension Movie {
@@ -52,6 +55,8 @@ extension Movie {
             backdropPath: details.backdropPath,
             runtimeMinutes: details.runtimeMinutes,
             genres: details.genres,
+            director: details.director,
+            cast: details.cast,
             userNotes: userNotes,
             source: source,
             streamingLocation: streamingLocation,

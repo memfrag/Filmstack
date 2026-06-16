@@ -27,6 +27,8 @@ final class Movie {
     var backdropPath: String?
     var runtimeMinutes: Int?
     var genres: [String] = []
+    var director: String?
+    var cast: [String] = []
 
     // Optional external links
     var letterboxdURLString: String?
@@ -58,6 +60,8 @@ final class Movie {
         backdropPath: String? = nil,
         runtimeMinutes: Int? = nil,
         genres: [String] = [],
+        director: String? = nil,
+        cast: [String] = [],
         letterboxdURL: URL? = nil,
         userNotes: String = "",
         source: String? = nil,
@@ -80,6 +84,8 @@ final class Movie {
         self.backdropPath = backdropPath
         self.runtimeMinutes = runtimeMinutes
         self.genres = genres
+        self.director = director
+        self.cast = cast
         self.letterboxdURLString = letterboxdURL?.absoluteString
         self.userNotes = userNotes
         self.source = source
