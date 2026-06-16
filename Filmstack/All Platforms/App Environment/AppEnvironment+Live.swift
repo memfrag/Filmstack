@@ -17,9 +17,12 @@ extension AppEnvironment {
     /// - Returns: A new ``AppEnvironment`` instance with live dependencies.
     ///
     internal static func live() -> AppEnvironment {
-        AppEnvironment(
+        let apiKeyStore = KeychainAPIKeyStore()
+        return AppEnvironment(
             metaRouter: MetaRouter(tree: appRoutingTree),
             appSettings: AppSettings(),
+            apiKeyStore: apiKeyStore,
+            movieAPIClient: TMDBClient(keyStore: apiKeyStore),
             authService: AuthService.mock(),
             engineeringMode: EngineeringMode.shared
         )

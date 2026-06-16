@@ -27,10 +27,16 @@ public final class AppEnvironment {
 
     /// Application settings used throughout the app.
     public let appSettings: AppSettings
-    
+
+    /// Keychain-backed store for the TMDB Read Access Token.
+    internal let apiKeyStore: any APIKeyStore
+
+    /// Movie metadata provider (TMDB).
+    internal let movieAPIClient: any MovieAPIClient
+
     /// Auth service
     internal let authService: AuthService
-    
+
     /// Engineering mode
     internal let engineeringMode: EngineeringMode
 
@@ -46,11 +52,15 @@ public final class AppEnvironment {
     internal init(
         metaRouter: MetaRouter,
         appSettings: AppSettings,
+        apiKeyStore: any APIKeyStore,
+        movieAPIClient: any MovieAPIClient,
         authService: AuthService,
         engineeringMode: EngineeringMode
     ) {
         self.metaRouter = metaRouter
         self.appSettings = appSettings
+        self.apiKeyStore = apiKeyStore
+        self.movieAPIClient = movieAPIClient
         self.authService = authService
         self.engineeringMode = engineeringMode
     }

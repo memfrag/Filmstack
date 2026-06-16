@@ -20,6 +20,8 @@ extension AppEnvironment {
         AppEnvironment(
             metaRouter: MetaRouter(tree: appRoutingTree),
             appSettings: AppSettings.mock(),
+            apiKeyStore: InMemoryAPIKeyStore(),
+            movieAPIClient: MockMovieAPIClient(),
             authService: AuthService.mock(),
             engineeringMode: EngineeringMode.shared
         )
