@@ -49,11 +49,7 @@ struct MovieDetailColumn: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    PosterView(movie: movie, size: .detail, cornerRadius: 10)
-                        .frame(maxWidth: 220)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    header(for: movie)
+                    headerRow(for: movie)
 
                     if let overview = movie.overview, !overview.isEmpty {
                         section("Overview") { Text(overview) }
@@ -87,22 +83,42 @@ struct MovieDetailColumn: View {
         }
     }
 
-    private func header(for movie: Movie) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(movie.title)
-                .font(.title.bold())
+    /// Poster on the left, title and key metadata stacked to the right (per mockup).
+    private func headerRow(for movie: Movie) -> some View {
+        HStack(alignment: .top, spacing: 20) {
+            PosterView(movie: movie, size: .detail, cornerRadius: 10)
+                .frame(width: 150)
 
-            if let meta = headerMetaLine(for: movie) {
-                Text(meta).foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 8) {
+                Text(movie.title)
+                    .font(.title.bold())
+                    .fixedSize(horizontal: false, vertical: true)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    if let meta = headerMetaLine(for: movie) {
+                        Text(meta)
+                    }
+                    if let genres = movie.genresText {
+                        Text(genres)
+                    }
+                }
+                .foregroundStyle(.secondary)
+
+                if let release = movie.releaseDateText {
+                    labeledField("Release Date", release)
+                        .padding(.top, 4)
+                }
             }
-            if let genres = movie.genresText {
-                Text(genres).foregroundStyle(.secondary)
-            }
-            if let release = movie.releaseDateText {
-                Text("Released \(release)")
-                    .font(.subheadline)
-                    .foregroundStyle(.tertiary)
-            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func labeledField(_ title: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title.uppercased())
+                .font(.caption.bold())
+                .foregroundStyle(.secondary)
+            Text(value)
         }
     }
 
