@@ -18,6 +18,9 @@ struct MovieListColumn: View {
 
     @State private var searchText = ""
     @State private var showingAddSheet = false
+    #if os(iOS)
+    @State private var showingSettings = false
+    #endif
 
     init(status: MovieStatus, selection: Binding<Movie?>) {
         self.status = status
@@ -62,6 +65,18 @@ struct MovieListColumn: View {
         .sheet(isPresented: $showingAddSheet) {
             MovieFormSheet(mode: .add(defaultStatus: status))
         }
+        #if os(iOS)
+        .sheet(isPresented: $showingSettings) {
+            NavigationStack {
+                SettingsScreen()
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { showingSettings = false }
+                        }
+                    }
+            }
+        }
+        #endif
     }
 
     // MARK: - List
@@ -145,6 +160,15 @@ struct MovieListColumn: View {
                 }
             }
         }
+        #if os(iOS)
+        ToolbarItem(placement: .topBarLeading) {
+            Button {
+                showingSettings = true
+            } label: {
+                Label("Settings", systemImage: "gearshape")
+            }
+        }
+        #endif
     }
 }
 

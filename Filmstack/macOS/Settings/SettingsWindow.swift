@@ -11,6 +11,7 @@ struct SettingsWindow: Scene {
 
     private enum Tabs: Hashable {
         case general
+        case movieDatabase
     }
 
     var body: some Scene {
@@ -18,7 +19,7 @@ struct SettingsWindow: Scene {
             tabs
         }
     }
-    
+
     @ViewBuilder var tabs: some View {
         TabView {
             GeneralSettingsTab()
@@ -26,10 +27,16 @@ struct SettingsWindow: Scene {
                     Label("General", systemImage: "gear")
                 }
                 .tag(Tabs.general)
+                .frame(width: 375, height: 150)
+
+            TMDBKeySettings()
+                .tabItem {
+                    Label("Movie Database", systemImage: "film")
+                }
+                .tag(Tabs.movieDatabase)
+                .frame(width: 460, height: 380)
         }
-        .padding(20)
-        .frame(width: 375, height: 150)
-    }    
+    }
 }
 
 #endif

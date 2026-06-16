@@ -23,6 +23,14 @@ struct SettingsScreen: View {
                     }
                 }
             }
+
+            Section("Movie Database") {
+                NavigationLink {
+                    TMDBKeySettings()
+                } label: {
+                    Label("TMDB API Key", systemImage: "film")
+                }
+            }
         }
         .navigationTitle("Settings")
         .formStyle(.grouped)
