@@ -36,6 +36,8 @@ enum SampleMovies {
                 director: "Denis Villeneuve",
                 cast: ["Timothée Chalamet", "Zendaya", "Rebecca Ferguson", "Josh Brolin",
                        "Austin Butler", "Florence Pugh", "Javier Bardem"],
+                tmdbRating: 8.2,
+                imdbID: "tt15239678",
                 userNotes: "Big screen if possible.",
                 streamingLocation: "Max",
                 status: .queued
@@ -50,6 +52,8 @@ enum SampleMovies {
                 genres: ["Drama"],
                 director: "Wim Wenders",
                 cast: ["Kōji Yakusho", "Tokio Emoto", "Arisa Nakano", "Aoi Yamada"],
+                tmdbRating: 7.7,
+                imdbID: "tt27503384",
                 userNotes: "Heard a lot of great things.",
                 status: .queued
             ),
@@ -64,6 +68,8 @@ enum SampleMovies {
                 genres: ["Drama", "History"],
                 director: "Jonathan Glazer",
                 cast: ["Christian Friedel", "Sandra Hüller", "Medusa Knopf"],
+                tmdbRating: 7.4,
+                imdbID: "tt7160372",
                 userNotes: "Academy Award winner.",
                 status: .queued
             ),
@@ -78,6 +84,8 @@ enum SampleMovies {
                 genres: ["Crime", "Drama"],
                 director: "Michael Mann",
                 cast: ["Al Pacino", "Robert De Niro", "Val Kilmer", "Jon Voight"],
+                tmdbRating: 7.9,
+                imdbID: "tt0113277",
                 userNotes: "Al Pacino and Robert De Niro.",
                 status: .queued
             ),
@@ -92,6 +100,8 @@ enum SampleMovies {
                 genres: ["Animation", "Fantasy"],
                 director: "Hayao Miyazaki",
                 cast: ["Rumi Hiiragi", "Miyu Irino", "Mari Natsuki", "Takashi Naitō"],
+                tmdbRating: 8.5,
+                imdbID: "tt0245429",
                 userNotes: "Miyazaki classic.",
                 status: .queued
             ),
@@ -106,6 +116,8 @@ enum SampleMovies {
                 genres: ["Crime", "Thriller"],
                 director: "Joel Coen, Ethan Coen",
                 cast: ["Tommy Lee Jones", "Javier Bardem", "Josh Brolin", "Woody Harrelson"],
+                tmdbRating: 8.1,
+                imdbID: "tt0477348",
                 userNotes: "Coen brothers.",
                 status: .maybeLater
             ),
@@ -120,6 +132,8 @@ enum SampleMovies {
                 genres: ["Drama", "Romance"],
                 director: "Wong Kar-wai",
                 cast: ["Tony Leung Chiu-wai", "Maggie Cheung", "Rebecca Pan"],
+                tmdbRating: 8.1,
+                imdbID: "tt0118694",
                 status: .watched,
                 dateWatched: Date(timeIntervalSinceNow: -60 * 60 * 24 * 9)
             ),
@@ -135,6 +149,8 @@ enum SampleMovies {
                 genres: ["Comedy", "Thriller", "Drama"],
                 director: "Bong Joon-ho",
                 cast: ["Song Kang-ho", "Lee Sun-kyun", "Cho Yeo-jeong", "Choi Woo-shik"],
+                tmdbRating: 8.5,
+                imdbID: "tt6751668",
                 rating: 5,
                 status: .watched,
                 dateWatched: Date(timeIntervalSinceNow: -60 * 60 * 24 * 30)

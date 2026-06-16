@@ -22,15 +22,21 @@ struct Sidebar: View {
             get: { Optional(selection) },
             set: { if let new = $0 { selection = new } }
         )) {
-            Section("Library") {
+            Section {
                 ForEach(sections, id: \.self) { section in
                     NavigationLink(value: section) {
                         Label(section.movieStatus.title, systemImage: section.movieStatus.systemImage)
                             .badge(count(for: section.movieStatus))
                     }
                 }
+            } header: {
+                Text("Library")
+                    .foregroundStyle(Palette.textSecondary)
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(Palette.sidebar)
+        .tint(Palette.accent)
         .navigationTitle(Bundle.main.appName)
         #if os(macOS)
         .navigationSplitViewColumnWidth(min: 200, ideal: 220, max: 280)
@@ -47,15 +53,17 @@ struct Sidebar: View {
     #if os(macOS)
     @ViewBuilder private var settingsButton: some View {
         VStack(spacing: 0) {
-            Divider()
+            Rectangle().fill(Palette.separator).frame(height: 1)
             SettingsLink {
                 Label("Settings", systemImage: "gearshape")
+                    .foregroundStyle(Palette.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .buttonStyle(.plain)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
         }
+        .background(Palette.sidebar)
     }
     #endif
 }

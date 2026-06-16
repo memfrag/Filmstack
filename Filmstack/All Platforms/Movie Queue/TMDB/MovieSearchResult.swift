@@ -32,6 +32,41 @@ struct MovieDetails: Codable, Sendable {
     var director: String?
     /// Top-billed cast member names, in billing order.
     var cast: [String]
+    /// TMDB community rating (0–10).
+    var tmdbRating: Double?
+    var imdbID: String?
+
+    init(
+        tmdbID: Int,
+        title: String,
+        originalTitle: String? = nil,
+        releaseDate: Date? = nil,
+        releaseYear: Int? = nil,
+        overview: String? = nil,
+        posterPath: String? = nil,
+        backdropPath: String? = nil,
+        runtimeMinutes: Int? = nil,
+        genres: [String] = [],
+        director: String? = nil,
+        cast: [String] = [],
+        tmdbRating: Double? = nil,
+        imdbID: String? = nil
+    ) {
+        self.tmdbID = tmdbID
+        self.title = title
+        self.originalTitle = originalTitle
+        self.releaseDate = releaseDate
+        self.releaseYear = releaseYear
+        self.overview = overview
+        self.posterPath = posterPath
+        self.backdropPath = backdropPath
+        self.runtimeMinutes = runtimeMinutes
+        self.genres = genres
+        self.director = director
+        self.cast = cast
+        self.tmdbRating = tmdbRating
+        self.imdbID = imdbID
+    }
 }
 
 extension Movie {
@@ -57,6 +92,8 @@ extension Movie {
             genres: details.genres,
             director: details.director,
             cast: details.cast,
+            tmdbRating: details.tmdbRating,
+            imdbID: details.imdbID,
             userNotes: userNotes,
             source: source,
             streamingLocation: streamingLocation,

@@ -50,17 +50,16 @@ struct MovieListColumn: View {
     }
 
     var body: some View {
-        Group {
+        VStack(spacing: 0) {
+            header
             if movies.isEmpty {
                 emptyState
             } else {
                 list
             }
         }
+        .filmWindowBackground()
         .navigationTitle(status.title)
-        #if os(macOS)
-        .navigationSubtitle(countText)
-        #endif
         .searchable(text: $searchText, prompt: "Search \(status.title.lowercased())")
         .toolbar { toolbarContent }
         .sheet(isPresented: $showingAddSheet) {
@@ -80,21 +79,46 @@ struct MovieListColumn: View {
         #endif
     }
 
+    // MARK: - Header
+
+    private var header: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text(status.title)
+                .font(.system(size: 28, weight: .bold))
+                .foregroundStyle(Palette.textPrimary)
+            Text(countText)
+                .font(.title3)
+                .foregroundStyle(Palette.textSecondary)
+            Spacer()
+        }
+        .padding(.horizontal, 22)
+        .padding(.top, 16)
+        .padding(.bottom, 8)
+    }
+
     // MARK: - List
 
     private var list: some View {
-        List(selection: $selection) {
+        List {
             ForEach(filteredMovies, id: \.persistentModelID) { movie in
                 row(for: movie)
             }
             .onMove(perform: moveHandler)
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .environment(\.defaultMinListRowHeight, 0)
     }
 
     @ViewBuilder
     private func row(for movie: Movie) -> some View {
-        MovieRow(movie: movie, position: position(for: movie))
-            .tag(movie)
+        let selected = movie.persistentModelID == selection?.persistentModelID
+        MovieRow(movie: movie, position: position(for: movie), isSelected: selected)
+            .contentShape(Rectangle())
+            .onTapGesture { selection = movie }
+            .listRowBackground(rowBackground(selected: selected))
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 3, leading: 12, bottom: 3, trailing: 12))
             .contextMenu { rowMenu(for: movie) }
             #if os(iOS)
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -104,6 +128,17 @@ struct MovieListColumn: View {
                 leadingSwipeActions(for: movie)
             }
             #endif
+    }
+
+    private func rowBackground(selected: Bool) -> some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(selected ? AnyShapeStyle(Gradients.selectedRow) : AnyShapeStyle(Palette.card))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(selected ? Color.white.opacity(0.22) : Palette.hairline)
+            }
+            .shadow(color: selected ? Palette.accent.opacity(0.35) : .clear, radius: 8, y: 3)
+            .padding(.vertical, 2)
     }
 
     #if os(iOS)
@@ -166,6 +201,9 @@ struct MovieListColumn: View {
         Divider()
         Button("Open in Letterboxd") {
             if let url = letterboxdURL(for: movie) { openURL(url) }
+        }
+        Button("Open in IMDb") {
+            if let url = imdbURL(for: movie) { openURL(url) }
         }
 
         Divider()
@@ -243,6 +281,8 @@ struct MovieListColumn: View {
                 } label: {
                     Label("Add Movie", systemImage: "plus")
                 }
+                .buttonStyle(.borderedProminent)
+                .tint(Palette.accent)
             }
         }
         #if os(iOS)

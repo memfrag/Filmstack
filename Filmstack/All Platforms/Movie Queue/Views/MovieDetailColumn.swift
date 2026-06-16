@@ -3,9 +3,11 @@
 //
 
 import SwiftUI
+import NukeUI
 
-/// The detail column of the main layout. Shows the selected movie and its actions,
-/// or a placeholder when nothing is selected.
+/// The detail column — the most cinematic surface in the app. A wide hero image
+/// (backdrop, or a blurred poster as a fallback) fades into the base color, with
+/// the poster overlapping below it and the title set large and bold.
 struct MovieDetailColumn: View {
 
     @Binding var selection: Movie?
@@ -16,31 +18,46 @@ struct MovieDetailColumn: View {
     @State private var showingEditSheet = false
     @State private var showingDeleteConfirmation = false
 
+    private let heroHeight: CGFloat = 220
+
     var body: some View {
-        if let movie = selection {
-            content(for: movie)
-                .sheet(isPresented: $showingEditSheet) {
-                    MovieFormSheet(mode: .edit(movie))
-                }
-                .confirmationDialog(
-                    "Delete \(movie.title)?",
-                    isPresented: $showingDeleteConfirmation,
-                    titleVisibility: .visible
-                ) {
-                    Button("Delete", role: .destructive) {
-                        MovieActions.delete(movie, in: context)
-                        selection = nil
+        Group {
+            if let movie = selection {
+                content(for: movie)
+                    .sheet(isPresented: $showingEditSheet) {
+                        MovieFormSheet(mode: .edit(movie))
                     }
-                } message: {
-                    Text("This removes the movie from your library.")
-                }
-        } else {
-            ContentUnavailableView(
-                "No Movie Selected",
-                systemImage: "film",
-                description: Text("Select a movie to see its details.")
-            )
+                    .confirmationDialog(
+                        "Delete \(movie.title)?",
+                        isPresented: $showingDeleteConfirmation,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Delete", role: .destructive) {
+                            MovieActions.delete(movie, in: context)
+                            selection = nil
+                        }
+                    } message: {
+                        Text("This removes the movie from your library.")
+                    }
+            } else {
+                emptyState
+            }
         }
+        .background(Palette.base)
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "film.stack")
+                .font(.system(size: 46, weight: .light))
+                .foregroundStyle(Palette.accent.opacity(0.8))
+            Text("No Movie Selected")
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(Palette.textPrimary)
+            Text("Select a movie to see its details.")
+                .foregroundStyle(Palette.textSecondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Content
@@ -48,125 +65,173 @@ struct MovieDetailColumn: View {
     private func content(for movie: Movie) -> some View {
         VStack(spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    headerRow(for: movie)
+                VStack(alignment: .leading, spacing: 22) {
+                    hero(for: movie)
 
-                    if let overview = movie.overview, !overview.isEmpty {
-                        section("Overview") { Text(overview) }
-                    }
+                    posterAndTitle(for: movie)
+                        .padding(.horizontal, 24)
+                        .padding(.top, -70)
 
-                    if !movie.cast.isEmpty {
-                        section("Cast") {
-                            Text(movie.cast.joined(separator: ", "))
+                    VStack(alignment: .leading, spacing: 22) {
+                        if let overview = movie.overview, !overview.isEmpty {
+                            section("Overview") { Text(overview) }
+                        }
+                        if !movie.cast.isEmpty {
+                            section("Cast") { Text(movie.cast.joined(separator: ", ")) }
+                        }
+                        if !movie.userNotes.isEmpty {
+                            section("My Notes") { Text(movie.userNotes) }
+                        }
+                        if let location = movie.streamingLocation, !location.isEmpty {
+                            section("Where to Watch") { Text(location) }
+                        }
+                        if let source = movie.source, !source.isEmpty {
+                            section("Heard About It From") { Text(source) }
+                        }
+                        section("Added") { Text(movie.dateAddedText) }
+                        if let watched = movie.dateWatchedText {
+                            section("Watched") { Text(watched) }
                         }
                     }
-
-                    if !movie.userNotes.isEmpty {
-                        section("My Notes") { Text(movie.userNotes) }
-                    }
-
-                    if let location = movie.streamingLocation, !location.isEmpty {
-                        section("Where to Watch") { Text(location) }
-                    }
-
-                    if let source = movie.source, !source.isEmpty {
-                        section("Heard About It From") { Text(source) }
-                    }
-
-                    section("Added") { Text(movie.dateAddedText) }
-
-                    if let watched = movie.dateWatchedText {
-                        section("Watched") { Text(watched) }
-                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 24)
                 }
-                .padding(20)
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            Divider()
             actionBar(for: movie)
-                .padding(16)
         }
     }
 
-    /// Poster on the left, title and key metadata stacked to the right (per mockup).
-    private func headerRow(for movie: Movie) -> some View {
-        HStack(alignment: .top, spacing: 20) {
-            PosterView(movie: movie, size: .detail, cornerRadius: 10)
-                .frame(width: 150)
+    // MARK: - Hero
+
+    private func hero(for movie: Movie) -> some View {
+        ZStack(alignment: .topTrailing) {
+            heroImage(for: movie)
+                .frame(height: heroHeight)
+                .frame(maxWidth: .infinity)
+                .clipped()
+                .overlay { Gradients.heroScrim() }
+
+            if let rating = movie.tmdbRating {
+                RatingBadge(rating: rating)
+                    .padding(16)
+            }
+        }
+        .frame(height: heroHeight)
+    }
+
+    @ViewBuilder private func heroImage(for movie: Movie) -> some View {
+        if let backdrop = TMDBImage.backdropURL(path: movie.backdropPath) {
+            LazyImage(url: backdrop) { state in
+                if let image = state.image {
+                    image.resizable().scaledToFill()
+                } else {
+                    Gradients.hero
+                }
+            }
+        } else if let poster = TMDBImage.posterURL(path: movie.posterPath, size: .detail) {
+            // No backdrop: use a blurred, dimmed poster as an ambient hero.
+            LazyImage(url: poster) { state in
+                if let image = state.image {
+                    image.resizable().scaledToFill().blur(radius: 38).opacity(0.55)
+                } else {
+                    Gradients.hero
+                }
+            }
+        } else {
+            Gradients.hero
+        }
+    }
+
+    // MARK: - Poster + title
+
+    private func posterAndTitle(for movie: Movie) -> some View {
+        HStack(alignment: .bottom, spacing: 18) {
+            PosterView(movie: movie, size: .detail, cornerRadius: 12)
+                .frame(width: 132)
+                .shadow(color: .black.opacity(0.6), radius: 14, y: 8)
 
             VStack(alignment: .leading, spacing: 8) {
                 Text(movie.title)
-                    .font(.title.bold())
+                    .font(.system(size: 30, weight: .bold))
+                    .foregroundStyle(Palette.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    if let meta = headerMetaLine(for: movie) {
+                    if let meta = metaLine(for: movie) {
                         Text(meta)
                     }
                     if let genres = movie.genresText {
                         Text(genres)
                     }
                 }
-                .foregroundStyle(.secondary)
+                .font(.callout)
+                .foregroundStyle(Palette.textSecondary)
 
-                if let director = movie.director, !director.isEmpty {
-                    labeledField("Director", director)
-                        .padding(.top, 4)
+                HStack(spacing: 24) {
+                    if let director = movie.director, !director.isEmpty {
+                        labeledField("Director", director)
+                    }
+                    if let release = movie.releaseDateText {
+                        labeledField("Release Date", release)
+                    }
                 }
-                if let release = movie.releaseDateText {
-                    labeledField("Release Date", release)
-                        .padding(.top, 4)
-                }
+                .padding(.top, 4)
             }
+            .padding(.bottom, 6)
+
             Spacer(minLength: 0)
         }
+    }
+
+    private func metaLine(for movie: Movie) -> String? {
+        let value = [movie.yearText, movie.runtimeText]
+            .compactMap { $0 }
+            .joined(separator: " · ")
+        return value.isEmpty ? nil : value
     }
 
     private func labeledField(_ title: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title.uppercased())
-                .font(.caption.bold())
-                .foregroundStyle(.secondary)
+                .font(.caption2.bold())
+                .foregroundStyle(Palette.accentBright)
             Text(value)
+                .font(.subheadline)
+                .foregroundStyle(Palette.textPrimary)
         }
-    }
-
-    private func headerMetaLine(for movie: Movie) -> String? {
-        [movie.yearText, movie.runtimeText]
-            .compactMap { $0 }
-            .joined(separator: " · ")
-            .nilIfEmpty
     }
 
     private func section(_ title: String, @ViewBuilder content: () -> some View) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 7) {
             Text(title.uppercased())
                 .font(.caption.bold())
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Palette.accentBright)
             content()
                 .font(.body)
+                .foregroundStyle(Palette.textPrimary.opacity(0.92))
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - Actions
 
     private func actionBar(for movie: Movie) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             if movie.status == .watched {
                 Button {
                     MovieActions.moveBackToQueue(movie, in: context)
                 } label: {
-                    Label("Move to Queue", systemImage: "arrow.uturn.left.circle")
+                    Label("Move to Queue", systemImage: "arrow.uturn.left.circle.fill")
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.filmAccent)
             } else {
                 Button {
                     MovieActions.markWatched(movie, in: context)
                 } label: {
-                    Label("Mark as Watched", systemImage: "checkmark.circle")
+                    Label("Mark as Watched", systemImage: "checkmark.circle.fill")
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.filmAccent)
             }
 
             Button {
@@ -174,6 +239,7 @@ struct MovieDetailColumn: View {
             } label: {
                 Label("Edit", systemImage: "pencil")
             }
+            .buttonStyle(.filmGlass)
 
             Menu {
                 if movie.status == .queued {
@@ -181,31 +247,34 @@ struct MovieDetailColumn: View {
                     Button("Move to Bottom") { MovieActions.moveToBottom(movie, in: context) }
                     Divider()
                 }
-                Button("Open in Letterboxd") { openLetterboxd(for: movie) }
+                Button("Open in Letterboxd") { open(letterboxdURL(for: movie)) }
+                Button("Open in IMDb") { open(imdbURL(for: movie)) }
                 Divider()
                 Button("Delete", role: .destructive) { showingDeleteConfirmation = true }
             } label: {
                 Label("More", systemImage: "ellipsis")
             }
-            .menuStyle(.borderlessButton)
+            .menuStyle(.button)
+            .buttonStyle(.filmGlass)
             .fixedSize()
 
             Spacer(minLength: 0)
         }
+        .padding(16)
+        .background(.ultraThinMaterial)
+        .overlay(alignment: .top) {
+            Rectangle().fill(Palette.separator).frame(height: 1)
+        }
     }
 
-    private func openLetterboxd(for movie: Movie) {
-        guard let url = letterboxdURL(for: movie) else { return }
+    private func open(_ url: URL?) {
+        guard let url else { return }
         openURL(url)
     }
-}
-
-private extension String {
-    var nilIfEmpty: String? { isEmpty ? nil : self }
 }
 
 #Preview {
     MovieDetailColumn(selection: .constant(SampleMovies.makeMovies().first))
         .modelContainer(MovieStore.previewContainer)
-        .frame(width: 360, height: 700)
+        .frame(width: 420, height: 760)
 }

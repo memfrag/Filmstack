@@ -41,4 +41,11 @@ enum TMDBImage {
         let normalized = path.hasPrefix("/") ? path : "/\(path)"
         return URL(string: "\(baseURLString)\(size.tmdbPath)\(normalized)")
     }
+
+    /// Builds a wide backdrop URL (used for the detail hero image).
+    static func backdropURL(path: String?, width: String = "w1280") -> URL? {
+        guard let path, !path.isEmpty else { return nil }
+        let normalized = path.hasPrefix("/") ? path : "/\(path)"
+        return URL(string: "\(baseURLString)\(width)\(normalized)")
+    }
 }

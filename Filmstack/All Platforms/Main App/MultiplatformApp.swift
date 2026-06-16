@@ -36,7 +36,7 @@ struct FilmstackApp: App {
         WindowGroup {
             MainSceneView()
                 .appEnvironment(.default)
-                .preferredColorScheme(AppEnvironment.default.appSettings.colorScheme.value)
+                .preferredColorScheme(.dark)
                 #if os(macOS)
                 .terminatesAppWhenClosed()
                 #endif

@@ -29,8 +29,11 @@ final class Movie {
     var genres: [String] = []
     var director: String?
     var cast: [String] = []
+    /// TMDB community rating (0–10).
+    var tmdbRating: Double?
 
     // Optional external links
+    var imdbID: String?
     var letterboxdURLString: String?
 
     // User-owned fields
@@ -62,6 +65,8 @@ final class Movie {
         genres: [String] = [],
         director: String? = nil,
         cast: [String] = [],
+        tmdbRating: Double? = nil,
+        imdbID: String? = nil,
         letterboxdURL: URL? = nil,
         userNotes: String = "",
         source: String? = nil,
@@ -86,6 +91,8 @@ final class Movie {
         self.genres = genres
         self.director = director
         self.cast = cast
+        self.tmdbRating = tmdbRating
+        self.imdbID = imdbID
         self.letterboxdURLString = letterboxdURL?.absoluteString
         self.userNotes = userNotes
         self.source = source

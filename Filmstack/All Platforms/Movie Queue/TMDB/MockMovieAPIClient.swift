@@ -59,7 +59,9 @@ final class MockMovieAPIClient: MovieAPIClient {
             runtimeMinutes: 120,
             genres: ["Drama"],
             director: "Sample Director",
-            cast: ["First Actor", "Second Actor", "Third Actor"]
+            cast: ["First Actor", "Second Actor", "Third Actor"],
+            tmdbRating: 7.8,
+            imdbID: nil
         )
     }
 

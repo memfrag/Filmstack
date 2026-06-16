@@ -71,7 +71,9 @@ final class TMDBClient: MovieAPIClient {
             runtimeMinutes: response.runtime.flatMap { $0 > 0 ? $0 : nil },
             genres: response.genres.map(\.name),
             director: response.credits?.directors,
-            cast: response.credits?.topBilledCast(limit: Self.castLimit) ?? []
+            cast: response.credits?.topBilledCast(limit: Self.castLimit) ?? [],
+            tmdbRating: response.voteAverage.flatMap { $0 > 0 ? $0 : nil },
+            imdbID: response.imdbID?.nilIfBlank
         )
     }
 
@@ -196,6 +198,8 @@ private struct DetailsResponse: Decodable {
     let releaseDate: String?
     let genres: [Genre]
     let credits: Credits?
+    let voteAverage: Double?
+    let imdbID: String?
 
     struct Genre: Decodable {
         let name: String
@@ -207,6 +211,8 @@ private struct DetailsResponse: Decodable {
         case posterPath = "poster_path"
         case backdropPath = "backdrop_path"
         case releaseDate = "release_date"
+        case voteAverage = "vote_average"
+        case imdbID = "imdb_id"
     }
 }
 
