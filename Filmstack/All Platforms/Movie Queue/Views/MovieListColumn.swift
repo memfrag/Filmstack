@@ -63,7 +63,7 @@ struct MovieListColumn: View {
         .searchable(text: $searchText, prompt: "Search \(status.title.lowercased())")
         .toolbar { toolbarContent }
         .sheet(isPresented: $showingAddSheet) {
-            MovieFormSheet(mode: .add(defaultStatus: status))
+            AddMovieSheet(defaultStatus: status)
         }
         #if os(iOS)
         .sheet(isPresented: $showingSettings) {
