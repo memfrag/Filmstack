@@ -5,8 +5,8 @@
 import SwiftUI
 
 /// Cross-platform settings UI. Hosted by:
-/// - macOS: the `Settings` scene (`SettingsWindow`).
-/// - iPhone / iPad / visionOS: pushed onto the navigation stack from `ProfileTab`.
+/// - macOS: the `Settings` scene (`SettingsWindow`), reachable from the sidebar.
+/// - iPhone / iPad / visionOS: pushed onto a navigation stack.
 ///
 struct SettingsScreen: View {
 

@@ -3,6 +3,7 @@
 //
 
 import SwiftUI
+import SwiftData
 import AppRouting
 
 /// The top-level view inside the main `WindowGroup`.
@@ -14,6 +15,7 @@ import AppRouting
 struct MainSceneView: View {
 
     @Environment(AuthService.self) private var authService
+    @Environment(\.modelContext) private var modelContext
 
     @Namespace private var presentationMainNamespace
 
@@ -38,6 +40,16 @@ struct MainSceneView: View {
                 presentable(destination)
             }
             .environment(\.presentationNamespace, presentationMainNamespace)
+            .task { seedSampleDataIfNeeded() }
+    }
+
+    /// Seeds demo movies on first launch in DEBUG builds so the UI isn't empty.
+    private func seedSampleDataIfNeeded() {
+        #if DEBUG
+        let count = (try? modelContext.fetchCount(FetchDescriptor<Movie>())) ?? 0
+        guard count == 0 else { return }
+        SampleMovies.seed(into: modelContext)
+        #endif
     }
 
     // MARK: Navigation

@@ -41,6 +41,7 @@ struct FilmstackApp: App {
                 .terminatesAppWhenClosed()
                 #endif
         }
+        .modelContainer(MovieStore.makeContainer())
         #if os(macOS)
         .defaultSize(width: 1100, height: 720)
         .windowResizability(.contentMinSize)

@@ -9,12 +9,20 @@ struct MainRouting: Routing {
 
     // MARK: - Selectable
 
-    /// Views that can be selected, i.e. tabs.
+    /// Library sections that can be selected in the sidebar / tab bar.
     nonisolated enum Selectable: SelectableDestination {
-        case homeTab
-        case exploreTab
-        case profileTab
-        case searchTab
+        case queue
+        case watched
+        case maybeLater
+
+        /// The movie status this section displays.
+        var movieStatus: MovieStatus {
+            switch self {
+            case .queue: .queued
+            case .watched: .watched
+            case .maybeLater: .maybeLater
+            }
+        }
     }
 
     // MARK: - Pushable

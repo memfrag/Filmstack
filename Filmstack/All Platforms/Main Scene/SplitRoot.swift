@@ -1,47 +1,42 @@
 //
-//  Copyright © 2026 Apparata AB. All rights reserved.
+//  Filmstack
 //
 
 import SwiftUI
 import AppDesign
 import AppRouting
 
-/// `NavigationSplitView`-based root used on iPad (regular width), macOS, and visionOS.
+/// Three-column `NavigationSplitView` root used on iPad (regular width), macOS, and
+/// visionOS: sidebar (library sections) → movie list → movie detail.
 ///
-/// Shares the `Router<MainRouting>.activeSelectable` selection state with
-/// `PhoneTabRoot`, so the user's selected item persists across iPad compact↔regular
-/// layout transitions.
-///
+/// Shares the `Router<MainRouting>.activeSelectable` selection with `PhoneTabRoot`,
+/// so the selected library section persists across iPad compact↔regular transitions.
 struct SplitRoot: View {
 
     @Environment(Router<MainRouting>.self) private var router
 
-    @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var selectedMovie: Movie?
 
     var body: some View {
         @Bindable var router = router
 
         NavigationSplitView(columnVisibility: $columnVisibility) {
             Sidebar(selection: $router.activeSelectable)
+        } content: {
+            MovieListColumn(status: router.activeSelectable.movieStatus, selection: $selectedMovie)
+                .id(router.activeSelectable)
         } detail: {
-            detail(for: router.activeSelectable)
+            MovieDetailColumn(selection: $selectedMovie)
         }
-    }
-
-    @ViewBuilder
-    private func detail(for selectable: MainRouting.Selectable) -> some View {
-        switch selectable {
-        case .homeTab: HomeTab()
-        case .exploreTab: ExploreTab()
-        case .profileTab: ProfileTab()
-        case .searchTab: SearchTab()
+        .onChange(of: router.activeSelectable) {
+            selectedMovie = nil
         }
     }
 }
 
-// MARK: - Preview
-
 #Preview {
     SplitRoot()
         .appEnvironment(.mock())
+        .modelContainer(MovieStore.previewContainer)
 }
