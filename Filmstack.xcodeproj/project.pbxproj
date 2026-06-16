@@ -12,6 +12,9 @@
 		2736E38C295C73B83655CB26 /* MathKit in Frameworks */ = {isa = PBXBuildFile; productRef = 27AA016380CFFDAB23960C27 /* MathKit */; };
 		305992FF7708063027BD0208 /* SettingsUI in Frameworks */ = {isa = PBXBuildFile; productRef = D0BF7A2D99A0506FEC668815 /* SettingsUI */; };
 		389D0293DB4B4B5430AF8660 /* KeyValueStore in Frameworks */ = {isa = PBXBuildFile; productRef = 9EDC6E4C6DD2F852D9586DB0 /* KeyValueStore */; };
+		41502B0D2FE2020A00D4C4B5 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 41502B0C2FE2020A00D4C4B5 /* Nuke */; };
+		41502B0F2FE2020A00D4C4B5 /* NukeExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 41502B0E2FE2020A00D4C4B5 /* NukeExtensions */; };
+		41502B112FE2020A00D4C4B5 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 41502B102FE2020A00D4C4B5 /* NukeUI */; };
 		5018E8DF29F8E70DF6858542 /* AttributionsUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7192C6D897D0852893A28FBA /* AttributionsUI */; };
 		594763EE1CAA6BE1C59A4464 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = F814E296688932BC87019915 /* MarkdownUI */; };
 		6152550994E4453D3AC55954 /* URLToolbox in Frameworks */ = {isa = PBXBuildFile; productRef = 5762480FF8B211BE4FB23BA0 /* URLToolbox */; };
@@ -66,15 +69,18 @@
 				E8426136B383E249938EDA29 /* AppDesign in Frameworks */,
 				D9232597C6360093DF3BF8B5 /* AppRouting in Frameworks */,
 				5018E8DF29F8E70DF6858542 /* AttributionsUI in Frameworks */,
+				41502B0F2FE2020A00D4C4B5 /* NukeExtensions in Frameworks */,
 				B0A0B221C54D19AB2CFA468A /* BinaryDataKit in Frameworks */,
 				E87ED0A44D922D8876453159 /* CGMath in Frameworks */,
 				FF585E231CFD6C3EBA83A77A /* CollectionKit in Frameworks */,
 				63BCDFB4C36EA8E03C88A755 /* Constructs in Frameworks */,
 				389D0293DB4B4B5430AF8660 /* KeyValueStore in Frameworks */,
 				594763EE1CAA6BE1C59A4464 /* MarkdownUI in Frameworks */,
+				41502B0D2FE2020A00D4C4B5 /* Nuke in Frameworks */,
 				F6E5C6C068573A9BE51B3656 /* Markin in Frameworks */,
 				2736E38C295C73B83655CB26 /* MathKit in Frameworks */,
 				2358FF068ED7ABCC3B2A3644 /* MessagePackKit in Frameworks */,
+				41502B112FE2020A00D4C4B5 /* NukeUI in Frameworks */,
 				AB0B95BC2364CB125703BAD4 /* SensibleStyling in Frameworks */,
 				305992FF7708063027BD0208 /* SettingsUI in Frameworks */,
 				24A5EB73830E4B02DB2129F1 /* SwiftUIToolbox in Frameworks */,
@@ -158,6 +164,9 @@
 				5762480FF8B211BE4FB23BA0 /* URLToolbox */,
 				A27EA54795640F1D91889EA0 /* UserDefaultsUI */,
 				7A860E9ACB8A633D70939E4E /* Zipcode */,
+				41502B0C2FE2020A00D4C4B5 /* Nuke */,
+				41502B0E2FE2020A00D4C4B5 /* NukeExtensions */,
+				41502B102FE2020A00D4C4B5 /* NukeUI */,
 			);
 			productName = Filmstack;
 			productReference = 5B1F8F63915D1C9D7629FE72 /* Filmstack.app */;
@@ -208,6 +217,7 @@
 				C602D73695AF84D4A4355AE9 /* XCRemoteSwiftPackageReference "UserDefaultsUI" */,
 				B58CE2DB667527D3887864C3 /* XCRemoteSwiftPackageReference "Zipcode" */,
 				0AB8DBB4F54404BC9A568060 /* XCLocalSwiftPackageReference "Packages/AppDesign" */,
+				41502B0B2FE2020A00D4C4B5 /* XCRemoteSwiftPackageReference "Nuke" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 301B921B896CADB2516CC495 /* Products */;
@@ -578,6 +588,14 @@
 				version = 1.3.1;
 			};
 		};
+		41502B0B2FE2020A00D4C4B5 /* XCRemoteSwiftPackageReference "Nuke" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kean/Nuke.git";
+			requirement = {
+				kind = exactVersion;
+				version = 13.0.6;
+			};
+		};
 		485748FABD1E148AEE6C4CA2 /* XCRemoteSwiftPackageReference "BinaryDataKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apparata/BinaryDataKit.git";
@@ -685,6 +703,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FB90556BCE22415B51B801CE /* XCRemoteSwiftPackageReference "MathKit" */;
 			productName = MathKit;
+		};
+		41502B0C2FE2020A00D4C4B5 /* Nuke */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 41502B0B2FE2020A00D4C4B5 /* XCRemoteSwiftPackageReference "Nuke" */;
+			productName = Nuke;
+		};
+		41502B0E2FE2020A00D4C4B5 /* NukeExtensions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 41502B0B2FE2020A00D4C4B5 /* XCRemoteSwiftPackageReference "Nuke" */;
+			productName = NukeExtensions;
+		};
+		41502B102FE2020A00D4C4B5 /* NukeUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 41502B0B2FE2020A00D4C4B5 /* XCRemoteSwiftPackageReference "Nuke" */;
+			productName = NukeUI;
 		};
 		444E74AD24CB89B3BD168259 /* BinaryDataKit */ = {
 			isa = XCSwiftPackageProductDependency;

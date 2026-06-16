@@ -3,39 +3,69 @@
 //
 
 import SwiftUI
+import NukeUI
 
 /// Poster artwork for a movie.
 ///
-/// For now this always renders a placeholder. Once TMDB poster loading lands, this
-/// is the single place that needs to learn how to fetch and cache real artwork.
+/// Loads (and caches) the poster from TMDB's public image CDN via Nuke's
+/// `LazyImage`, falling back to a placeholder while loading, on failure, or when
+/// the movie has no poster (e.g. manual entries).
 struct PosterView: View {
 
     let movie: Movie
+    var size: PosterSize = .queue
     var cornerRadius: CGFloat = 6
 
+    private var posterURL: URL? {
+        TMDBImage.posterURL(path: movie.posterPath, size: size)
+    }
+
     var body: some View {
-        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        content
+            .aspectRatio(2.0 / 3.0, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(.separator, lineWidth: 0.5)
+            }
+            .accessibilityLabel("\(movie.title) poster")
+    }
+
+    @ViewBuilder private var content: some View {
+        if let posterURL {
+            LazyImage(url: posterURL) { state in
+                if let image = state.image {
+                    image.resizable().scaledToFill()
+                } else if state.error != nil {
+                    placeholder
+                } else {
+                    placeholder.overlay {
+                        ProgressView().controlSize(.small)
+                    }
+                }
+            }
+        } else {
+            placeholder
+        }
+    }
+
+    private var placeholder: some View {
+        Rectangle()
             .fill(.fill.tertiary)
             .overlay {
                 Image(systemName: "film")
                     .font(.system(size: 20, weight: .regular))
                     .foregroundStyle(.secondary)
             }
-            .overlay {
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(.separator, lineWidth: 0.5)
-            }
-            .aspectRatio(2.0 / 3.0, contentMode: .fit)
-            .accessibilityLabel("\(movie.title) poster")
     }
 }
 
 #Preview {
     HStack {
-        PosterView(movie: Movie(title: "Dune: Part Two"))
+        PosterView(movie: Movie(title: "No Poster"))
             .frame(height: 80)
-        PosterView(movie: Movie(title: "Heat"))
-            .frame(height: 160)
+        PosterView(movie: SampleMovies.makeMovies()[0], size: .detail)
+            .frame(height: 220)
     }
     .padding()
 }

@@ -49,7 +49,7 @@ struct MovieDetailColumn: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    PosterView(movie: movie, cornerRadius: 10)
+                    PosterView(movie: movie, size: .detail, cornerRadius: 10)
                         .frame(maxWidth: 220)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
