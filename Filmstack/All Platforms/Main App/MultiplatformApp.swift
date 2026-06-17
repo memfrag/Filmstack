@@ -46,8 +46,8 @@ struct FilmstackApp: App {
         .defaultSize(width: 1100, height: 720)
         .windowResizability(.contentMinSize)
         .commands {
-                        CheckForUpdatesCommand(updater: updaterController.updater)
-                        HelpCommands()
+            CheckForUpdatesCommand(updater: updaterController.updater)
+            HelpCommands()
             MyCommands()
         }
         #elseif os(visionOS)

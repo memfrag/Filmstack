@@ -70,7 +70,7 @@ struct MovieDetailColumn: View {
 
                     posterAndTitle(for: movie)
                         .padding(.horizontal, 24)
-                        .padding(.top, -70)
+                        .padding(.top, -90)
 
                     VStack(alignment: .leading, spacing: 22) {
                         if let overview = movie.overview, !overview.isEmpty {
@@ -111,11 +111,6 @@ struct MovieDetailColumn: View {
                 .frame(maxWidth: .infinity)
                 .clipped()
                 .overlay { Gradients.heroScrim() }
-
-            if let rating = movie.tmdbRating {
-                RatingBadge(rating: rating)
-                    .padding(16)
-            }
         }
         .frame(height: heroHeight)
     }
@@ -152,6 +147,11 @@ struct MovieDetailColumn: View {
                 .shadow(color: .black.opacity(0.6), radius: 14, y: 8)
 
             VStack(alignment: .leading, spacing: 8) {
+
+                if let rating = movie.tmdbRating {
+                    RatingBadge(rating: rating)
+                }
+
                 Text(movie.title)
                     .font(.system(size: 30, weight: .bold))
                     .foregroundStyle(Palette.textPrimary)

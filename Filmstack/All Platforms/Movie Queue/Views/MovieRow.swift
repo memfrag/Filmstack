@@ -18,7 +18,7 @@ struct MovieRow: View {
                 Text("\(position)")
                     .font(.callout.monospacedDigit().weight(.semibold))
                     .foregroundStyle(isSelected ? Color.white.opacity(0.9) : Palette.textSecondary)
-                    .frame(width: 20, alignment: .trailing)
+                    .frame(width: 20, alignment: .center)
             }
 
             PosterView(movie: movie, size: .queue, cornerRadius: 7)
@@ -57,7 +57,7 @@ struct MovieRow: View {
             }
         }
         .padding(.vertical, 9)
-        .padding(.horizontal, 12)
+        .padding(.trailing, 8)
     }
 }
 

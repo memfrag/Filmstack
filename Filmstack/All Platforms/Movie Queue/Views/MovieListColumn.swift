@@ -138,7 +138,8 @@ struct MovieListColumn: View {
                     .strokeBorder(selected ? Color.white.opacity(0.22) : Palette.hairline)
             }
             .shadow(color: selected ? Palette.accent.opacity(0.35) : .clear, radius: 8, y: 3)
-            .padding(.vertical, 2)
+            .padding(.vertical, 4)
+            .padding(.horizontal, 8)
     }
 
     #if os(iOS)

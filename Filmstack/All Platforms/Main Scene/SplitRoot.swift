@@ -30,7 +30,9 @@ struct SplitRoot: View {
                 .id(router.activeSelectable)
         } detail: {
             MovieDetailColumn(selection: selectionBinding)
+                .ignoresSafeArea(edges: .top)
         }
+        .toolbar(removing: .title)
     }
 
     private var selectionBinding: Binding<Movie?> {
