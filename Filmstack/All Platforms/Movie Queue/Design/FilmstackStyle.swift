@@ -17,7 +17,6 @@ struct AccentButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: 11, style: .continuous)
                     .strokeBorder(.white.opacity(0.18))
             }
-            .shadow(color: Palette.accent.opacity(0.45), radius: 12, y: 5)
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .opacity(configuration.isPressed ? 0.9 : 1)
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)

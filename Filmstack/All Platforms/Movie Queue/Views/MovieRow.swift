@@ -58,6 +58,7 @@ struct MovieRow: View {
         }
         .padding(.vertical, 9)
         .padding(.trailing, 8)
+        .padding(.leading, position == nil ? 8 : 4)
     }
 }
 

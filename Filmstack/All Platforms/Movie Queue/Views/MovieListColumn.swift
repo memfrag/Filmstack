@@ -108,7 +108,6 @@ struct MovieListColumn: View {
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .environment(\.defaultMinListRowHeight, 0)
-        .tint(Palette.accent)
     }
 
     @ViewBuilder
@@ -116,9 +115,14 @@ struct MovieListColumn: View {
         let selected = movie.persistentModelID == selection?.persistentModelID
         MovieRow(movie: movie, position: position(for: movie), isSelected: selected)
             .tag(movie)
-            .listRowBackground(rowBackground(selected: selected))
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 3, leading: 12, bottom: 3, trailing: 12))
+            //.listRowBackground(rowBackground(selected: selected))
+            //.listRowSeparator(.hidden)
+            .listRowSeparatorTint(Palette.card)
+            .listRowInsets(EdgeInsets(top: 3, leading: 0, bottom: 3, trailing: 0))
+            .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+            .alignmentGuide(.listRowSeparatorTrailing) { dimensions in
+                dimensions.width
+            }
             .contextMenu { rowMenu(for: movie) }
             #if os(iOS)
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -132,14 +136,14 @@ struct MovieListColumn: View {
 
     private func rowBackground(selected: Bool) -> some View {
         RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(selected ? AnyShapeStyle(Gradients.selectedRow) : AnyShapeStyle(Palette.card))
+            .fill(Palette.card)
             .overlay {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .strokeBorder(selected ? Color.white.opacity(0.22) : Palette.hairline)
             }
             .shadow(color: selected ? Palette.accent.opacity(0.35) : .clear, radius: 8, y: 3)
             .padding(.vertical, 4)
-            .padding(.horizontal, 8)
+            .padding(.horizontal, 12)
     }
 
     #if os(iOS)
@@ -282,8 +286,6 @@ struct MovieListColumn: View {
                 } label: {
                     Label("Add Movie", systemImage: "plus")
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Palette.accent)
             }
         }
         #if os(iOS)

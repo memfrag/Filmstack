@@ -46,7 +46,7 @@ enum Gradients {
 
     /// Primary accent button fill.
     static let accentButton = LinearGradient(
-        colors: [Palette.accentBright, Palette.accent],
+        colors: [Palette.accentBright.opacity(0.3), Palette.accent.opacity(0.3)],
         startPoint: .top,
         endPoint: .bottom
     )

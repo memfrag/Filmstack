@@ -261,7 +261,7 @@ struct MovieDetailColumn: View {
             Spacer(minLength: 0)
         }
         .padding(16)
-        .background(.ultraThinMaterial)
+        //.background(.ultraThinMaterial)
         .overlay(alignment: .top) {
             Rectangle().fill(Palette.separator).frame(height: 1)
         }

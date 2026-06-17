@@ -10,7 +10,6 @@ import SwiftUI
 struct SettingsWindow: Scene {
 
     private enum Tabs: Hashable {
-        case general
         case movieDatabase
         case about
     }
@@ -23,13 +22,6 @@ struct SettingsWindow: Scene {
 
     @ViewBuilder var tabs: some View {
         TabView {
-            GeneralSettingsTab()
-                .tabItem {
-                    Label("General", systemImage: "gear")
-                }
-                .tag(Tabs.general)
-                .frame(width: 375, height: 150)
-
             TMDBKeySettings()
                 .tabItem {
                     Label("Movie Database", systemImage: "film")
