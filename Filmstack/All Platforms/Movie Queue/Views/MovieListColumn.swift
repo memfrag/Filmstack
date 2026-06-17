@@ -4,6 +4,13 @@
 
 import SwiftUI
 import SwiftData
+import UniformTypeIdentifiers
+
+/// How the section's movies are laid out.
+enum LibraryViewMode: String {
+    case list
+    case grid
+}
 
 /// The middle column of the main layout: the list of movies for one library
 /// section (Queue / Watched / Maybe Later). Selecting a row drives the detail
@@ -21,9 +28,15 @@ struct MovieListColumn: View {
     @State private var showingAddSheet = false
     @State private var filter = LibraryFilter()
     @State private var showingFilterPopover = false
+    @State private var draggingMovie: Movie?
+    @AppStorage("filmstack.libraryViewMode") private var viewModeRaw = LibraryViewMode.list.rawValue
     #if os(iOS)
     @State private var showingSettings = false
     #endif
+
+    private var viewMode: LibraryViewMode {
+        LibraryViewMode(rawValue: viewModeRaw) ?? .list
+    }
 
     init(section: MainRouting.Selectable, selection: Binding<Movie?>) {
         self.section = section
@@ -104,6 +117,8 @@ struct MovieListColumn: View {
                 emptyState
             } else if filteredMovies.isEmpty {
                 noMatchesState
+            } else if viewMode == .grid {
+                grid
             } else {
                 list
             }
@@ -215,6 +230,70 @@ struct MovieListColumn: View {
                 leadingSwipeActions(for: movie)
             }
             #endif
+    }
+
+    // MARK: - Grid
+
+    private var grid: some View {
+        ScrollView {
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 116, maximum: 150), spacing: 16)],
+                spacing: 18
+            ) {
+                ForEach(filteredMovies, id: \.persistentModelID) { movie in
+                    gridCell(for: movie)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 16)
+        }
+    }
+
+    @ViewBuilder
+    private func gridCell(for movie: Movie) -> some View {
+        let selected = movie.persistentModelID == selection?.persistentModelID
+
+        VStack(alignment: .leading, spacing: 6) {
+            PosterView(movie: movie, size: .detail, cornerRadius: 10)
+                .overlay(alignment: .topLeading) {
+                    if let position = position(for: movie) {
+                        positionBadge(position)
+                    }
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(Palette.accent, lineWidth: selected ? 3 : 0)
+                }
+                .shadow(color: selected ? Palette.accent.opacity(0.4) : .black.opacity(0.4),
+                        radius: selected ? 10 : 5, y: 3)
+
+            Text(movie.title)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(selected ? Palette.textPrimary : Palette.textSecondary)
+                .lineLimit(1)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { selection = movie }
+        .contextMenu { rowMenu(for: movie) }
+        .opacity(draggingMovie?.persistentModelID == movie.persistentModelID ? 0.4 : 1)
+        .modifier(GridReorderModifier(
+            movie: movie,
+            enabled: canReorder,
+            movies: filteredMovies,
+            dragging: $draggingMovie,
+            reorder: { MovieActions.reorderQueue($0, in: context) }
+        ))
+    }
+
+    private func positionBadge(_ position: Int) -> some View {
+        Text("\(position)")
+            .font(.caption2.weight(.bold).monospacedDigit())
+            .foregroundStyle(.white)
+            .padding(.vertical, 3)
+            .padding(.horizontal, 7)
+            .background(.black.opacity(0.6), in: Capsule())
+            .overlay { Capsule().strokeBorder(.white.opacity(0.2)) }
+            .padding(6)
     }
 
     private func rowBackground(selected: Bool) -> some View {
@@ -378,6 +457,14 @@ struct MovieListColumn: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+        ToolbarItem {
+            Button {
+                viewModeRaw = (viewMode == .grid ? LibraryViewMode.list : .grid).rawValue
+            } label: {
+                Label(viewMode == .grid ? "List View" : "Grid View",
+                      systemImage: viewMode == .grid ? "list.bullet" : "square.grid.2x2")
+            }
+        }
         if hasFilters {
             ToolbarItem {
                 Button {
@@ -416,6 +503,67 @@ struct MovieListColumn: View {
             }
         }
         #endif
+    }
+}
+
+// MARK: - Grid reordering
+
+/// Applies drag-and-drop reordering to a grid cell when `enabled`. Reordering is
+/// applied live through the data source, so the grid reflows as you drag.
+private struct GridReorderModifier: ViewModifier {
+    let movie: Movie
+    let enabled: Bool
+    let movies: [Movie]
+    @Binding var dragging: Movie?
+    let reorder: ([Movie]) -> Void
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content
+                .onDrag {
+                    dragging = movie
+                    return NSItemProvider(object: NSString(string: movie.id.uuidString))
+                }
+                .onDrop(
+                    of: [.text],
+                    delegate: MovieDropDelegate(
+                        target: movie,
+                        movies: movies,
+                        dragging: $dragging,
+                        reorder: reorder
+                    )
+                )
+        } else {
+            content
+        }
+    }
+}
+
+private struct MovieDropDelegate: DropDelegate {
+    let target: Movie
+    let movies: [Movie]
+    @Binding var dragging: Movie?
+    let reorder: ([Movie]) -> Void
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+
+    func dropEntered(info: DropInfo) {
+        guard let dragging,
+              dragging.persistentModelID != target.persistentModelID,
+              let from = movies.firstIndex(where: { $0.persistentModelID == dragging.persistentModelID }),
+              let to = movies.firstIndex(where: { $0.persistentModelID == target.persistentModelID })
+        else { return }
+
+        var newOrder = movies
+        newOrder.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
+        reorder(newOrder)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        dragging = nil
+        return true
     }
 }
 
