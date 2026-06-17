@@ -31,6 +31,14 @@ struct SettingsScreen: View {
                     Label("TMDB API Key", systemImage: "film")
                 }
             }
+
+            Section {
+                NavigationLink {
+                    AboutScreen()
+                } label: {
+                    Label("About Filmstack", systemImage: "info.circle")
+                }
+            }
         }
         .navigationTitle("Settings")
         .formStyle(.grouped)

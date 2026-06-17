@@ -99,7 +99,7 @@ struct MovieListColumn: View {
     // MARK: - List
 
     private var list: some View {
-        List {
+        List(selection: $selection) {
             ForEach(filteredMovies, id: \.persistentModelID) { movie in
                 row(for: movie)
             }
@@ -108,14 +108,14 @@ struct MovieListColumn: View {
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .environment(\.defaultMinListRowHeight, 0)
+        .tint(Palette.accent)
     }
 
     @ViewBuilder
     private func row(for movie: Movie) -> some View {
         let selected = movie.persistentModelID == selection?.persistentModelID
         MovieRow(movie: movie, position: position(for: movie), isSelected: selected)
-            .contentShape(Rectangle())
-            .onTapGesture { selection = movie }
+            .tag(movie)
             .listRowBackground(rowBackground(selected: selected))
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets(top: 3, leading: 12, bottom: 3, trailing: 12))

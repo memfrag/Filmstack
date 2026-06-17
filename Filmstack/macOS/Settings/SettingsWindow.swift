@@ -12,6 +12,7 @@ struct SettingsWindow: Scene {
     private enum Tabs: Hashable {
         case general
         case movieDatabase
+        case about
     }
 
     var body: some Scene {
@@ -35,6 +36,13 @@ struct SettingsWindow: Scene {
                 }
                 .tag(Tabs.movieDatabase)
                 .frame(width: 460, height: 380)
+
+            AboutScreen()
+                .tabItem {
+                    Label("About", systemImage: "info.circle")
+                }
+                .tag(Tabs.about)
+                .frame(width: 460, height: 560)
         }
     }
 }
