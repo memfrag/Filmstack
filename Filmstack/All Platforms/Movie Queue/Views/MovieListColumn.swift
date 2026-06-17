@@ -10,7 +10,7 @@ import SwiftData
 /// column via the shared `selection` binding.
 struct MovieListColumn: View {
 
-    let status: MovieStatus
+    let section: MainRouting.Selectable
     @Binding var selection: Movie?
 
     @Environment(\.modelContext) private var context
@@ -25,29 +25,48 @@ struct MovieListColumn: View {
     @State private var showingSettings = false
     #endif
 
-    init(status: MovieStatus, selection: Binding<Movie?>) {
-        self.status = status
+    init(section: MainRouting.Selectable, selection: Binding<Movie?>) {
+        self.section = section
         self._selection = selection
 
-        let raw = status.rawValue
+        let predicate: Predicate<Movie>
         let sort: [SortDescriptor<Movie>]
-        switch status {
-        case .queued:
+        let watchedRaw = MovieStatus.watched.rawValue
+        switch section {
+        case .queue:
+            let raw = MovieStatus.queued.rawValue
+            predicate = #Predicate { $0.statusRawValue == raw }
             sort = [SortDescriptor(\.queuePosition, order: .forward)]
         case .watched:
+            let raw = MovieStatus.watched.rawValue
+            predicate = #Predicate { $0.statusRawValue == raw }
             sort = [SortDescriptor(\.dateWatched, order: .reverse)]
         case .maybeLater:
+            let raw = MovieStatus.maybeLater.rawValue
+            predicate = #Predicate { $0.statusRawValue == raw }
             sort = [SortDescriptor(\.dateAdded, order: .reverse)]
+        case .upcoming:
+            // Any non-watched movie; future-dated ones are kept in `sectionMovies`.
+            predicate = #Predicate { $0.statusRawValue != watchedRaw }
+            sort = [SortDescriptor(\.releaseDate, order: .forward)]
         }
-        _movies = Query(filter: #Predicate { $0.statusRawValue == raw }, sort: sort)
+        _movies = Query(filter: predicate, sort: sort)
     }
 
     private var canReorder: Bool {
-        status == .queued && searchText.isEmpty && !filter.isActive
+        section == .queue && searchText.isEmpty && !filter.isActive
+    }
+
+    /// Movies belonging to this section before user filters/search. For Upcoming
+    /// this keeps only movies with a future release date.
+    private var sectionMovies: [Movie] {
+        guard section == .upcoming else { return movies }
+        let now = Date()
+        return movies.filter { ($0.releaseDate ?? .distantPast) > now }
     }
 
     private var filteredMovies: [Movie] {
-        var result = filter.isActive ? movies.filter(filter.matches) : movies
+        var result = filter.isActive ? sectionMovies.filter(filter.matches) : sectionMovies
         if !searchText.isEmpty {
             result = result.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
         }
@@ -56,18 +75,18 @@ struct MovieListColumn: View {
 
     /// Genres present in this section, sorted — the available genre filters.
     private var availableGenres: [String] {
-        Set(movies.flatMap(\.genres)).sorted()
+        Set(sectionMovies.flatMap(\.genres)).sorted()
     }
 
     /// Sources present in this section, sorted — the available source filters.
     private var availableSources: [String] {
-        Set(movies.compactMap { $0.source?.trimmingCharacters(in: .whitespaces) }
+        Set(sectionMovies.compactMap { $0.source?.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }).sorted()
     }
 
     /// Streaming locations present in this section, sorted.
     private var availableLocations: [String] {
-        Set(movies.compactMap { $0.streamingLocation?.trimmingCharacters(in: .whitespaces) }
+        Set(sectionMovies.compactMap { $0.streamingLocation?.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }).sorted()
     }
 
@@ -81,7 +100,7 @@ struct MovieListColumn: View {
             if filter.isActive {
                 filterChips
             }
-            if movies.isEmpty {
+            if sectionMovies.isEmpty {
                 emptyState
             } else if filteredMovies.isEmpty {
                 noMatchesState
@@ -90,11 +109,11 @@ struct MovieListColumn: View {
             }
         }
         .filmWindowBackground()
-        .navigationTitle(status.title)
-        .searchable(text: $searchText, prompt: "Search \(status.title.lowercased())")
+        .navigationTitle(section.title)
+        .searchable(text: $searchText, prompt: "Search \(section.title.lowercased())")
         .toolbar { toolbarContent }
         .sheet(isPresented: $showingAddSheet) {
-            AddMovieSheet(defaultStatus: status)
+            AddMovieSheet(defaultStatus: section.defaultAddStatus ?? .queued)
         }
         #if os(iOS)
         .sheet(isPresented: $showingSettings) {
@@ -114,7 +133,7 @@ struct MovieListColumn: View {
 
     private var header: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Text(status.title)
+            Text(section.title)
                 .font(.system(size: 28, weight: .bold))
                 .foregroundStyle(Palette.textPrimary)
             Text(countText)
@@ -218,7 +237,7 @@ struct MovieListColumn: View {
         } label: {
             Label("Delete", systemImage: "trash")
         }
-        if status != .watched {
+        if movie.status != .watched {
             Button {
                 MovieActions.markWatched(movie, in: context)
             } label: {
@@ -230,7 +249,7 @@ struct MovieListColumn: View {
 
     @ViewBuilder
     private func leadingSwipeActions(for movie: Movie) -> some View {
-        if status != .maybeLater {
+        if movie.status != .maybeLater {
             Button {
                 MovieActions.moveToMaybeLater(movie, in: context)
             } label: {
@@ -238,7 +257,7 @@ struct MovieListColumn: View {
             }
             .tint(.orange)
         }
-        if status != .queued {
+        if movie.status != .queued {
             Button {
                 MovieActions.moveBackToQueue(movie, in: context)
             } label: {
@@ -251,19 +270,19 @@ struct MovieListColumn: View {
 
     @ViewBuilder
     private func rowMenu(for movie: Movie) -> some View {
-        if status == .queued {
+        if movie.status == .queued {
             Button("Move to Top") { MovieActions.moveToTop(movie, in: context) }
             Button("Move to Bottom") { MovieActions.moveToBottom(movie, in: context) }
             Divider()
         }
 
-        if status != .queued {
+        if movie.status != .queued {
             Button("Move to Queue") { MovieActions.moveBackToQueue(movie, in: context) }
         }
-        if status != .maybeLater {
+        if movie.status != .maybeLater {
             Button("Move to Maybe Later") { MovieActions.moveToMaybeLater(movie, in: context) }
         }
-        if status != .watched {
+        if movie.status != .watched {
             Button("Mark as Watched") { MovieActions.markWatched(movie, in: context) }
         }
 
@@ -298,7 +317,7 @@ struct MovieListColumn: View {
     }
 
     private func position(for movie: Movie) -> Int? {
-        guard status == .queued else { return nil }
+        guard section.showsPosition else { return nil }
         guard let index = movies.firstIndex(where: { $0.persistentModelID == movie.persistentModelID }) else {
             return nil
         }
@@ -310,11 +329,11 @@ struct MovieListColumn: View {
     private var emptyState: some View {
         VStack {
             ContentUnavailableView {
-                Label(emptyTitle, systemImage: status.systemImage)
+                Label(emptyTitle, systemImage: section.systemImage)
             } description: {
                 Text(emptyMessage)
             } actions: {
-                if status != .watched {
+                if section.defaultAddStatus != nil {
                     Button("Add Movie") { showingAddSheet = true }
                 }
             }
@@ -323,16 +342,18 @@ struct MovieListColumn: View {
     }
 
     private var emptyTitle: String {
-        switch status {
-        case .queued: "Your movie queue is empty"
+        switch section {
+        case .queue: "Your movie queue is empty"
+        case .upcoming: "Nothing upcoming"
         case .watched: "Nothing watched yet"
         case .maybeLater: "Nothing on the maybe list"
         }
     }
 
     private var emptyMessage: String {
-        switch status {
-        case .queued: "Add something you want to watch."
+        switch section {
+        case .queue: "Add something you want to watch."
+        case .upcoming: "Movies in your library with a future release date show up here."
         case .watched: "Movies you mark as watched will show up here."
         case .maybeLater: "Park movies here when you're not sure yet."
         }
@@ -343,7 +364,7 @@ struct MovieListColumn: View {
             Label("No Matches", systemImage: "line.3.horizontal.decrease.circle")
         } description: {
             Text(searchText.isEmpty
-                 ? "No movies in \(status.title) match this filter."
+                 ? "No movies in \(section.title) match this filter."
                  : "No movies match your search.")
         }
     }
@@ -377,7 +398,7 @@ struct MovieListColumn: View {
             }
             ToolbarSpacer(.fixed)
         }
-        if status != .watched {
+        if section.defaultAddStatus != nil {
             ToolbarItem {
                 Button {
                     showingAddSheet = true
@@ -400,7 +421,7 @@ struct MovieListColumn: View {
 
 #Preview {
     NavigationStack {
-        MovieListColumn(status: .queued, selection: .constant(nil))
+        MovieListColumn(section: .queue, selection: .constant(nil))
     }
     .modelContainer(MovieStore.previewContainer)
 }

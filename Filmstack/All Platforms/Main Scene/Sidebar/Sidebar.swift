@@ -15,7 +15,7 @@ struct Sidebar: View {
 
     @Query private var movies: [Movie]
 
-    private let sections: [MainRouting.Selectable] = [.queue, .watched, .maybeLater]
+    private let sections = MainRouting.Selectable.allCases
 
     var body: some View {
         List(selection: Binding(
@@ -25,8 +25,8 @@ struct Sidebar: View {
             Section {
                 ForEach(sections, id: \.self) { section in
                     NavigationLink(value: section) {
-                        Label(section.movieStatus.title, systemImage: section.movieStatus.systemImage)
-                            .badge(count(for: section.movieStatus))
+                        Label(section.title, systemImage: section.systemImage)
+                            .badge(count(for: section))
                     }
                 }
             } header: {
@@ -46,8 +46,16 @@ struct Sidebar: View {
         #endif
     }
 
-    private func count(for status: MovieStatus) -> Int {
-        movies.lazy.filter { $0.statusRawValue == status.rawValue }.count
+    private func count(for section: MainRouting.Selectable) -> Int {
+        if let status = section.status {
+            return movies.lazy.filter { $0.statusRawValue == status.rawValue }.count
+        }
+        // Upcoming: non-watched movies with a future release date.
+        let watchedRaw = MovieStatus.watched.rawValue
+        let now = Date()
+        return movies.lazy.filter {
+            $0.statusRawValue != watchedRaw && ($0.releaseDate ?? .distantPast) > now
+        }.count
     }
 
     #if os(macOS)

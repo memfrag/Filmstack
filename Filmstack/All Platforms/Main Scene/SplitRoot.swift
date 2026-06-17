@@ -27,7 +27,7 @@ struct SplitRoot: View {
             Sidebar(selection: $router.activeSelectable)
         } content: {
             MovieListColumn(
-                status: router.activeSelectable.movieStatus,
+                section: router.activeSelectable,
                 selection: selectionBinding
             )
             .id(router.activeSelectable)

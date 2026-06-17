@@ -20,14 +20,10 @@ struct PhoneTabRoot: View {
         @Bindable var router = router
 
         TabView(selection: $router.activeSelectable) {
-            Tab(MovieStatus.queued.title, systemImage: MovieStatus.queued.systemImage, value: .queue) {
-                MovieSectionStack(status: .queued)
-            }
-            Tab(MovieStatus.watched.title, systemImage: MovieStatus.watched.systemImage, value: .watched) {
-                MovieSectionStack(status: .watched)
-            }
-            Tab(MovieStatus.maybeLater.title, systemImage: MovieStatus.maybeLater.systemImage, value: .maybeLater) {
-                MovieSectionStack(status: .maybeLater)
+            ForEach(MainRouting.Selectable.allCases, id: \.self) { section in
+                Tab(section.title, systemImage: section.systemImage, value: section) {
+                    MovieSectionStack(section: section)
+                }
             }
         }
     }
@@ -36,12 +32,12 @@ struct PhoneTabRoot: View {
 /// A library section wrapped in a navigation stack, pushing detail on selection.
 private struct MovieSectionStack: View {
 
-    let status: MovieStatus
+    let section: MainRouting.Selectable
     @State private var selectedMovie: Movie?
 
     var body: some View {
         NavigationStack {
-            MovieListColumn(status: status, selection: $selectedMovie)
+            MovieListColumn(section: section, selection: $selectedMovie)
                 .navigationDestination(item: $selectedMovie) { movie in
                     MovieDetailColumn(selection: $selectedMovie)
                         .navigationTitle(movie.title)
