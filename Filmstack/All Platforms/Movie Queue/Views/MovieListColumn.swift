@@ -12,6 +12,7 @@ struct MovieListColumn: View {
 
     let status: MovieStatus
     @Binding var selection: Movie?
+    let filter: LibraryFilter
 
     @Environment(\.modelContext) private var context
     @Environment(\.openURL) private var openURL
@@ -23,9 +24,10 @@ struct MovieListColumn: View {
     @State private var showingSettings = false
     #endif
 
-    init(status: MovieStatus, selection: Binding<Movie?>) {
+    init(status: MovieStatus, selection: Binding<Movie?>, filter: LibraryFilter = .all) {
         self.status = status
         self._selection = selection
+        self.filter = filter
 
         let raw = status.rawValue
         let sort: [SortDescriptor<Movie>]
@@ -41,12 +43,15 @@ struct MovieListColumn: View {
     }
 
     private var canReorder: Bool {
-        status == .queued && searchText.isEmpty
+        status == .queued && searchText.isEmpty && !filter.isActive
     }
 
     private var filteredMovies: [Movie] {
-        guard !searchText.isEmpty else { return movies }
-        return movies.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+        var result = filter.isActive ? movies.filter(filter.matches) : movies
+        if !searchText.isEmpty {
+            result = result.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+        }
+        return result
     }
 
     var body: some View {
@@ -54,6 +59,8 @@ struct MovieListColumn: View {
             header
             if movies.isEmpty {
                 emptyState
+            } else if filteredMovies.isEmpty {
+                noMatchesState
             } else {
                 list
             }
@@ -271,10 +278,21 @@ struct MovieListColumn: View {
         }
     }
 
+    private var noMatchesState: some View {
+        ContentUnavailableView {
+            Label("No Matches", systemImage: "line.3.horizontal.decrease.circle")
+        } description: {
+            Text(searchText.isEmpty
+                 ? "No movies in \(status.title) match this filter."
+                 : "No movies match your search.")
+        }
+    }
+
     // MARK: - Toolbar
 
     private var countText: String {
-        movies.count == 1 ? "1 movie" : "\(movies.count) movies"
+        let count = filteredMovies.count
+        return count == 1 ? "1 movie" : "\(count) movies"
     }
 
     @ToolbarContentBuilder

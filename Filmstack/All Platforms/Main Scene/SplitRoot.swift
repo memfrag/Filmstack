@@ -19,15 +19,20 @@ struct SplitRoot: View {
     /// Selection is remembered per library section, so switching sections and
     /// returning preserves what was selected.
     @State private var selections: [MainRouting.Selectable: Movie] = [:]
+    @State private var filter: LibraryFilter = .all
 
     var body: some View {
         @Bindable var router = router
 
         NavigationSplitView(columnVisibility: $columnVisibility) {
-            Sidebar(selection: $router.activeSelectable)
+            Sidebar(selection: $router.activeSelectable, filter: $filter)
         } content: {
-            MovieListColumn(status: router.activeSelectable.movieStatus, selection: selectionBinding)
-                .id(router.activeSelectable)
+            MovieListColumn(
+                status: router.activeSelectable.movieStatus,
+                selection: selectionBinding,
+                filter: filter
+            )
+            .id(router.activeSelectable)
         } detail: {
             MovieDetailColumn(selection: selectionBinding)
                 .ignoresSafeArea(edges: .top)

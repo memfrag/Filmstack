@@ -12,10 +12,22 @@ import SwiftData
 struct Sidebar: View {
 
     @Binding var selection: MainRouting.Selectable
+    @Binding var filter: LibraryFilter
 
     @Query private var movies: [Movie]
 
     private let sections: [MainRouting.Selectable] = [.queue, .watched, .maybeLater]
+
+    /// Genres present anywhere in the library, sorted.
+    private var genres: [String] {
+        Set(movies.flatMap(\.genres)).sorted()
+    }
+
+    /// Sources present anywhere in the library, sorted.
+    private var sources: [String] {
+        Set(movies.compactMap { $0.source?.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }).sorted()
+    }
 
     var body: some View {
         List(selection: Binding(
@@ -33,6 +45,8 @@ struct Sidebar: View {
                 Text("Library")
                     .foregroundStyle(Palette.textSecondary)
             }
+
+            filtersSection
         }
         .scrollContentBackground(.hidden)
         .background(Palette.sidebar)
@@ -44,6 +58,60 @@ struct Sidebar: View {
             settingsButton
         }
         #endif
+    }
+
+    // MARK: - Filters
+
+    @ViewBuilder private var filtersSection: some View {
+        Section {
+            filterRow(.all, label: "All", systemImage: "square.stack.3d.up")
+
+            if !genres.isEmpty {
+                DisclosureGroup {
+                    ForEach(genres, id: \.self) { genre in
+                        filterRow(.genre(genre), label: genre)
+                    }
+                } label: {
+                    Label("By Genre", systemImage: "theatermasks")
+                }
+            }
+
+            if !sources.isEmpty {
+                DisclosureGroup {
+                    ForEach(sources, id: \.self) { source in
+                        filterRow(.source(source), label: source)
+                    }
+                } label: {
+                    Label("By Source", systemImage: "sparkles")
+                }
+            }
+        } header: {
+            Text("Filters")
+                .foregroundStyle(Palette.textSecondary)
+        }
+    }
+
+    private func filterRow(_ value: LibraryFilter, label: String, systemImage: String? = nil) -> some View {
+        Button {
+            filter = value
+        } label: {
+            HStack {
+                if let systemImage {
+                    Label(label, systemImage: systemImage)
+                } else {
+                    Text(label)
+                }
+                Spacer()
+                if filter == value {
+                    Image(systemName: "checkmark")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Palette.accent)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(filter == value ? Palette.textPrimary : Palette.textSecondary)
     }
 
     private func count(for status: MovieStatus) -> Int {
@@ -78,7 +146,7 @@ private extension Bundle {
 
 #Preview {
     NavigationSplitView {
-        Sidebar(selection: .constant(.queue))
+        Sidebar(selection: .constant(.queue), filter: .constant(.all))
     } detail: {
         Text("Detail")
     }
