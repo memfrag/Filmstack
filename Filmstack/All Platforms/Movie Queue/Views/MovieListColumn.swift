@@ -325,6 +325,7 @@ struct MovieListColumn: View {
                     )
                 }
             }
+            ToolbarSpacer(.fixed)
         }
         if status != .watched {
             ToolbarItem {
