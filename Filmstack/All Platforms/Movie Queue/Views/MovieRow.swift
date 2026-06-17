@@ -51,7 +51,9 @@ struct MovieRow: View {
 
             Spacer(minLength: 0)
 
-            if let rating = movie.tmdbRating {
+            if movie.isUpcoming {
+                UpcomingBadge()
+            } else if let rating = movie.tmdbRating {
                 RatingBadge(rating: rating)
                     .opacity(isSelected ? 1 : 0.9)
             }

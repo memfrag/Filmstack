@@ -69,6 +69,19 @@ extension View {
     }
 }
 
+/// A small yellow warning badge for movies that haven't premiered yet.
+struct UpcomingBadge: View {
+    var body: some View {
+        Image(systemName: "exclamationmark.triangle.fill")
+            .font(.caption2)
+            .foregroundStyle(.yellow)
+            .padding(5)
+            .background(.black.opacity(0.45), in: Circle())
+            .overlay { Circle().strokeBorder(.white.opacity(0.18)) }
+            .accessibilityLabel("Not yet released")
+    }
+}
+
 /// A small star-rating pill, e.g. for TMDB's community score on the hero.
 struct RatingBadge: View {
     /// Rating on a 0–10 scale.

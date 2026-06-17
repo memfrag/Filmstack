@@ -148,7 +148,9 @@ struct MovieDetailColumn: View {
 
             VStack(alignment: .leading, spacing: 8) {
 
-                if let rating = movie.tmdbRating {
+                if movie.isUpcoming {
+                    UpcomingBadge()
+                } else if let rating = movie.tmdbRating {
                     RatingBadge(rating: rating)
                 }
 

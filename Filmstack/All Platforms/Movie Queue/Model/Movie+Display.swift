@@ -49,4 +49,10 @@ extension Movie {
     var releaseDateText: String? {
         releaseDate?.formatted(date: .long, time: .omitted)
     }
+
+    /// Whether the movie's release date is in the future.
+    var isUpcoming: Bool {
+        guard let releaseDate else { return false }
+        return releaseDate > Date()
+    }
 }
