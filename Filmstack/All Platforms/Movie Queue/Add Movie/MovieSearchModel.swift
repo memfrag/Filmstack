@@ -68,8 +68,8 @@ final class MovieSearchModel {
         }
     }
 
-    func fetchDetails(for result: MovieSearchResult) async throws -> MovieDetails {
-        try await client.fetchMovieDetails(tmdbID: result.tmdbID)
+    func fetchDetails(for result: MovieSearchResult, region: String?) async throws -> MovieDetails {
+        try await client.fetchMovieDetails(tmdbID: result.tmdbID, region: region)
     }
 
     private static func message(for error: Error) -> String {

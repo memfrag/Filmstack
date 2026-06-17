@@ -45,7 +45,7 @@ final class MockMovieAPIClient: MovieAPIClient {
         return results.filter { $0.title.localizedCaseInsensitiveContains(trimmed) }
     }
 
-    func fetchMovieDetails(tmdbID: Int) async throws -> MovieDetails {
+    func fetchMovieDetails(tmdbID: Int, region: String?) async throws -> MovieDetails {
         let result = results.first { $0.tmdbID == tmdbID }
         return MovieDetails(
             tmdbID: tmdbID,

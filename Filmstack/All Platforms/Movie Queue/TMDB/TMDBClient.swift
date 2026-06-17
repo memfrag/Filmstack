@@ -51,20 +51,29 @@ final class TMDBClient: MovieAPIClient {
 
     // MARK: - Details
 
-    func fetchMovieDetails(tmdbID: Int) async throws -> MovieDetails {
+    func fetchMovieDetails(tmdbID: Int, region: String?) async throws -> MovieDetails {
         let data = try await get("movie/\(tmdbID)", queryItems: [
             URLQueryItem(name: "language", value: "en-US"),
-            URLQueryItem(name: "append_to_response", value: "credits")
+            URLQueryItem(name: "append_to_response", value: "credits,release_dates")
         ])
 
         let response = try decode(DetailsResponse.self, from: data)
-        let parsed = Self.parseReleaseDate(response.releaseDate)
+        let primary = Self.parseReleaseDate(response.releaseDate)
+
+        // Prefer a local release date for the given region, keeping the canonical
+        // (primary) year for display.
+        var effectiveDate = primary.date
+        if let regionString = response.releaseDates?.preferredReleaseString(region: region),
+           let regional = Self.parseReleaseDate(String(regionString.prefix(10))).date {
+            effectiveDate = regional
+        }
+
         return MovieDetails(
             tmdbID: response.id,
             title: response.title,
             originalTitle: response.originalTitle,
-            releaseDate: parsed.date,
-            releaseYear: parsed.year,
+            releaseDate: effectiveDate,
+            releaseYear: primary.year,
             overview: response.overview?.nilIfBlank,
             posterPath: response.posterPath,
             backdropPath: response.backdropPath,
@@ -200,6 +209,7 @@ private struct DetailsResponse: Decodable {
     let credits: Credits?
     let voteAverage: Double?
     let imdbID: String?
+    let releaseDates: ReleaseDates?
 
     struct Genre: Decodable {
         let name: String
@@ -213,6 +223,47 @@ private struct DetailsResponse: Decodable {
         case releaseDate = "release_date"
         case voteAverage = "vote_average"
         case imdbID = "imdb_id"
+        case releaseDates = "release_dates"
+    }
+}
+
+private struct ReleaseDates: Decodable {
+    let results: [CountryReleases]
+
+    struct CountryReleases: Decodable {
+        let iso31661: String
+        let releaseDates: [Release]
+
+        enum CodingKeys: String, CodingKey {
+            case iso31661 = "iso_3166_1"
+            case releaseDates = "release_dates"
+        }
+    }
+
+    struct Release: Decodable {
+        let type: Int
+        let releaseDate: String
+
+        enum CodingKeys: String, CodingKey {
+            case type
+            case releaseDate = "release_date"
+        }
+    }
+
+    /// The preferred release-date string for a region, by release-type priority:
+    /// theatrical → limited → premiere → digital → physical → TV, then earliest.
+    func preferredReleaseString(region: String?) -> String? {
+        guard let region,
+              let country = results.first(where: { $0.iso31661.caseInsensitiveCompare(region) == .orderedSame })
+        else { return nil }
+
+        let priority = [3, 2, 1, 4, 5, 6]
+        for type in priority {
+            if let release = country.releaseDates.first(where: { $0.type == type }) {
+                return release.releaseDate
+            }
+        }
+        return country.releaseDates.map(\.releaseDate).min()
     }
 }
 

@@ -36,6 +36,7 @@ struct SettingsWindow: Scene {
                 .tag(Tabs.about)
                 .frame(width: 460, height: 560)
         }
+        .environment(AppEnvironment.default.appSettings)
     }
 }
 

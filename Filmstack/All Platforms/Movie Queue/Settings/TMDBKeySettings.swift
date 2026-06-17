@@ -10,8 +10,18 @@ import SwiftUI
 struct TMDBKeySettings: View {
 
     @State private var model: TMDBKeySettingsModel
+    @Environment(AppSettings.self) private var appSettings
 
     private let tokenURL = URL(string: "https://www.themoviedb.org/settings/api")!
+
+    /// ISO 3166-1 country codes with localized names, sorted by name.
+    private let regions: [(code: String, name: String)] = Locale.Region.isoRegions
+        .filter { $0.identifier.count == 2 }
+        .compactMap { region in
+            guard let name = Locale.current.localizedString(forRegionCode: region.identifier) else { return nil }
+            return (region.identifier, name)
+        }
+        .sorted { $0.name < $1.name }
 
     init(model: TMDBKeySettingsModel = TMDBKeySettingsModel()) {
         _model = State(wrappedValue: model)
@@ -19,6 +29,7 @@ struct TMDBKeySettings: View {
 
     var body: some View {
         @Bindable var model = model
+        @Bindable var appSettings = appSettings
 
         Form {
             Section {
@@ -60,6 +71,19 @@ struct TMDBKeySettings: View {
                 .disabled(!model.isConfigured || model.isBusy)
             }
 
+            Section {
+                Picker("Region", selection: $appSettings.releaseRegion) {
+                    ForEach(regions, id: \.code) { region in
+                        Text(region.name).tag(region.code)
+                    }
+                }
+            } header: {
+                Text("Release Dates")
+            } footer: {
+                Text("Used to show the release date for your region when available, "
+                     + "falling back to TMDB's primary release date.")
+            }
+
             if let feedback = model.feedback {
                 Section {
                     Label(feedback.text, systemImage: feedback.kind == .success
@@ -97,6 +121,7 @@ struct TMDBKeySettings: View {
             client: MockMovieAPIClient()
         ))
     }
+    .environment(AppSettings.mock())
     .frame(width: 480, height: 420)
 }
 
@@ -107,5 +132,6 @@ struct TMDBKeySettings: View {
             client: MockMovieAPIClient()
         ))
     }
+    .environment(AppSettings.mock())
     .frame(width: 480, height: 420)
 }

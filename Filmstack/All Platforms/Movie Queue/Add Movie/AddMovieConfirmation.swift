@@ -17,6 +17,7 @@ struct AddMovieConfirmation: View {
     let onAdded: () -> Void
 
     @Environment(\.modelContext) private var context
+    @Environment(AppSettings.self) private var appSettings
 
     enum Phase {
         case loading
@@ -164,7 +165,7 @@ struct AddMovieConfirmation: View {
     private func load() async {
         phase = .loading
         do {
-            let details = try await model.fetchDetails(for: result)
+            let details = try await model.fetchDetails(for: result, region: appSettings.releaseRegion)
             phase = .loaded(details)
         } catch {
             phase = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)

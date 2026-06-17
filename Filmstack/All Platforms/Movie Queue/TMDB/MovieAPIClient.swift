@@ -8,7 +8,9 @@ import Foundation
 /// a protocol rather than the concrete network client.
 protocol MovieAPIClient: Sendable {
     func searchMovies(query: String) async throws -> [MovieSearchResult]
-    func fetchMovieDetails(tmdbID: Int) async throws -> MovieDetails
+    /// Fetches full details. `region` is an ISO 3166-1 code used to prefer a local
+    /// release date; pass `nil` to use TMDB's primary release date.
+    func fetchMovieDetails(tmdbID: Int, region: String?) async throws -> MovieDetails
     func posterURL(path: String, size: PosterSize) -> URL?
     func validateToken(_ token: String) async throws -> Bool
 }
