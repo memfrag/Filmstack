@@ -71,26 +71,9 @@ struct AboutScreen: View {
                 .font(.caption.bold())
                 .foregroundStyle(Palette.accentBright)
 
-            HStack(spacing: 12) {
-                Text("TMDB")
-                    .font(.system(size: 22, weight: .heavy))
-                    .foregroundStyle(.white)
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 14)
-                    .background(
-                        LinearGradient(
-                            colors: [Color(red: 0.0, green: 0.71, blue: 0.84),
-                                     Color(red: 0.13, green: 0.85, blue: 0.71)],
-                            startPoint: .leading, endPoint: .trailing
-                        ),
-                        in: RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    )
-
-                Text("The Movie Database")
-                    .font(.callout.weight(.medium))
-                    .foregroundStyle(Palette.textPrimary)
-                Spacer()
-            }
+            tmdbLogo
+                .frame(height: 26)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             Text(tmdbAttribution)
                 .font(.footnote)
@@ -100,6 +83,43 @@ struct AboutScreen: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(18)
         .filmCard()
+    }
+
+    /// The official TMDB logo if bundled, otherwise a styled text fallback.
+    @ViewBuilder private var tmdbLogo: some View {
+        if let image = bundledTMDBLogo {
+            image
+                .resizable()
+                .scaledToFit()
+                .accessibilityLabel("The Movie Database")
+        } else {
+            HStack(spacing: 12) {
+                Text("TMDB")
+                    .font(.system(size: 20, weight: .heavy))
+                    .foregroundStyle(.white)
+                    .padding(.vertical, 7)
+                    .padding(.horizontal, 13)
+                    .background(
+                        LinearGradient(
+                            colors: [Color(red: 0.0, green: 0.71, blue: 0.84),
+                                     Color(red: 0.13, green: 0.85, blue: 0.71)],
+                            startPoint: .leading, endPoint: .trailing
+                        ),
+                        in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    )
+                Text("The Movie Database")
+                    .font(.callout.weight(.medium))
+                    .foregroundStyle(Palette.textPrimary)
+            }
+        }
+    }
+
+    private var bundledTMDBLogo: Image? {
+        #if os(macOS)
+        return NSImage(named: "TMDBLogo").map { Image(nsImage: $0) }
+        #else
+        return UIImage(named: "TMDBLogo").map { Image(uiImage: $0) }
+        #endif
     }
 
     private var privacyNote: some View {

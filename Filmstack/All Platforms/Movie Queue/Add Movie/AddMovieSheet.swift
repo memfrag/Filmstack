@@ -23,6 +23,7 @@ struct AddMovieSheet: View {
                 searchField
                 Divider()
                 content
+                    .frame(maxHeight: .infinity)
             }
             .navigationTitle("Add Movie")
             #if os(iOS)

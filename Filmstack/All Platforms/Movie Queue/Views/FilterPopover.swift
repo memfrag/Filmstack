@@ -10,6 +10,7 @@ struct FilterPopover: View {
     @Binding var filter: LibraryFilter
     let genres: [String]
     let sources: [String]
+    var locations: [String] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -33,11 +34,20 @@ struct FilterPopover: View {
                             toggle: { filter.toggleSource($0) }
                         )
                     }
+                    if !locations.isEmpty {
+                        group(
+                            "Where to Watch",
+                            items: locations,
+                            isOn: { filter.locations.contains($0) },
+                            toggle: { filter.toggleLocation($0) }
+                        )
+                    }
                 }
                 .padding(16)
             }
         }
         .frame(width: 250, height: 340)
+        .presentationCompactAdaptation(.popover)
     }
 
     private var header: some View {
@@ -88,6 +98,34 @@ struct FilterPopover: View {
                 .buttonStyle(.plain)
             }
         }
+    }
+}
+
+/// A removable chip representing one active filter.
+struct FilterChip: View {
+    let label: String
+    var systemImage: String?
+    let onRemove: () -> Void
+
+    var body: some View {
+        Button(action: onRemove) {
+            HStack(spacing: 5) {
+                if let systemImage {
+                    Image(systemName: systemImage).font(.caption2)
+                }
+                Text(label)
+                    .font(.caption.weight(.medium))
+                Image(systemName: "xmark")
+                    .font(.caption2.weight(.bold))
+            }
+            .foregroundStyle(.white)
+            .padding(.vertical, 5)
+            .padding(.horizontal, 10)
+            .background(Palette.accent.opacity(0.85), in: Capsule())
+            .overlay { Capsule().strokeBorder(.white.opacity(0.15)) }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Remove \(label) filter")
     }
 }
 

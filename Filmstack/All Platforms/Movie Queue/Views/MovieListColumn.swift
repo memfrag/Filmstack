@@ -65,9 +65,22 @@ struct MovieListColumn: View {
             .filter { !$0.isEmpty }).sorted()
     }
 
+    /// Streaming locations present in this section, sorted.
+    private var availableLocations: [String] {
+        Set(movies.compactMap { $0.streamingLocation?.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }).sorted()
+    }
+
+    private var hasFilters: Bool {
+        !availableGenres.isEmpty || !availableSources.isEmpty || !availableLocations.isEmpty
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             header
+            if filter.isActive {
+                filterChips
+            }
             if movies.isEmpty {
                 emptyState
             } else if filteredMovies.isEmpty {
@@ -112,6 +125,39 @@ struct MovieListColumn: View {
         .padding(.horizontal, 22)
         .padding(.top, 16)
         .padding(.bottom, 8)
+    }
+
+    // MARK: - Filter chips
+
+    private var filterChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(filter.genres.sorted(), id: \.self) { genre in
+                    FilterChip(label: genre, systemImage: "theatermasks") {
+                        filter.toggleGenre(genre)
+                    }
+                }
+                ForEach(filter.sources.sorted(), id: \.self) { source in
+                    FilterChip(label: source, systemImage: "sparkles") {
+                        filter.toggleSource(source)
+                    }
+                }
+                ForEach(filter.locations.sorted(), id: \.self) { location in
+                    FilterChip(label: location, systemImage: "play.tv") {
+                        filter.toggleLocation(location)
+                    }
+                }
+                if filter.activeCount > 1 {
+                    Button("Clear All") { filter.clear() }
+                        .font(.caption.weight(.semibold))
+                        .buttonStyle(.plain)
+                        .foregroundStyle(Palette.textSecondary)
+                        .padding(.leading, 2)
+                }
+            }
+            .padding(.horizontal, 22)
+            .padding(.bottom, 10)
+        }
     }
 
     // MARK: - List
@@ -262,15 +308,18 @@ struct MovieListColumn: View {
     // MARK: - Empty state
 
     private var emptyState: some View {
-        ContentUnavailableView {
-            Label(emptyTitle, systemImage: status.systemImage)
-        } description: {
-            Text(emptyMessage)
-        } actions: {
-            if status != .watched {
-                Button("Add Movie") { showingAddSheet = true }
+        VStack {
+            ContentUnavailableView {
+                Label(emptyTitle, systemImage: status.systemImage)
+            } description: {
+                Text(emptyMessage)
+            } actions: {
+                if status != .watched {
+                    Button("Add Movie") { showingAddSheet = true }
+                }
             }
         }
+        .frame(maxHeight: .infinity)
     }
 
     private var emptyTitle: String {
@@ -308,7 +357,7 @@ struct MovieListColumn: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        if !availableGenres.isEmpty || !availableSources.isEmpty {
+        if hasFilters {
             ToolbarItem {
                 Button {
                     showingFilterPopover = true
@@ -321,7 +370,8 @@ struct MovieListColumn: View {
                     FilterPopover(
                         filter: $filter,
                         genres: availableGenres,
-                        sources: availableSources
+                        sources: availableSources,
+                        locations: availableLocations
                     )
                 }
             }
