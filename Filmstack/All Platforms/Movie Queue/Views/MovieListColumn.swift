@@ -12,7 +12,6 @@ struct MovieListColumn: View {
 
     let status: MovieStatus
     @Binding var selection: Movie?
-    let filter: LibraryFilter
 
     @Environment(\.modelContext) private var context
     @Environment(\.openURL) private var openURL
@@ -20,14 +19,15 @@ struct MovieListColumn: View {
 
     @State private var searchText = ""
     @State private var showingAddSheet = false
+    @State private var filter = LibraryFilter()
+    @State private var showingFilterPopover = false
     #if os(iOS)
     @State private var showingSettings = false
     #endif
 
-    init(status: MovieStatus, selection: Binding<Movie?>, filter: LibraryFilter = .all) {
+    init(status: MovieStatus, selection: Binding<Movie?>) {
         self.status = status
         self._selection = selection
-        self.filter = filter
 
         let raw = status.rawValue
         let sort: [SortDescriptor<Movie>]
@@ -52,6 +52,17 @@ struct MovieListColumn: View {
             result = result.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
         }
         return result
+    }
+
+    /// Genres present in this section, sorted — the available genre filters.
+    private var availableGenres: [String] {
+        Set(movies.flatMap(\.genres)).sorted()
+    }
+
+    /// Sources present in this section, sorted — the available source filters.
+    private var availableSources: [String] {
+        Set(movies.compactMap { $0.source?.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }).sorted()
     }
 
     var body: some View {
@@ -297,6 +308,24 @@ struct MovieListColumn: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+        if !availableGenres.isEmpty || !availableSources.isEmpty {
+            ToolbarItem {
+                Button {
+                    showingFilterPopover = true
+                } label: {
+                    Label("Filter", systemImage: filter.isActive
+                          ? "line.3.horizontal.decrease.circle.fill"
+                          : "line.3.horizontal.decrease.circle")
+                }
+                .popover(isPresented: $showingFilterPopover, arrowEdge: .bottom) {
+                    FilterPopover(
+                        filter: $filter,
+                        genres: availableGenres,
+                        sources: availableSources
+                    )
+                }
+            }
+        }
         if status != .watched {
             ToolbarItem {
                 Button {
