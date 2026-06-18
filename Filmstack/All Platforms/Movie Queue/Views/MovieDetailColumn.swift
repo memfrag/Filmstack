@@ -237,7 +237,7 @@ struct MovieDetailColumn: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
                             ForEach(movie.watchProviders, id: \.name) { provider in
-                                providerChip(provider)
+                                providerChip(provider, link: movie.justWatchURL)
                             }
                         }
                     }
@@ -256,27 +256,35 @@ struct MovieDetailColumn: View {
         }
     }
 
-    private func providerChip(_ provider: WatchProvider) -> some View {
-        HStack(spacing: 7) {
-            if let url = TMDBImage.logoURL(path: provider.logoPath) {
-                LazyImage(url: url) { state in
-                    if let image = state.image {
-                        image.resizable().scaledToFit()
-                    } else {
-                        Color.clear
+    private func providerChip(_ provider: WatchProvider, link: URL?) -> some View {
+        Button {
+            if let link { openURL(link) }
+        } label: {
+            HStack(spacing: 7) {
+                if let url = TMDBImage.logoURL(path: provider.logoPath) {
+                    LazyImage(url: url) { state in
+                        if let image = state.image {
+                            image.resizable().scaledToFit()
+                        } else {
+                            Color.clear
+                        }
                     }
+                    .frame(width: 22, height: 22)
+                    .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                 }
-                .frame(width: 22, height: 22)
-                .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                Text(provider.name)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(Palette.textPrimary)
             }
-            Text(provider.name)
-                .font(.caption.weight(.medium))
-                .foregroundStyle(Palette.textPrimary)
+            .padding(.vertical, 6)
+            .padding(.horizontal, 11)
+            .background(Palette.card, in: Capsule())
+            .overlay { Capsule().strokeBorder(Palette.hairline) }
+            .contentShape(Capsule())
         }
-        .padding(.vertical, 6)
-        .padding(.horizontal, 11)
-        .background(Palette.card, in: Capsule())
-        .overlay { Capsule().strokeBorder(Palette.hairline) }
+        .buttonStyle(.plain)
+        .disabled(link == nil)
+        .help(link == nil ? "" : "Open on JustWatch")
     }
 
     @ViewBuilder
