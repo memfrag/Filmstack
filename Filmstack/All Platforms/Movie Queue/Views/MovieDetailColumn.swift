@@ -228,6 +228,7 @@ struct MovieDetailColumn: View {
                         .font(.caption.bold())
                         .foregroundStyle(Palette.accentBright)
                     Spacer()
+                    justWatchAttribution(for: movie)
                     if movie.tmdbID != nil {
                         Button {
                             refreshWatchProviders(for: movie)
@@ -249,7 +250,6 @@ struct MovieDetailColumn: View {
                     ForEach(WatchProvider.Access.allCases, id: \.self) { access in
                         providerGroup(access, in: movie)
                     }
-                    justWatchAttribution(for: movie)
                 } else if hasManual {
                     Text(movie.streamingLocation ?? "")
                         .font(.body)
@@ -319,11 +319,11 @@ struct MovieDetailColumn: View {
         if let link = movie.justWatchURL {
             Link("Powered by JustWatch", destination: link)
                 .font(.caption2)
-                .foregroundStyle(Palette.textSecondary)
+                .foregroundStyle(Palette.textSecondary.opacity(0.3))
         } else {
             Text("Powered by JustWatch")
                 .font(.caption2)
-                .foregroundStyle(Palette.textSecondary)
+                .foregroundStyle(Palette.textSecondary.opacity(0.3))
         }
     }
 
