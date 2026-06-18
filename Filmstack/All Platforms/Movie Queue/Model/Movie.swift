@@ -32,6 +32,10 @@ final class Movie {
     /// TMDB community rating (0–10).
     var tmdbRating: Double?
 
+    // Streaming availability (TMDB watch/providers, powered by JustWatch)
+    var watchProviders: [WatchProvider] = []
+    var justWatchURLString: String?
+
     // Optional external links
     var imdbID: String?
     var letterboxdURLString: String?
@@ -66,6 +70,8 @@ final class Movie {
         director: String? = nil,
         cast: [String] = [],
         tmdbRating: Double? = nil,
+        watchProviders: [WatchProvider] = [],
+        justWatchURL: URL? = nil,
         imdbID: String? = nil,
         letterboxdURL: URL? = nil,
         userNotes: String = "",
@@ -92,6 +98,8 @@ final class Movie {
         self.director = director
         self.cast = cast
         self.tmdbRating = tmdbRating
+        self.watchProviders = watchProviders
+        self.justWatchURLString = justWatchURL?.absoluteString
         self.imdbID = imdbID
         self.letterboxdURLString = letterboxdURL?.absoluteString
         self.userNotes = userNotes
@@ -119,5 +127,10 @@ extension Movie {
     var letterboxdURL: URL? {
         get { letterboxdURLString.flatMap(URL.init(string:)) }
         set { letterboxdURLString = newValue?.absoluteString }
+    }
+
+    var justWatchURL: URL? {
+        get { justWatchURLString.flatMap(URL.init(string:)) }
+        set { justWatchURLString = newValue?.absoluteString }
     }
 }

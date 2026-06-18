@@ -48,4 +48,11 @@ enum TMDBImage {
         let normalized = path.hasPrefix("/") ? path : "/\(path)"
         return URL(string: "\(baseURLString)\(width)\(normalized)")
     }
+
+    /// Builds a provider logo URL (watch providers).
+    static func logoURL(path: String?, width: String = "w92") -> URL? {
+        guard let path, !path.isEmpty else { return nil }
+        let normalized = path.hasPrefix("/") ? path : "/\(path)"
+        return URL(string: "\(baseURLString)\(width)\(normalized)")
+    }
 }

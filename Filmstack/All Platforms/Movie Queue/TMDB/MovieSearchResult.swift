@@ -35,6 +35,10 @@ struct MovieDetails: Codable, Sendable {
     /// TMDB community rating (0–10).
     var tmdbRating: Double?
     var imdbID: String?
+    /// Streaming providers for the requested region (JustWatch via TMDB).
+    var watchProviders: [WatchProvider]
+    /// JustWatch availability page for the requested region.
+    var watchLink: URL?
 
     init(
         tmdbID: Int,
@@ -50,7 +54,9 @@ struct MovieDetails: Codable, Sendable {
         director: String? = nil,
         cast: [String] = [],
         tmdbRating: Double? = nil,
-        imdbID: String? = nil
+        imdbID: String? = nil,
+        watchProviders: [WatchProvider] = [],
+        watchLink: URL? = nil
     ) {
         self.tmdbID = tmdbID
         self.title = title
@@ -66,6 +72,8 @@ struct MovieDetails: Codable, Sendable {
         self.cast = cast
         self.tmdbRating = tmdbRating
         self.imdbID = imdbID
+        self.watchProviders = watchProviders
+        self.watchLink = watchLink
     }
 }
 
@@ -93,6 +101,8 @@ extension Movie {
             director: details.director,
             cast: details.cast,
             tmdbRating: details.tmdbRating,
+            watchProviders: details.watchProviders,
+            justWatchURL: details.watchLink,
             imdbID: details.imdbID,
             userNotes: userNotes,
             source: source,

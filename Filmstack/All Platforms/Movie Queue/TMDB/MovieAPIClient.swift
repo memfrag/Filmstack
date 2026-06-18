@@ -11,6 +11,8 @@ protocol MovieAPIClient: Sendable {
     /// Fetches full details. `region` is an ISO 3166-1 code used to prefer a local
     /// release date; pass `nil` to use TMDB's primary release date.
     func fetchMovieDetails(tmdbID: Int, region: String?) async throws -> MovieDetails
+    /// Re-fetches just the streaming availability for a region (it changes over time).
+    func fetchWatchProviders(tmdbID: Int, region: String?) async throws -> WatchAvailability
     func posterURL(path: String, size: PosterSize) -> URL?
     func validateToken(_ token: String) async throws -> Bool
 }

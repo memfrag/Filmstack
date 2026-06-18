@@ -54,11 +54,12 @@ final class TMDBClient: MovieAPIClient {
     func fetchMovieDetails(tmdbID: Int, region: String?) async throws -> MovieDetails {
         let data = try await get("movie/\(tmdbID)", queryItems: [
             URLQueryItem(name: "language", value: "en-US"),
-            URLQueryItem(name: "append_to_response", value: "credits,release_dates")
+            URLQueryItem(name: "append_to_response", value: "credits,release_dates,watch/providers")
         ])
 
         let response = try decode(DetailsResponse.self, from: data)
         let primary = Self.parseReleaseDate(response.releaseDate)
+        let watch = response.watchProviders?.streaming(forRegion: region)
 
         // Prefer a local release date for the given region, keeping the canonical
         // (primary) year for display.
@@ -82,12 +83,23 @@ final class TMDBClient: MovieAPIClient {
             director: response.credits?.directors,
             cast: response.credits?.topBilledCast(limit: Self.castLimit) ?? [],
             tmdbRating: response.voteAverage.flatMap { $0 > 0 ? $0 : nil },
-            imdbID: response.imdbID?.nilIfBlank
+            imdbID: response.imdbID?.nilIfBlank,
+            watchProviders: watch?.providers ?? [],
+            watchLink: watch?.link
         )
     }
 
     /// Number of top-billed cast members to keep.
     private static let castLimit = 8
+
+    // MARK: - Watch providers
+
+    func fetchWatchProviders(tmdbID: Int, region: String?) async throws -> WatchAvailability {
+        let data = try await get("movie/\(tmdbID)/watch/providers", queryItems: [])
+        let response = try decode(WatchProvidersResponse.self, from: data)
+        let resolved = response.streaming(forRegion: region)
+        return WatchAvailability(providers: resolved.providers, link: resolved.link)
+    }
 
     // MARK: - Posters
 
@@ -210,6 +222,7 @@ private struct DetailsResponse: Decodable {
     let voteAverage: Double?
     let imdbID: String?
     let releaseDates: ReleaseDates?
+    let watchProviders: WatchProvidersResponse?
 
     struct Genre: Decodable {
         let name: String
@@ -224,6 +237,48 @@ private struct DetailsResponse: Decodable {
         case voteAverage = "vote_average"
         case imdbID = "imdb_id"
         case releaseDates = "release_dates"
+        case watchProviders = "watch/providers"
+    }
+}
+
+private struct WatchProvidersResponse: Decodable {
+    let results: [String: RegionProviders]
+
+    struct RegionProviders: Decodable {
+        let link: String?
+        let flatrate: [Provider]?
+        let free: [Provider]?
+        let ads: [Provider]?
+    }
+
+    struct Provider: Decodable {
+        let providerName: String
+        let logoPath: String?
+        let displayPriority: Int?
+
+        enum CodingKeys: String, CodingKey {
+            case providerName = "provider_name"
+            case logoPath = "logo_path"
+            case displayPriority = "display_priority"
+        }
+    }
+
+    /// Streaming providers (subscription, free, ad-supported) for a region, with
+    /// the region's JustWatch link. Rent/buy are intentionally excluded.
+    func streaming(forRegion region: String?) -> (link: URL?, providers: [WatchProvider]) {
+        guard let region,
+              let regionProviders = results[region.uppercased()] ?? results[region]
+        else { return (nil, []) }
+
+        var seen = Set<String>()
+        var providers: [WatchProvider] = []
+        for bucket in [regionProviders.flatrate, regionProviders.free, regionProviders.ads] {
+            let sorted = (bucket ?? []).sorted { ($0.displayPriority ?? .max) < ($1.displayPriority ?? .max) }
+            for provider in sorted where seen.insert(provider.providerName).inserted {
+                providers.append(WatchProvider(name: provider.providerName, logoPath: provider.logoPath))
+            }
+        }
+        return (regionProviders.link.flatMap(URL.init(string:)), providers)
     }
 }
 

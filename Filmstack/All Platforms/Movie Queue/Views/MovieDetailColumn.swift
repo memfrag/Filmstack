@@ -14,9 +14,11 @@ struct MovieDetailColumn: View {
 
     @Environment(\.modelContext) private var context
     @Environment(\.openURL) private var openURL
+    @Environment(AppSettings.self) private var appSettings
 
     @State private var showingEditSheet = false
     @State private var showingDeleteConfirmation = false
+    @State private var isRefreshingWatch = false
 
     private let heroHeight: CGFloat = 220
 
@@ -82,9 +84,7 @@ struct MovieDetailColumn: View {
                         if !movie.userNotes.isEmpty {
                             section("My Notes") { Text(movie.userNotes) }
                         }
-                        if let location = movie.streamingLocation, !location.isEmpty {
-                            section("Where to Watch") { Text(location) }
-                        }
+                        whereToWatchSection(for: movie)
                         if let source = movie.source, !source.isEmpty {
                             section("Heard About It From") { Text(source) }
                         }
@@ -204,6 +204,112 @@ struct MovieDetailColumn: View {
         }
     }
 
+    // MARK: - Where to watch
+
+    @ViewBuilder
+    private func whereToWatchSection(for movie: Movie) -> some View {
+        let hasManual = !(movie.streamingLocation ?? "").isEmpty
+        if movie.tmdbID != nil || hasManual || !movie.watchProviders.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("WHERE TO WATCH")
+                        .font(.caption.bold())
+                        .foregroundStyle(Palette.accentBright)
+                    Spacer()
+                    if movie.tmdbID != nil {
+                        Button {
+                            refreshWatchProviders(for: movie)
+                        } label: {
+                            if isRefreshingWatch {
+                                ProgressView().controlSize(.small)
+                            } else {
+                                Image(systemName: "arrow.clockwise")
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(Palette.textSecondary)
+                        .disabled(isRefreshingWatch)
+                        .help("Refresh availability")
+                    }
+                }
+
+                if !movie.watchProviders.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(movie.watchProviders, id: \.name) { provider in
+                                providerChip(provider)
+                            }
+                        }
+                    }
+                    justWatchAttribution(for: movie)
+                } else if hasManual {
+                    Text(movie.streamingLocation ?? "")
+                        .font(.body)
+                        .foregroundStyle(Palette.textPrimary.opacity(0.92))
+                } else {
+                    Text("No streaming info yet — tap refresh to check availability.")
+                        .font(.callout)
+                        .foregroundStyle(Palette.textSecondary)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func providerChip(_ provider: WatchProvider) -> some View {
+        HStack(spacing: 7) {
+            if let url = TMDBImage.logoURL(path: provider.logoPath) {
+                LazyImage(url: url) { state in
+                    if let image = state.image {
+                        image.resizable().scaledToFit()
+                    } else {
+                        Color.clear
+                    }
+                }
+                .frame(width: 22, height: 22)
+                .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+            }
+            Text(provider.name)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(Palette.textPrimary)
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 11)
+        .background(Palette.card, in: Capsule())
+        .overlay { Capsule().strokeBorder(Palette.hairline) }
+    }
+
+    @ViewBuilder
+    private func justWatchAttribution(for movie: Movie) -> some View {
+        if let link = movie.justWatchURL {
+            Link("Powered by JustWatch", destination: link)
+                .font(.caption2)
+                .foregroundStyle(Palette.textSecondary)
+        } else {
+            Text("Powered by JustWatch")
+                .font(.caption2)
+                .foregroundStyle(Palette.textSecondary)
+        }
+    }
+
+    private func refreshWatchProviders(for movie: Movie) {
+        guard let tmdbID = movie.tmdbID, !isRefreshingWatch else { return }
+        isRefreshingWatch = true
+        Task {
+            defer { isRefreshingWatch = false }
+            do {
+                let availability = try await AppEnvironment.default.movieAPIClient
+                    .fetchWatchProviders(tmdbID: tmdbID, region: appSettings.releaseRegion)
+                movie.watchProviders = availability.providers
+                movie.justWatchURL = availability.link
+                movie.updatedAt = Date()
+                try? context.save()
+            } catch {
+                // Availability refresh is best-effort; leave existing data in place.
+            }
+        }
+    }
+
     private func section(_ title: String, @ViewBuilder content: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 7) {
             Text(title.uppercased())
@@ -277,6 +383,7 @@ struct MovieDetailColumn: View {
 
 #Preview {
     MovieDetailColumn(selection: .constant(SampleMovies.makeMovies().first))
+        .appEnvironment(.mock())
         .modelContainer(MovieStore.previewContainer)
         .frame(width: 420, height: 760)
 }
