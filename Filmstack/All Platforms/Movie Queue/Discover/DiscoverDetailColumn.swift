@@ -99,8 +99,8 @@ struct DiscoverDetailColumn: View {
     private var posterAndTitle: some View {
         HStack(alignment: .bottom, spacing: 18) {
             poster
-                .frame(width: 132)
                 .aspectRatio(2.0 / 3.0, contentMode: .fit)
+                .frame(width: 132)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .shadow(color: .black.opacity(0.6), radius: 14, y: 8)
 
