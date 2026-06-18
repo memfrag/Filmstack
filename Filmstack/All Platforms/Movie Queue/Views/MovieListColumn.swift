@@ -62,8 +62,8 @@ struct MovieListColumn: View {
             // Any non-watched movie; future-dated ones are kept in `sectionMovies`.
             predicate = #Predicate { $0.statusRawValue != watchedRaw }
             sort = [SortDescriptor(\.releaseDate, order: .forward)]
-        case .discover:
-            // Discover sections render `DiscoverColumn`, never this view.
+        case .discover, .letterboxd:
+            // External-browse sections use their own columns, never this view.
             predicate = #Predicate { _ in false }
             sort = []
         }
@@ -430,7 +430,7 @@ struct MovieListColumn: View {
         case .upcoming: "Nothing upcoming"
         case .watched: "Nothing watched yet"
         case .maybeLater: "Nothing on the maybe list"
-        case .discover: ""
+        case .discover, .letterboxd: ""
         }
     }
 
@@ -440,7 +440,7 @@ struct MovieListColumn: View {
         case .upcoming: "Movies in your library with a future release date show up here."
         case .watched: "Movies you mark as watched will show up here."
         case .maybeLater: "Park movies here when you're not sure yet."
-        case .discover: ""
+        case .discover, .letterboxd: ""
         }
     }
 

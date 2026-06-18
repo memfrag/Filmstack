@@ -42,6 +42,17 @@ struct Sidebar: View {
                 Text("Discover")
                     .foregroundStyle(Palette.textSecondary)
             }
+
+            Section {
+                ForEach(MainRouting.Selectable.miscCases, id: \.self) { section in
+                    NavigationLink(value: section) {
+                        Label(section.title, systemImage: section.systemImage)
+                    }
+                }
+            } header: {
+                Text("Miscellaneous")
+                    .foregroundStyle(Palette.textSecondary)
+            }
         }
         .scrollContentBackground(.hidden)
         .background(Palette.sidebar)

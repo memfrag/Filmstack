@@ -28,6 +28,26 @@ struct PhoneTabRoot: View {
             Tab("Discover", systemImage: "sparkles", value: .discover(.nowPlaying)) {
                 DiscoverTabStack()
             }
+            Tab("Letterboxd", systemImage: "film.stack", value: .letterboxd) {
+                LetterboxdTabStack()
+            }
+        }
+    }
+}
+
+/// iPhone Letterboxd tab: a navigation stack pushing detail on selection.
+private struct LetterboxdTabStack: View {
+
+    @State private var selection: MovieSearchResult?
+
+    var body: some View {
+        NavigationStack {
+            LetterboxdColumn(selection: $selection)
+                .navigationDestination(item: $selection) { result in
+                    DiscoverDetailColumn(result: result)
+                        .navigationTitle(result.title)
+                        .navigationBarTitleDisplayMode(.inline)
+                }
         }
     }
 }

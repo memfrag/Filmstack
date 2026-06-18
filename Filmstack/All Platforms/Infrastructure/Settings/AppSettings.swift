@@ -26,6 +26,9 @@ import KeyValueStore
         /// The ISO 3166-1 region used to resolve release dates.
         case releaseRegion
 
+        /// The user's Letterboxd username (for the diary RSS feed).
+        case letterboxdUsername
+
         // <-- (1 / 3) Add key for new property here
     }
 
@@ -51,6 +54,13 @@ import KeyValueStore
         Locale.current.region?.identifier ?? "US"
     }
 
+    /// The user's Letterboxd username, used to load their diary RSS feed.
+    public var letterboxdUsername: String {
+        didSet {
+            store.save(letterboxdUsername, for: .letterboxdUsername)
+        }
+    }
+
     // <-- (2 / 3) Add property for new property here
 
     // MARK: Setup
@@ -68,6 +78,7 @@ import KeyValueStore
         self.store = store ?? .defaultStore
         colorScheme = self.store.load(.colorScheme, default: .system)
         releaseRegion = self.store.load(.releaseRegion, default: AppSettings.defaultRegion)
+        letterboxdUsername = self.store.load(.letterboxdUsername, default: "")
 
         // <-- (3 / 3) Add initializer for new property here.
     }

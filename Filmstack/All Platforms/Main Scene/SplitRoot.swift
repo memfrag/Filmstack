@@ -30,6 +30,8 @@ struct SplitRoot: View {
             Group {
                 if let list = router.activeSelectable.discoverList {
                     DiscoverColumn(list: list, selection: $discoverSelection)
+                } else if router.activeSelectable == .letterboxd {
+                    LetterboxdColumn(selection: $discoverSelection)
                 } else {
                     MovieListColumn(
                         section: router.activeSelectable,
@@ -47,7 +49,7 @@ struct SplitRoot: View {
     }
 
     @ViewBuilder private var detailColumn: some View {
-        if router.activeSelectable.discoverList != nil {
+        if router.activeSelectable.isExternalBrowse {
             if let result = discoverSelection {
                 DiscoverDetailColumn(result: result)
             } else {

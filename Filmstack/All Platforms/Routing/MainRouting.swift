@@ -16,13 +16,16 @@ struct MainRouting: Routing {
         case watched
         case maybeLater
         case discover(DiscoverList)
+        case letterboxd
 
         /// Library sections.
         static let libraryCases: [Selectable] = [.queue, .upcoming, .watched, .maybeLater]
         /// Discover sections.
         static let discoverCases: [Selectable] = DiscoverList.allCases.map { .discover($0) }
+        /// Miscellaneous sections.
+        static let miscCases: [Selectable] = [.letterboxd]
 
-        static var allCases: [Selectable] { libraryCases + discoverCases }
+        static var allCases: [Selectable] { libraryCases + discoverCases + miscCases }
 
         var title: String {
             switch self {
@@ -31,6 +34,7 @@ struct MainRouting: Routing {
             case .watched: "Watched"
             case .maybeLater: "Maybe Later"
             case .discover(let list): list.title
+            case .letterboxd: "Letterboxd"
             }
         }
 
@@ -41,17 +45,18 @@ struct MainRouting: Routing {
             case .watched: "checkmark.circle"
             case .maybeLater: "clock"
             case .discover(let list): list.systemImage
+            case .letterboxd: "film.stack"
             }
         }
 
         /// The movie status this section maps to, or `nil` for sections that
-        /// don't map to a single status (Upcoming, Discover).
+        /// don't map to a single status (Upcoming, Discover, Letterboxd).
         var status: MovieStatus? {
             switch self {
             case .queue: .queued
             case .watched: .watched
             case .maybeLater: .maybeLater
-            case .upcoming, .discover: nil
+            case .upcoming, .discover, .letterboxd: nil
             }
         }
 
@@ -61,7 +66,7 @@ struct MainRouting: Routing {
             switch self {
             case .queue, .upcoming: .queued
             case .maybeLater: .maybeLater
-            case .watched, .discover: nil
+            case .watched, .discover, .letterboxd: nil
             }
         }
 
@@ -72,6 +77,13 @@ struct MainRouting: Routing {
         var discoverList: DiscoverList? {
             if case .discover(let list) = self { return list }
             return nil
+        }
+
+        /// Whether this section browses external movies (Discover, Letterboxd)
+        /// that drive the shared `DiscoverDetailColumn`.
+        var isExternalBrowse: Bool {
+            if case .discover = self { return true }
+            return self == .letterboxd
         }
     }
 
