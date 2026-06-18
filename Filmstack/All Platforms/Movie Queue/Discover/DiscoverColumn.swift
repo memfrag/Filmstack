@@ -3,6 +3,7 @@
 //
 
 import SwiftUI
+import SwiftData
 import NukeUI
 
 /// Browses a TMDB Discover list (now playing / popular / top rated / upcoming) as
@@ -13,9 +14,15 @@ struct DiscoverColumn: View {
     @Binding var selection: MovieSearchResult?
 
     @Environment(AppSettings.self) private var appSettings
+    @Query private var libraryMovies: [Movie]
     private let store = DiscoverStore.shared
 
     private var region: String? { appSettings.releaseRegion }
+
+    /// TMDB IDs already in the library.
+    private var libraryTMDBIDs: Set<Int> {
+        Set(libraryMovies.compactMap(\.tmdbID))
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -97,6 +104,7 @@ struct DiscoverColumn: View {
 
     private func posterCard(_ movie: MovieSearchResult) -> some View {
         let isSelected = selection?.id == movie.id
+        let inLibrary = libraryTMDBIDs.contains(movie.tmdbID)
         return Button {
             selection = movie
         } label: {
@@ -109,16 +117,31 @@ struct DiscoverColumn: View {
                             .strokeBorder(isSelected ? Palette.accent : Palette.hairline,
                                           lineWidth: isSelected ? 3 : 1)
                     }
+                    .overlay(alignment: .topTrailing) {
+                        if inLibrary { inLibraryBadge.padding(6) }
+                    }
                     .shadow(color: isSelected ? Palette.accent.opacity(0.4) : .black.opacity(0.4),
                             radius: isSelected ? 10 : 5, y: 3)
 
                 Text(movie.title)
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(Palette.textSecondary)
+                    .foregroundStyle(inLibrary ? Palette.accentBright : Palette.textSecondary)
                     .lineLimit(1)
             }
+            .opacity(inLibrary ? 0.92 : 1)
         }
         .buttonStyle(.plain)
+    }
+
+    private var inLibraryBadge: some View {
+        Image(systemName: "checkmark")
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(.white)
+            .padding(5)
+            .background(Palette.accent, in: Circle())
+            .overlay { Circle().strokeBorder(.white.opacity(0.25)) }
+            .shadow(color: .black.opacity(0.4), radius: 3, y: 1)
+            .accessibilityLabel("In your library")
     }
 
     @ViewBuilder private func poster(_ movie: MovieSearchResult) -> some View {
