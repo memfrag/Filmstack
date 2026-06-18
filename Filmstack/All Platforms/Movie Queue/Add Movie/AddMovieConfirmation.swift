@@ -27,7 +27,6 @@ struct AddMovieConfirmation: View {
 
     @State private var phase: Phase = .loading
     @State private var notes = ""
-    @State private var streamingLocation = ""
     @State private var source = ""
     @State private var alreadyInLibrary = false
     @State private var confirmWatchedAgain = false
@@ -124,7 +123,6 @@ struct AddMovieConfirmation: View {
         Section("Optional") {
             TextField("Notes", text: $notes, axis: .vertical)
                 .lineLimit(2...4)
-            TextField("Where can you watch it?", text: $streamingLocation)
             TextField("Where did you hear about it?", text: $source)
         }
     }
@@ -190,7 +188,6 @@ struct AddMovieConfirmation: View {
             details: details,
             userNotes: notes.trimmingCharacters(in: .whitespacesAndNewlines),
             source: source.nilIfBlank,
-            streamingLocation: streamingLocation.nilIfBlank,
             status: defaultStatus
         )
         MovieActions.add(movie, in: context)

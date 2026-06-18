@@ -24,7 +24,6 @@ struct MovieFormSheet: View {
     @State private var title = ""
     @State private var year = ""
     @State private var notes = ""
-    @State private var streamingLocation = ""
     @State private var source = ""
     @State private var status: MovieStatus = .queued
 
@@ -56,7 +55,6 @@ struct MovieFormSheet: View {
                             Text(status.title).tag(status)
                         }
                     }
-                    TextField("Where can you watch it?", text: $streamingLocation)
                     TextField("Where did you hear about it?", text: $source)
                 }
 
@@ -102,7 +100,6 @@ struct MovieFormSheet: View {
             title = movie.title
             year = movie.releaseYear.map(String.init) ?? ""
             notes = movie.userNotes
-            streamingLocation = movie.streamingLocation ?? ""
             source = movie.source ?? ""
             status = movie.status
         }
@@ -135,7 +132,6 @@ struct MovieFormSheet: View {
             releaseYear: parsedYear,
             userNotes: notes.trimmingCharacters(in: .whitespacesAndNewlines),
             source: source.nilIfBlank,
-            streamingLocation: streamingLocation.nilIfBlank,
             status: status
         )
         MovieActions.add(movie, in: context)
@@ -146,7 +142,6 @@ struct MovieFormSheet: View {
         movie.title = trimmedTitle
         movie.releaseYear = parsedYear
         movie.userNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
-        movie.streamingLocation = streamingLocation.nilIfBlank
         movie.source = source.nilIfBlank
         movie.status = status
     }
