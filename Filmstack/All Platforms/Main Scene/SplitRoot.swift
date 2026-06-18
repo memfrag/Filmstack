@@ -26,10 +26,16 @@ struct SplitRoot: View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             Sidebar(selection: $router.activeSelectable)
         } content: {
-            MovieListColumn(
-                section: router.activeSelectable,
-                selection: selectionBinding
-            )
+            Group {
+                if let list = router.activeSelectable.discoverList {
+                    DiscoverColumn(list: list)
+                } else {
+                    MovieListColumn(
+                        section: router.activeSelectable,
+                        selection: selectionBinding
+                    )
+                }
+            }
             .id(router.activeSelectable)
         } detail: {
             MovieDetailColumn(selection: selectionBinding)

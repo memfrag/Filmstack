@@ -9,12 +9,20 @@ struct MainRouting: Routing {
 
     // MARK: - Selectable
 
-    /// Library sections that can be selected in the sidebar / tab bar.
-    nonisolated enum Selectable: SelectableDestination, CaseIterable {
+    /// Sections that can be selected in the sidebar / tab bar.
+    nonisolated enum Selectable: SelectableDestination {
         case queue
         case upcoming
         case watched
         case maybeLater
+        case discover(DiscoverList)
+
+        /// Library sections.
+        static let libraryCases: [Selectable] = [.queue, .upcoming, .watched, .maybeLater]
+        /// Discover sections.
+        static let discoverCases: [Selectable] = DiscoverList.allCases.map { .discover($0) }
+
+        static var allCases: [Selectable] { libraryCases + discoverCases }
 
         var title: String {
             switch self {
@@ -22,6 +30,7 @@ struct MainRouting: Routing {
             case .upcoming: "Upcoming"
             case .watched: "Watched"
             case .maybeLater: "Maybe Later"
+            case .discover(let list): list.title
             }
         }
 
@@ -31,32 +40,39 @@ struct MainRouting: Routing {
             case .upcoming: "calendar.badge.clock"
             case .watched: "checkmark.circle"
             case .maybeLater: "clock"
+            case .discover(let list): list.systemImage
             }
         }
 
-        /// The movie status this section maps to, or `nil` for derived sections
-        /// like Upcoming that span statuses.
+        /// The movie status this section maps to, or `nil` for sections that
+        /// don't map to a single status (Upcoming, Discover).
         var status: MovieStatus? {
             switch self {
             case .queue: .queued
             case .watched: .watched
             case .maybeLater: .maybeLater
-            case .upcoming: nil
+            case .upcoming, .discover: nil
             }
         }
 
         /// The status a newly added movie gets in this section, or `nil` if the
-        /// section doesn't support adding.
+        /// section doesn't support adding directly.
         var defaultAddStatus: MovieStatus? {
             switch self {
             case .queue, .upcoming: .queued
             case .maybeLater: .maybeLater
-            case .watched: nil
+            case .watched, .discover: nil
             }
         }
 
         /// Whether rows show a queue position number.
         var showsPosition: Bool { self == .queue }
+
+        /// The Discover list this section represents, if any.
+        var discoverList: DiscoverList? {
+            if case .discover(let list) = self { return list }
+            return nil
+        }
     }
 
     // MARK: - Pushable

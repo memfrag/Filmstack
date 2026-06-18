@@ -71,6 +71,10 @@ final class MockMovieAPIClient: MovieAPIClient {
         WatchAvailability(providers: Self.sampleProviders, link: nil)
     }
 
+    func fetchDiscover(list: DiscoverList, region: String?) async throws -> [MovieSearchResult] {
+        results
+    }
+
     private static let sampleProviders: [WatchProvider] = [
         WatchProvider(name: "Sample Stream", logoPath: nil, access: .stream),
         WatchProvider(name: "Sample Rental", logoPath: nil, access: .rent),

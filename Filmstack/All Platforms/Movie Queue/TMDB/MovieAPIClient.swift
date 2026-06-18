@@ -13,6 +13,8 @@ protocol MovieAPIClient: Sendable {
     func fetchMovieDetails(tmdbID: Int, region: String?) async throws -> MovieDetails
     /// Re-fetches just the streaming availability for a region (it changes over time).
     func fetchWatchProviders(tmdbID: Int, region: String?) async throws -> WatchAvailability
+    /// Fetches a TMDB discover list (now playing, popular, top rated, upcoming).
+    func fetchDiscover(list: DiscoverList, region: String?) async throws -> [MovieSearchResult]
     func posterURL(path: String, size: PosterSize) -> URL?
     func validateToken(_ token: String) async throws -> Bool
 }

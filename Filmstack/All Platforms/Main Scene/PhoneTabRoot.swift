@@ -20,11 +20,37 @@ struct PhoneTabRoot: View {
         @Bindable var router = router
 
         TabView(selection: $router.activeSelectable) {
-            ForEach(MainRouting.Selectable.allCases, id: \.self) { section in
+            ForEach(MainRouting.Selectable.libraryCases, id: \.self) { section in
                 Tab(section.title, systemImage: section.systemImage, value: section) {
                     MovieSectionStack(section: section)
                 }
             }
+            Tab("Discover", systemImage: "sparkles", value: .discover(.nowPlaying)) {
+                DiscoverTabStack()
+            }
+        }
+    }
+}
+
+/// iPhone Discover tab: a navigation stack with a picker to switch lists.
+private struct DiscoverTabStack: View {
+
+    @State private var list: DiscoverList = .nowPlaying
+
+    var body: some View {
+        NavigationStack {
+            DiscoverColumn(list: list)
+                .id(list)
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        Picker("List", selection: $list) {
+                            ForEach(DiscoverList.allCases, id: \.self) { list in
+                                Text(list.title).tag(list)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
+                }
         }
     }
 }

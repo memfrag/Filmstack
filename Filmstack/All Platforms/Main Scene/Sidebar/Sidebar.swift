@@ -15,15 +15,13 @@ struct Sidebar: View {
 
     @Query private var movies: [Movie]
 
-    private let sections = MainRouting.Selectable.allCases
-
     var body: some View {
         List(selection: Binding(
             get: { Optional(selection) },
             set: { if let new = $0 { selection = new } }
         )) {
             Section {
-                ForEach(sections, id: \.self) { section in
+                ForEach(MainRouting.Selectable.libraryCases, id: \.self) { section in
                     NavigationLink(value: section) {
                         Label(section.title, systemImage: section.systemImage)
                             .badge(count(for: section))
@@ -31,6 +29,17 @@ struct Sidebar: View {
                 }
             } header: {
                 Text("Library")
+                    .foregroundStyle(Palette.textSecondary)
+            }
+
+            Section {
+                ForEach(MainRouting.Selectable.discoverCases, id: \.self) { section in
+                    NavigationLink(value: section) {
+                        Label(section.title, systemImage: section.systemImage)
+                    }
+                }
+            } header: {
+                Text("Discover")
                     .foregroundStyle(Palette.textSecondary)
             }
         }

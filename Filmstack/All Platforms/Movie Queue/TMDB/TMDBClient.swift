@@ -92,6 +92,34 @@ final class TMDBClient: MovieAPIClient {
     /// Number of top-billed cast members to keep.
     private static let castLimit = 8
 
+    // MARK: - Discover
+
+    func fetchDiscover(list: DiscoverList, region: String?) async throws -> [MovieSearchResult] {
+        var queryItems = [
+            URLQueryItem(name: "language", value: "en-US"),
+            URLQueryItem(name: "page", value: "1")
+        ]
+        if list.usesRegion, let region {
+            queryItems.append(URLQueryItem(name: "region", value: region))
+        }
+
+        let data = try await get(list.path, queryItems: queryItems)
+        let response = try decode(SearchResponse.self, from: data)
+        return response.results.map { item in
+            let parsed = Self.parseReleaseDate(item.releaseDate)
+            return MovieSearchResult(
+                tmdbID: item.id,
+                title: item.title,
+                originalTitle: item.originalTitle,
+                releaseDate: parsed.date,
+                releaseYear: parsed.year,
+                overview: item.overview?.nilIfBlank,
+                posterPath: item.posterPath,
+                posterThumbnailURL: TMDBImage.posterURL(path: item.posterPath, size: .thumbnail)
+            )
+        }
+    }
+
     // MARK: - Watch providers
 
     func fetchWatchProviders(tmdbID: Int, region: String?) async throws -> WatchAvailability {
