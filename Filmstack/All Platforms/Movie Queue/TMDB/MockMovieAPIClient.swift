@@ -62,14 +62,20 @@ final class MockMovieAPIClient: MovieAPIClient {
             cast: ["First Actor", "Second Actor", "Third Actor"],
             tmdbRating: 7.8,
             imdbID: nil,
-            watchProviders: [WatchProvider(name: "Sample Stream", logoPath: nil)],
+            watchProviders: Self.sampleProviders,
             watchLink: nil
         )
     }
 
     func fetchWatchProviders(tmdbID: Int, region: String?) async throws -> WatchAvailability {
-        WatchAvailability(providers: [WatchProvider(name: "Sample Stream", logoPath: nil)], link: nil)
+        WatchAvailability(providers: Self.sampleProviders, link: nil)
     }
+
+    private static let sampleProviders: [WatchProvider] = [
+        WatchProvider(name: "Sample Stream", logoPath: nil, access: .stream),
+        WatchProvider(name: "Sample Rental", logoPath: nil, access: .rent),
+        WatchProvider(name: "Sample Store", logoPath: nil, access: .buy)
+    ]
 
     func posterURL(path: String, size: PosterSize) -> URL? {
         TMDBImage.posterURL(path: path, size: size)

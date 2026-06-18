@@ -59,7 +59,7 @@ final class TMDBClient: MovieAPIClient {
 
         let response = try decode(DetailsResponse.self, from: data)
         let primary = Self.parseReleaseDate(response.releaseDate)
-        let watch = response.watchProviders?.streaming(forRegion: region)
+        let watch = response.watchProviders?.availability(forRegion: region)
 
         // Prefer a local release date for the given region, keeping the canonical
         // (primary) year for display.
@@ -97,7 +97,7 @@ final class TMDBClient: MovieAPIClient {
     func fetchWatchProviders(tmdbID: Int, region: String?) async throws -> WatchAvailability {
         let data = try await get("movie/\(tmdbID)/watch/providers", queryItems: [])
         let response = try decode(WatchProvidersResponse.self, from: data)
-        let resolved = response.streaming(forRegion: region)
+        let resolved = response.availability(forRegion: region)
         return WatchAvailability(providers: resolved.providers, link: resolved.link)
     }
 
@@ -249,6 +249,8 @@ private struct WatchProvidersResponse: Decodable {
         let flatrate: [Provider]?
         let free: [Provider]?
         let ads: [Provider]?
+        let rent: [Provider]?
+        let buy: [Provider]?
     }
 
     struct Provider: Decodable {
@@ -263,22 +265,32 @@ private struct WatchProvidersResponse: Decodable {
         }
     }
 
-    /// Streaming providers (subscription, free, ad-supported) for a region, with
-    /// the region's JustWatch link. Rent/buy are intentionally excluded.
-    func streaming(forRegion region: String?) -> (link: URL?, providers: [WatchProvider]) {
+    /// Providers for a region grouped by access type (stream/rent/buy), with the
+    /// region's JustWatch link. Streaming combines subscription, free, and
+    /// ad-supported buckets.
+    func availability(forRegion region: String?) -> (link: URL?, providers: [WatchProvider]) {
         guard let region,
               let regionProviders = results[region.uppercased()] ?? results[region]
         else { return (nil, []) }
 
-        var seen = Set<String>()
-        var providers: [WatchProvider] = []
-        for bucket in [regionProviders.flatrate, regionProviders.free, regionProviders.ads] {
-            let sorted = (bucket ?? []).sorted { ($0.displayPriority ?? .max) < ($1.displayPriority ?? .max) }
-            for provider in sorted where seen.insert(provider.providerName).inserted {
-                providers.append(WatchProvider(name: provider.providerName, logoPath: provider.logoPath))
+        func providers(_ buckets: [[Provider]?], access: WatchProvider.Access) -> [WatchProvider] {
+            var seen = Set<String>()
+            var result: [WatchProvider] = []
+            for bucket in buckets {
+                let sorted = (bucket ?? []).sorted { ($0.displayPriority ?? .max) < ($1.displayPriority ?? .max) }
+                for provider in sorted where seen.insert(provider.providerName).inserted {
+                    result.append(WatchProvider(name: provider.providerName, logoPath: provider.logoPath, access: access))
+                }
             }
+            return result
         }
-        return (regionProviders.link.flatMap(URL.init(string:)), providers)
+
+        let all =
+            providers([regionProviders.flatrate, regionProviders.free, regionProviders.ads], access: .stream)
+            + providers([regionProviders.rent], access: .rent)
+            + providers([regionProviders.buy], access: .buy)
+
+        return (regionProviders.link.flatMap(URL.init(string:)), all)
     }
 }
 

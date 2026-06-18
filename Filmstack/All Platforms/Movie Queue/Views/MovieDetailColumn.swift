@@ -246,12 +246,8 @@ struct MovieDetailColumn: View {
                 }
 
                 if !movie.watchProviders.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 10) {
-                            ForEach(movie.watchProviders, id: \.name) { provider in
-                                providerChip(provider, link: movie.justWatchURL)
-                            }
-                        }
+                    ForEach(WatchProvider.Access.allCases, id: \.self) { access in
+                        providerGroup(access, in: movie)
                     }
                     justWatchAttribution(for: movie)
                 } else if hasManual {
@@ -265,6 +261,25 @@ struct MovieDetailColumn: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private func providerGroup(_ access: WatchProvider.Access, in movie: Movie) -> some View {
+        let items = movie.watchProviders.filter { $0.access == access }
+        if !items.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(access.title.uppercased())
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(Palette.textSecondary)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(items, id: \.self) { provider in
+                            providerChip(provider, link: movie.justWatchURL)
+                        }
+                    }
+                }
+            }
         }
     }
 
