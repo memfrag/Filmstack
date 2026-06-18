@@ -10,7 +10,7 @@ import NukeUI
 /// grid. Tapping an entry with a TMDB id shows it in the detail pane.
 struct LetterboxdColumn: View {
 
-    @Binding var selection: MovieSearchResult?
+    @Binding var selection: BrowseSelection?
 
     @Environment(AppSettings.self) private var appSettings
     @Environment(\.openURL) private var openURL
@@ -143,10 +143,14 @@ struct LetterboxdColumn: View {
 
     private func card(_ entry: LetterboxdEntry) -> some View {
         let inLibrary = entry.tmdbID.map { libraryTMDBIDs.contains($0) } ?? false
-        let isSelected = entry.tmdbID != nil && selection?.tmdbID == entry.tmdbID
+        let isSelected = entry.tmdbID != nil && selection?.id == entry.tmdbID
         return Button {
             if let result = entry.asSearchResult {
-                selection = result
+                selection = BrowseSelection(
+                    result: result,
+                    watchedDate: entry.watchedDate,
+                    rating: entry.rating
+                )
             } else if let link = entry.link {
                 openURL(link)
             }

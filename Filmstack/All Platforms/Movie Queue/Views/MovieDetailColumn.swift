@@ -302,6 +302,8 @@ struct MovieDetailColumn: View {
                 Text(provider.name)
                     .font(.caption.weight(.medium))
                     .foregroundStyle(Palette.textPrimary)
+                    .lineLimit(1)
+                    .fixedSize()
             }
             .padding(.vertical, 6)
             .padding(.horizontal, 11)
@@ -310,6 +312,7 @@ struct MovieDetailColumn: View {
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
+        .fixedSize()
         .disabled(link == nil)
         .help(link == nil ? "" : "Open on JustWatch")
     }

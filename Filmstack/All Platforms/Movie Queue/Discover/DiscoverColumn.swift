@@ -11,7 +11,7 @@ import NukeUI
 struct DiscoverColumn: View {
 
     let list: DiscoverList
-    @Binding var selection: MovieSearchResult?
+    @Binding var selection: BrowseSelection?
 
     @Environment(AppSettings.self) private var appSettings
     @Query private var libraryMovies: [Movie]
@@ -106,7 +106,7 @@ struct DiscoverColumn: View {
         let isSelected = selection?.id == movie.id
         let inLibrary = libraryTMDBIDs.contains(movie.tmdbID)
         return Button {
-            selection = movie
+            selection = BrowseSelection(result: movie)
         } label: {
             VStack(alignment: .leading, spacing: 6) {
                 poster(movie)

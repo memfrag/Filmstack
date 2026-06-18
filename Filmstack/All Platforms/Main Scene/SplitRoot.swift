@@ -19,7 +19,7 @@ struct SplitRoot: View {
     /// Selection is remembered per library section, so switching sections and
     /// returning preserves what was selected.
     @State private var selections: [MainRouting.Selectable: Movie] = [:]
-    @State private var discoverSelection: MovieSearchResult?
+    @State private var discoverSelection: BrowseSelection?
 
     var body: some View {
         @Bindable var router = router
@@ -51,7 +51,7 @@ struct SplitRoot: View {
     @ViewBuilder private var detailColumn: some View {
         if router.activeSelectable.isExternalBrowse {
             if let result = discoverSelection {
-                DiscoverDetailColumn(result: result)
+                DiscoverDetailColumn(selection: result)
             } else {
                 discoverEmptyState
             }

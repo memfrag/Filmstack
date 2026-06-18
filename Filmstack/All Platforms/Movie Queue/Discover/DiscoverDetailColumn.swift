@@ -10,7 +10,8 @@ import NukeUI
 /// cinematically and offers an Add action, fetching full details on appear.
 struct DiscoverDetailColumn: View {
 
-    let result: MovieSearchResult
+    let selection: BrowseSelection
+    private var result: MovieSearchResult { selection.result }
 
     @Environment(AppSettings.self) private var appSettings
     @Environment(\.modelContext) private var context
@@ -27,6 +28,8 @@ struct DiscoverDetailColumn: View {
     /// Status it was just added as, this session.
     @State private var addedStatus: MovieStatus?
     @State private var confirmWatchedAgain = false
+    @State private var pendingStatus: MovieStatus = .queued
+    @State private var pendingWatched = false
 
     private let heroHeight: CGFloat = 220
     private var region: String? { appSettings.releaseRegion }
@@ -58,7 +61,7 @@ struct DiscoverDetailColumn: View {
             isPresented: $confirmWatchedAgain,
             titleVisibility: .visible
         ) {
-            Button("Add Again") { add(.queued, force: true) }
+            Button("Add Again") { commitAdd(pendingStatus, watched: pendingWatched) }
             Button("Cancel", role: .cancel) {}
         }
     }
@@ -198,6 +201,25 @@ struct DiscoverDetailColumn: View {
                 Label("In \(status.title)", systemImage: "checkmark.circle.fill")
                     .font(.headline)
                     .foregroundStyle(.green)
+            } else if selection.watchedDate != nil {
+                Button {
+                    add(.watched, watched: true)
+                } label: {
+                    Label("Add as Watched", systemImage: "checkmark.circle.fill")
+                }
+                .buttonStyle(.filmAccent)
+                .disabled(details == nil)
+
+                Menu {
+                    Button("Add to Queue") { add(.queued) }
+                    Button("Add to Maybe Later") { add(.maybeLater) }
+                } label: {
+                    Label("More", systemImage: "ellipsis")
+                }
+                .menuStyle(.button)
+                .buttonStyle(.filmGlass)
+                .fixedSize()
+                .disabled(details == nil)
             } else {
                 Button {
                     add(.queued)
@@ -244,22 +266,33 @@ struct DiscoverDetailColumn: View {
         }
     }
 
-    private func add(_ status: MovieStatus, force: Bool = false) {
+    private func add(_ status: MovieStatus, watched: Bool = false) {
+        guard case .loaded = phase else { return }
+        let existing = existingMovies()
+        if existing.contains(where: { $0.status == .queued || $0.status == .maybeLater }) {
+            existingStatus = currentExistingStatus()
+            return
+        }
+        if existing.contains(where: { $0.status == .watched }) {
+            pendingStatus = status
+            pendingWatched = watched
+            confirmWatchedAgain = true
+            return
+        }
+        commitAdd(status, watched: watched)
+    }
+
+    private func commitAdd(_ status: MovieStatus, watched: Bool) {
         guard case .loaded(let details) = phase else { return }
-        if !force {
-            let existing = existingMovies()
-            if existing.contains(where: { $0.status == .queued || $0.status == .maybeLater }) {
-                existingStatus = currentExistingStatus()
-                return
-            }
-            if existing.contains(where: { $0.status == .watched }) {
-                confirmWatchedAgain = true
-                return
+        let movie = Movie(details: details, status: status)
+        if watched {
+            movie.dateWatched = selection.watchedDate ?? Date()
+            if let rating = selection.rating {
+                movie.rating = Int(rating.rounded())
             }
         }
-        let movie = Movie(details: details, status: status)
         MovieActions.add(movie, in: context)
-        addedStatus = status
+        addedStatus = movie.status
     }
 
     private func existingMovies() -> [Movie] {

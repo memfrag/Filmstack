@@ -38,14 +38,14 @@ struct PhoneTabRoot: View {
 /// iPhone Letterboxd tab: a navigation stack pushing detail on selection.
 private struct LetterboxdTabStack: View {
 
-    @State private var selection: MovieSearchResult?
+    @State private var selection: BrowseSelection?
 
     var body: some View {
         NavigationStack {
             LetterboxdColumn(selection: $selection)
-                .navigationDestination(item: $selection) { result in
-                    DiscoverDetailColumn(result: result)
-                        .navigationTitle(result.title)
+                .navigationDestination(item: $selection) { selection in
+                    DiscoverDetailColumn(selection: selection)
+                        .navigationTitle(selection.result.title)
                         .navigationBarTitleDisplayMode(.inline)
                 }
         }
@@ -56,15 +56,15 @@ private struct LetterboxdTabStack: View {
 private struct DiscoverTabStack: View {
 
     @State private var list: DiscoverList = .nowPlaying
-    @State private var selection: MovieSearchResult?
+    @State private var selection: BrowseSelection?
 
     var body: some View {
         NavigationStack {
             DiscoverColumn(list: list, selection: $selection)
                 .id(list)
-                .navigationDestination(item: $selection) { result in
-                    DiscoverDetailColumn(result: result)
-                        .navigationTitle(result.title)
+                .navigationDestination(item: $selection) { selection in
+                    DiscoverDetailColumn(selection: selection)
+                        .navigationTitle(selection.result.title)
                         .navigationBarTitleDisplayMode(.inline)
                 }
                 .toolbar {
