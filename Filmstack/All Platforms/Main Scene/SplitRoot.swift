@@ -19,6 +19,7 @@ struct SplitRoot: View {
     /// Selection is remembered per library section, so switching sections and
     /// returning preserves what was selected.
     @State private var selections: [MainRouting.Selectable: Movie] = [:]
+    @State private var discoverSelection: MovieSearchResult?
 
     var body: some View {
         @Bindable var router = router
@@ -28,7 +29,7 @@ struct SplitRoot: View {
         } content: {
             Group {
                 if let list = router.activeSelectable.discoverList {
-                    DiscoverColumn(list: list)
+                    DiscoverColumn(list: list, selection: $discoverSelection)
                 } else {
                     MovieListColumn(
                         section: router.activeSelectable,
@@ -38,10 +39,40 @@ struct SplitRoot: View {
             }
             .id(router.activeSelectable)
         } detail: {
-            MovieDetailColumn(selection: selectionBinding)
+            detailColumn
                 .ignoresSafeArea(edges: .top)
         }
         .toolbar(removing: .title)
+        .onChange(of: router.activeSelectable) { discoverSelection = nil }
+    }
+
+    @ViewBuilder private var detailColumn: some View {
+        if router.activeSelectable.discoverList != nil {
+            if let result = discoverSelection {
+                DiscoverDetailColumn(result: result)
+            } else {
+                discoverEmptyState
+            }
+        } else {
+            MovieDetailColumn(selection: selectionBinding)
+        }
+    }
+
+    private var discoverEmptyState: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 46, weight: .light))
+                .foregroundStyle(Palette.accent.opacity(0.8))
+            Text("Discover Movies")
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(Palette.textPrimary)
+            Text("Select a movie to see details and add it to your library.")
+                .foregroundStyle(Palette.textSecondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Palette.base)
     }
 
     private var selectionBinding: Binding<Movie?> {

@@ -94,10 +94,36 @@ final class TMDBClient: MovieAPIClient {
 
     // MARK: - Discover
 
+    /// Number of pages to combine per discover list.
+    private static let discoverPageCount = 3
+
     func fetchDiscover(list: DiscoverList, region: String?) async throws -> [MovieSearchResult] {
+        var combined: [MovieSearchResult] = []
+        var seen = Set<Int>()
+
+        for page in 1...Self.discoverPageCount {
+            // Page 1 must succeed; later pages are best-effort.
+            let results: [MovieSearchResult]
+            if page == 1 {
+                results = try await fetchDiscoverPage(list, region: region, page: page)
+            } else {
+                results = (try? await fetchDiscoverPage(list, region: region, page: page)) ?? []
+            }
+            for result in results where seen.insert(result.tmdbID).inserted {
+                combined.append(result)
+            }
+        }
+        return combined
+    }
+
+    private func fetchDiscoverPage(
+        _ list: DiscoverList,
+        region: String?,
+        page: Int
+    ) async throws -> [MovieSearchResult] {
         var queryItems = [
             URLQueryItem(name: "language", value: "en-US"),
-            URLQueryItem(name: "page", value: "1")
+            URLQueryItem(name: "page", value: String(page))
         ]
         if list.usesRegion, let region {
             queryItems.append(URLQueryItem(name: "region", value: region))

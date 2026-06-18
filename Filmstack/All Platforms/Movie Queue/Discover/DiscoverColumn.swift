@@ -10,11 +10,10 @@ import NukeUI
 struct DiscoverColumn: View {
 
     let list: DiscoverList
+    @Binding var selection: MovieSearchResult?
 
     @Environment(AppSettings.self) private var appSettings
     private let store = DiscoverStore.shared
-
-    @State private var selectedResult: MovieSearchResult?
 
     private var region: String? { appSettings.releaseRegion }
 
@@ -37,9 +36,6 @@ struct DiscoverColumn: View {
         }
         .task(id: list) {
             await store.ensureLoaded(list, region: region)
-        }
-        .sheet(item: $selectedResult) { result in
-            addSheet(for: result)
         }
     }
 
@@ -100,8 +96,9 @@ struct DiscoverColumn: View {
     }
 
     private func posterCard(_ movie: MovieSearchResult) -> some View {
-        Button {
-            selectedResult = movie
+        let isSelected = selection?.id == movie.id
+        return Button {
+            selection = movie
         } label: {
             VStack(alignment: .leading, spacing: 6) {
                 poster(movie)
@@ -109,9 +106,11 @@ struct DiscoverColumn: View {
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .overlay {
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .strokeBorder(Palette.hairline)
+                            .strokeBorder(isSelected ? Palette.accent : Palette.hairline,
+                                          lineWidth: isSelected ? 3 : 1)
                     }
-                    .shadow(color: .black.opacity(0.4), radius: 5, y: 3)
+                    .shadow(color: isSelected ? Palette.accent.opacity(0.4) : .black.opacity(0.4),
+                            radius: isSelected ? 10 : 5, y: 3)
 
                 Text(movie.title)
                     .font(.caption.weight(.medium))
@@ -140,22 +139,5 @@ struct DiscoverColumn: View {
         Rectangle()
             .fill(.fill.tertiary)
             .overlay { Image(systemName: "film").foregroundStyle(.secondary) }
-    }
-
-    private func addSheet(for result: MovieSearchResult) -> some View {
-        NavigationStack {
-            AddMovieConfirmation(
-                result: result,
-                defaultStatus: .queued,
-                model: MovieSearchModel(),
-                onAdded: { selectedResult = nil }
-            )
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { selectedResult = nil }
-                }
-            }
-        }
-        .frame(minWidth: 460, minHeight: 520)
     }
 }

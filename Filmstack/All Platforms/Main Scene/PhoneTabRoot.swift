@@ -36,11 +36,17 @@ struct PhoneTabRoot: View {
 private struct DiscoverTabStack: View {
 
     @State private var list: DiscoverList = .nowPlaying
+    @State private var selection: MovieSearchResult?
 
     var body: some View {
         NavigationStack {
-            DiscoverColumn(list: list)
+            DiscoverColumn(list: list, selection: $selection)
                 .id(list)
+                .navigationDestination(item: $selection) { result in
+                    DiscoverDetailColumn(result: result)
+                        .navigationTitle(result.title)
+                        .navigationBarTitleDisplayMode(.inline)
+                }
                 .toolbar {
                     ToolbarItem(placement: .principal) {
                         Picker("List", selection: $list) {
