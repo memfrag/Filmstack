@@ -103,6 +103,7 @@ extension Movie {
             tmdbRating: details.tmdbRating,
             watchProviders: details.watchProviders,
             justWatchURL: details.watchLink,
+            watchProvidersUpdatedAt: Date(),
             imdbID: details.imdbID,
             userNotes: userNotes,
             source: source,

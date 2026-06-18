@@ -35,6 +35,8 @@ final class Movie {
     // Streaming availability (TMDB watch/providers, powered by JustWatch)
     var watchProviders: [WatchProvider] = []
     var justWatchURLString: String?
+    /// When streaming availability was last fetched (it changes over time).
+    var watchProvidersUpdatedAt: Date?
 
     // Optional external links
     var imdbID: String?
@@ -72,6 +74,7 @@ final class Movie {
         tmdbRating: Double? = nil,
         watchProviders: [WatchProvider] = [],
         justWatchURL: URL? = nil,
+        watchProvidersUpdatedAt: Date? = nil,
         imdbID: String? = nil,
         letterboxdURL: URL? = nil,
         userNotes: String = "",
@@ -100,6 +103,7 @@ final class Movie {
         self.tmdbRating = tmdbRating
         self.watchProviders = watchProviders
         self.justWatchURLString = justWatchURL?.absoluteString
+        self.watchProvidersUpdatedAt = watchProvidersUpdatedAt
         self.imdbID = imdbID
         self.letterboxdURLString = letterboxdURL?.absoluteString
         self.userNotes = userNotes

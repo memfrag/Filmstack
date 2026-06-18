@@ -100,6 +100,18 @@ struct MovieDetailColumn: View {
 
             actionBar(for: movie)
         }
+        .task(id: movie.persistentModelID) {
+            autoRefreshWatchIfStale(movie)
+        }
+    }
+
+    /// Refreshes availability on open when it's never been fetched or is over a
+    /// week old.
+    private func autoRefreshWatchIfStale(_ movie: Movie) {
+        guard movie.tmdbID != nil else { return }
+        let weekAgo = Date(timeIntervalSinceNow: -7 * 24 * 60 * 60)
+        if let updated = movie.watchProvidersUpdatedAt, updated > weekAgo { return }
+        refreshWatchProviders(for: movie)
     }
 
     // MARK: - Hero
@@ -310,6 +322,7 @@ struct MovieDetailColumn: View {
                     .fetchWatchProviders(tmdbID: tmdbID, region: appSettings.releaseRegion)
                 movie.watchProviders = availability.providers
                 movie.justWatchURL = availability.link
+                movie.watchProvidersUpdatedAt = Date()
                 movie.updatedAt = Date()
                 try? context.save()
             } catch {
