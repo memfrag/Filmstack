@@ -233,7 +233,6 @@ struct MovieDetailColumn: View {
                         .font(.caption.bold())
                         .foregroundStyle(Palette.accentBright)
                     Spacer()
-                    justWatchAttribution(for: movie)
                     if movie.tmdbID != nil {
                         Button {
                             refreshWatchProviders(for: movie)
@@ -252,9 +251,7 @@ struct MovieDetailColumn: View {
                 }
 
                 if !movie.watchProviders.isEmpty {
-                    ForEach(WatchProvider.Access.allCases, id: \.self) { access in
-                        providerGroup(access, in: movie)
-                    }
+                    WatchProvidersView(providers: movie.watchProviders, justWatchURL: movie.justWatchURL)
                 } else if hasManual {
                     Text(movie.streamingLocation ?? "")
                         .font(.body)
@@ -266,72 +263,6 @@ struct MovieDetailColumn: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    @ViewBuilder
-    private func providerGroup(_ access: WatchProvider.Access, in movie: Movie) -> some View {
-        let items = movie.watchProviders.filter { $0.access == access }
-        if !items.isEmpty {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(access.title.uppercased())
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(Palette.textSecondary)
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
-                        ForEach(items, id: \.self) { provider in
-                            providerChip(provider, link: movie.justWatchURL)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private func providerChip(_ provider: WatchProvider, link: URL?) -> some View {
-        Button {
-            if let link { openURL(link) }
-        } label: {
-            HStack(spacing: 7) {
-                if let url = TMDBImage.logoURL(path: provider.logoPath) {
-                    LazyImage(url: url) { state in
-                        if let image = state.image {
-                            image.resizable().scaledToFit()
-                        } else {
-                            Color.clear
-                        }
-                    }
-                    .frame(width: 22, height: 22)
-                    .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-                }
-                Text(provider.name)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(Palette.textPrimary)
-                    .lineLimit(1)
-                    .fixedSize()
-            }
-            .padding(.vertical, 6)
-            .padding(.horizontal, 11)
-            .background(Palette.card, in: Capsule())
-            .overlay { Capsule().strokeBorder(Palette.hairline) }
-            .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .fixedSize()
-        .disabled(link == nil)
-        .help(link == nil ? "" : "Open on JustWatch")
-    }
-
-    @ViewBuilder
-    private func justWatchAttribution(for movie: Movie) -> some View {
-        if let link = movie.justWatchURL {
-            Link("Powered by JustWatch", destination: link)
-                .font(.caption2)
-                .foregroundStyle(Palette.textSecondary.opacity(0.3))
-        } else {
-            Text("Powered by JustWatch")
-                .font(.caption2)
-                .foregroundStyle(Palette.textSecondary.opacity(0.3))
         }
     }
 

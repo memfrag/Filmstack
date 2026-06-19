@@ -204,9 +204,9 @@ struct DiscoverDetailColumn: View {
         if let cast = details?.cast, !cast.isEmpty {
             section("Cast") { Text(cast.joined(separator: ", ")) }
         }
-        if let providers = details?.watchProviders, !providers.isEmpty {
+        if let details, !details.watchProviders.isEmpty {
             section("Where to Watch") {
-                Text(providers.filter { $0.access == .stream }.map(\.name).joined(separator: ", "))
+                WatchProvidersView(providers: details.watchProviders, justWatchURL: details.watchLink)
             }
         }
     }
