@@ -171,7 +171,7 @@ struct DiscoverDetailColumn: View {
             Label(message, systemImage: "exclamationmark.triangle")
                 .foregroundStyle(Palette.textSecondary)
         }
-        if let overview = result.overview, !overview.isEmpty {
+        if let overview = details?.overview ?? result.overview, !overview.isEmpty {
             section("Overview") { Text(overview) }
         }
         if let cast = details?.cast, !cast.isEmpty {
