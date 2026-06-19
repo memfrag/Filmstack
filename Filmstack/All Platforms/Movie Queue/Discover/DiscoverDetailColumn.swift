@@ -60,11 +60,14 @@ struct DiscoverDetailColumn: View {
                 }
             }
             .scrollEdgeEffectStyle(.soft, for: .top)
+            #if os(macOS)
             actionBar
+            #endif
         }
         .background(Palette.base)
         #if os(iOS)
         .ignoresSafeArea(edges: .top)
+        .toolbar { detailToolbar }
         #endif
         .task(id: result.id) { await load() }
         .confirmationDialog(
@@ -233,6 +236,53 @@ struct DiscoverDetailColumn: View {
     }
 
     // MARK: - Actions
+
+    #if os(iOS)
+    @ToolbarContentBuilder
+    private var detailToolbar: some ToolbarContent {
+        if let status = addedStatus ?? nonWatchedExisting {
+            ToolbarItem(placement: .topBarTrailing) {
+                Label("In \(status.title)", systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+            }
+        } else if selection.watchedDate != nil {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    add(.watched, watched: true)
+                } label: {
+                    Label("Add as Watched", systemImage: "checkmark.circle.fill")
+                }
+                .disabled(details == nil)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button("Add to Queue") { add(.queued) }
+                    Button("Add to Maybe Later") { add(.maybeLater) }
+                } label: {
+                    Label("More", systemImage: "ellipsis")
+                }
+                .disabled(details == nil)
+            }
+        } else {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    add(.queued)
+                } label: {
+                    Label("Add to Queue", systemImage: "plus.circle.fill")
+                }
+                .disabled(details == nil)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button("Add to Maybe Later") { add(.maybeLater) }
+                } label: {
+                    Label("More", systemImage: "ellipsis")
+                }
+                .disabled(details == nil)
+            }
+        }
+    }
+    #endif
 
     private var actionBar: some View {
         HStack(spacing: 12) {

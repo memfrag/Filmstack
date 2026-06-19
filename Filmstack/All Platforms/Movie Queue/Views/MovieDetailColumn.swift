@@ -109,11 +109,16 @@ struct MovieDetailColumn: View {
             }
             .scrollEdgeEffectStyle(.soft, for: .top)
 
+            #if os(macOS)
             actionBar(for: movie)
+            #endif
         }
         .task(id: movie.persistentModelID) {
             autoRefreshWatchIfStale(movie)
         }
+        #if os(iOS)
+        .toolbar { detailToolbar(for: movie) }
+        #endif
     }
 
     /// Refreshes availability on open when it's never been fetched or is over a
@@ -193,7 +198,7 @@ struct MovieDetailColumn: View {
                 .font(.callout)
                 .foregroundStyle(Palette.textSecondary)
 
-                HStack(spacing: 24) {
+                HStack(alignment: .top, spacing: 24) {
                     if let director = movie.director, !director.isEmpty {
                         labeledField("Director", director)
                     }
@@ -369,6 +374,43 @@ struct MovieDetailColumn: View {
             Rectangle().fill(Palette.separator).frame(height: 1)
         }
     }
+
+    #if os(iOS)
+    @ToolbarContentBuilder
+    private func detailToolbar(for movie: Movie) -> some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            if movie.status == .watched {
+                Button {
+                    MovieActions.moveBackToQueue(movie, in: context)
+                } label: {
+                    Label("Move to Queue", systemImage: "arrow.uturn.left.circle.fill")
+                }
+            } else {
+                Button {
+                    MovieActions.markWatched(movie, in: context)
+                } label: {
+                    Label("Mark as Watched", systemImage: "checkmark.circle.fill")
+                }
+            }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            Menu {
+                Button { showingEditSheet = true } label: { Label("Edit", systemImage: "pencil") }
+                if movie.status == .queued {
+                    Button("Move to Top") { MovieActions.moveToTop(movie, in: context) }
+                    Button("Move to Bottom") { MovieActions.moveToBottom(movie, in: context) }
+                }
+                Divider()
+                Button("Open in Letterboxd") { open(letterboxdURL(for: movie)) }
+                Button("Open in IMDb") { open(imdbURL(for: movie)) }
+                Divider()
+                Button("Delete", role: .destructive) { showingDeleteConfirmation = true }
+            } label: {
+                Label("More", systemImage: "ellipsis")
+            }
+        }
+    }
+    #endif
 
     private func open(_ url: URL?) {
         guard let url else { return }
