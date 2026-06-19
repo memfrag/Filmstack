@@ -130,11 +130,13 @@ struct DiscoverDetailColumn: View {
                         .font(.callout)
                         .foregroundStyle(Palette.textSecondary)
                 }
-                if let director = details?.director, !director.isEmpty {
-                    labeledField("Director", director).padding(.top, 4)
-                }
-                if let rating = selection.rating {
-                    letterboxdRatingField(rating).padding(.top, 4)
+                HStack(spacing: 32) {
+                    if let director = details?.director, !director.isEmpty {
+                        labeledField("Director", director).padding(.top, 4)
+                    }
+                    if let rating = selection.rating {
+                        letterboxdRatingField(rating).padding(.top, 4)
+                    }
                 }
             }
             .padding(.bottom, 6)
@@ -144,7 +146,7 @@ struct DiscoverDetailColumn: View {
 
     private func letterboxdRatingField(_ rating: Double) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("YOUR LETTERBOXD RATING")
+            Text("LETTERBOXD")
                 .font(.caption2.bold())
                 .foregroundStyle(Palette.accentBright)
             HStack(spacing: 5) {

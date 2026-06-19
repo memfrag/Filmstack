@@ -35,8 +35,10 @@ struct MovieDetailColumn: View {
                         titleVisibility: .visible
                     ) {
                         Button("Delete", role: .destructive) {
-                            MovieActions.delete(movie, in: context)
+                            // Clear selection first so the detail stops rendering
+                            // this movie before SwiftData deletes it.
                             selection = nil
+                            MovieActions.delete(movie, in: context)
                         }
                     } message: {
                         Text("This removes the movie from your library.")
