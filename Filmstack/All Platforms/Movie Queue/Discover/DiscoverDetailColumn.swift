@@ -5,6 +5,7 @@
 import SwiftUI
 import SwiftData
 import NukeUI
+import SwiftUIToolbox
 
 /// Detail pane for a movie picked from a Discover list. Shows the movie
 /// cinematically and offers an Add action, fetching full details on appear.
@@ -87,6 +88,7 @@ struct DiscoverDetailColumn: View {
                 .overlay { Gradients.heroScrim() }
         }
         .frame(height: heroHeight)
+        .stretchyHeader()
     }
 
     @ViewBuilder private var heroImage: some View {

@@ -4,6 +4,7 @@
 
 import SwiftUI
 import NukeUI
+import SwiftUIToolbox
 
 /// The detail column — the most cinematic surface in the app. A wide hero image
 /// (backdrop, or a blurred poster as a fallback) fades into the base color, with
@@ -74,6 +75,7 @@ struct MovieDetailColumn: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     hero(for: movie)
+                        .stretchyHeader()
 
                     posterAndTitle(for: movie)
                         .padding(.horizontal, 24)
