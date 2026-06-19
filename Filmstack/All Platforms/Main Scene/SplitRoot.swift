@@ -45,6 +45,9 @@ struct SplitRoot: View {
                 .ignoresSafeArea(edges: .top)
         }
         .toolbar(removing: .title)
+        #if os(macOS)
+        .toolbarBackground(.clear, for: .windowToolbar)
+        #endif
         .onChange(of: router.activeSelectable) { discoverSelection = nil }
     }
 
