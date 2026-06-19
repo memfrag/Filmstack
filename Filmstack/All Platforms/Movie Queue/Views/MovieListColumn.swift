@@ -222,7 +222,7 @@ struct MovieListColumn: View {
         let selected = movie.persistentModelID == selection?.persistentModelID
         MovieRow(movie: movie, position: position(for: movie), isSelected: selected)
             .tag(movie)
-            //.listRowBackground(rowBackground(selected: selected))
+            .listRowBackground(Color.clear)
             //.listRowSeparator(.hidden)
             .listRowSeparatorTint(Palette.card)
             .listRowInsets(EdgeInsets(top: 3, leading: 0, bottom: 3, trailing: 0))
