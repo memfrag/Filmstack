@@ -151,7 +151,7 @@ enum SampleMovies {
                 cast: ["Song Kang-ho", "Lee Sun-kyun", "Cho Yeo-jeong", "Choi Woo-shik"],
                 tmdbRating: 8.5,
                 imdbID: "tt6751668",
-                rating: 5,
+                userRating: 4.5,
                 status: .watched,
                 dateWatched: Date(timeIntervalSinceNow: -60 * 60 * 24 * 30)
             )

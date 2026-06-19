@@ -46,7 +46,8 @@ final class Movie {
     var userNotes: String = ""
     var source: String?
     var streamingLocation: String?
-    var rating: Int?
+    /// The user's personal rating, 0.5–5 in half-star steps.
+    var userRating: Double?
 
     // Queue state
     var statusRawValue: String = MovieStatus.queued.rawValue
@@ -80,7 +81,7 @@ final class Movie {
         userNotes: String = "",
         source: String? = nil,
         streamingLocation: String? = nil,
-        rating: Int? = nil,
+        userRating: Double? = nil,
         status: MovieStatus = .queued,
         queuePosition: Int? = nil,
         dateAdded: Date = Date(),
@@ -109,7 +110,7 @@ final class Movie {
         self.userNotes = userNotes
         self.source = source
         self.streamingLocation = streamingLocation
-        self.rating = rating
+        self.userRating = userRating
         self.statusRawValue = status.rawValue
         self.queuePosition = queuePosition
         self.dateAdded = dateAdded

@@ -318,9 +318,7 @@ struct DiscoverDetailColumn: View {
         let movie = Movie(details: details, status: status)
         if watched {
             movie.dateWatched = selection.watchedDate ?? Date()
-            if let rating = selection.rating {
-                movie.rating = Int(rating.rounded())
-            }
+            movie.userRating = selection.rating
         }
         MovieActions.add(movie, in: context)
         addedStatus = movie.status

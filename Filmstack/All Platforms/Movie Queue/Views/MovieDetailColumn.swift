@@ -81,6 +81,9 @@ struct MovieDetailColumn: View {
                         if !movie.cast.isEmpty {
                             section("Cast") { Text(movie.cast.joined(separator: ", ")) }
                         }
+                        section("My Rating") {
+                            StarRatingView(rating: ratingBinding(for: movie))
+                        }
                         if !movie.userNotes.isEmpty {
                             section("My Notes") { Text(movie.userNotes) }
                         }
@@ -347,6 +350,17 @@ struct MovieDetailColumn: View {
                 // Availability refresh is best-effort; leave existing data in place.
             }
         }
+    }
+
+    private func ratingBinding(for movie: Movie) -> Binding<Double?> {
+        Binding(
+            get: { movie.userRating },
+            set: { newValue in
+                movie.userRating = newValue
+                movie.updatedAt = Date()
+                try? context.save()
+            }
+        )
     }
 
     private func section(_ title: String, @ViewBuilder content: () -> some View) -> some View {
