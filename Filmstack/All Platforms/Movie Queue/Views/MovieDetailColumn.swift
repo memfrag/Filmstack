@@ -88,9 +88,20 @@ struct MovieDetailColumn: View {
                         if !movie.cast.isEmpty {
                             section("Cast") { Text(movie.cast.joined(separator: ", ")) }
                         }
+                        #if os(iOS)
+                        HStack(alignment: .top, spacing: 24) {
+                            section("My Rating") {
+                                StarRatingView(rating: ratingBinding(for: movie), starSize: 17)
+                            }
+                            if let rating = movie.tmdbRating {
+                                section("TMDB") { RatingBadge(rating: rating) }
+                            }
+                        }
+                        #else
                         section("My Rating") {
                             StarRatingView(rating: ratingBinding(for: movie), starSize: 17)
                         }
+                        #endif
                         if !movie.userNotes.isEmpty {
                             section("My Notes") { Text(movie.userNotes) }
                         }
@@ -187,8 +198,12 @@ struct MovieDetailColumn: View {
 
                 if movie.isUpcoming {
                     UpcomingBadge()
-                } else if let rating = movie.tmdbRating {
-                    RatingBadge(rating: rating)
+                } else {
+                    #if os(macOS)
+                    if let rating = movie.tmdbRating {
+                        RatingBadge(rating: rating)
+                    }
+                    #endif
                 }
 
                 Text(movie.title)
