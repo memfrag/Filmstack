@@ -98,7 +98,16 @@ struct MovieDetailColumn: View {
                         if let source = movie.source, !source.isEmpty {
                             section("Heard About It From") { Text(source) }
                         }
+                        #if os(iOS)
+                        HStack(alignment: .top, spacing: 24) {
+                            section("Added") { Text(movie.dateAddedText) }
+                            if let release = movie.releaseDateText {
+                                section("Release Date") { Text(release) }
+                            }
+                        }
+                        #else
                         section("Added") { Text(movie.dateAddedText) }
+                        #endif
                         if let watched = movie.dateWatchedText {
                             section("Watched") { Text(watched) }
                         }
@@ -202,9 +211,11 @@ struct MovieDetailColumn: View {
                     if let director = movie.director, !director.isEmpty {
                         labeledField("Director", director)
                     }
+                    #if os(macOS)
                     if let release = movie.releaseDateText {
                         labeledField("Release Date", release)
                     }
+                    #endif
                 }
                 .padding(.top, 4)
             }
