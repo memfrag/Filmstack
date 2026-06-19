@@ -84,7 +84,7 @@ struct MovieDetailColumn: View {
                             section("Cast") { Text(movie.cast.joined(separator: ", ")) }
                         }
                         section("My Rating") {
-                            StarRatingView(rating: ratingBinding(for: movie))
+                            StarRatingView(rating: ratingBinding(for: movie), starSize: 17)
                         }
                         if !movie.userNotes.isEmpty {
                             section("My Notes") { Text(movie.userNotes) }
