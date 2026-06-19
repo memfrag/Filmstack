@@ -39,6 +39,12 @@ struct DiscoverDetailColumn: View {
         return nil
     }
 
+    /// TMDB poster path, preferring fetched details (Letterboxd results carry no
+    /// TMDB poster path of their own).
+    private var posterPath: String? {
+        details?.posterPath ?? result.posterPath
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
@@ -84,7 +90,7 @@ struct DiscoverDetailColumn: View {
             LazyImage(url: backdrop) { state in
                 if let image = state.image { image.resizable().scaledToFill() } else { Gradients.hero }
             }
-        } else if let poster = TMDBImage.posterURL(path: result.posterPath, size: .detail) {
+        } else if let poster = TMDBImage.posterURL(path: posterPath, size: .detail) {
             LazyImage(url: poster) { state in
                 if let image = state.image {
                     image.resizable().scaledToFill().blur(radius: 38).opacity(0.55)
@@ -134,7 +140,7 @@ struct DiscoverDetailColumn: View {
     }
 
     @ViewBuilder private var poster: some View {
-        if let url = TMDBImage.posterURL(path: result.posterPath, size: .detail) {
+        if let url = TMDBImage.posterURL(path: posterPath, size: .detail) {
             LazyImage(url: url) { state in
                 if let image = state.image { image.resizable().scaledToFill() } else { posterPlaceholder }
             }
