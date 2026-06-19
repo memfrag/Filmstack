@@ -10,8 +10,8 @@ import AppRouting
 
 /// `TabView`-based root used on iPhone and on iPad in compact horizontal size class.
 ///
-/// Each tab is a library section that pushes the movie detail onto its own
-/// navigation stack.
+/// The library sections are the bottom tabs; Discover and Miscellaneous live under
+/// a single "Browse" tab as a sectioned list (iOS doesn't section the More tab).
 struct PhoneTabRoot: View {
 
     @Environment(Router<MainRouting>.self) private var router
@@ -25,59 +25,79 @@ struct PhoneTabRoot: View {
                     MovieSectionStack(section: section)
                 }
             }
-
-            TabSection("Discover") {
-                ForEach(DiscoverList.allCases, id: \.self) { list in
-                    Tab(list.title, systemImage: list.systemImage,
-                        value: MainRouting.Selectable.discover(list)) {
-                        DiscoverListStack(list: list)
-                    }
-                }
-            }
-
-            TabSection("Miscellaneous") {
-                Tab("Letterboxd", systemImage: "film.stack",
-                    value: MainRouting.Selectable.letterboxd) {
-                    LetterboxdTabStack()
-                }
+            Tab("Browse", systemImage: "sparkles",
+                value: MainRouting.Selectable.discover(.nowPlaying)) {
+                BrowseTab()
             }
         }
     }
 }
 
-/// iPhone Letterboxd tab: a navigation stack pushing detail on selection.
-private struct LetterboxdTabStack: View {
+/// The Browse tab: a sectioned list of Discover lists and Miscellaneous sources.
+private struct BrowseTab: View {
 
-    @State private var selection: BrowseSelection?
+    private enum Route: Hashable {
+        case discover(DiscoverList)
+        case letterboxd
+    }
 
     var body: some View {
         NavigationStack {
-            LetterboxdColumn(selection: $selection)
-                .navigationDestination(item: $selection) { selection in
-                    DiscoverDetailColumn(selection: selection)
-                        .navigationTitle(selection.result.title)
-                        .navigationBarTitleDisplayMode(.inline)
+            List {
+                Section("Discover") {
+                    ForEach(DiscoverList.allCases, id: \.self) { list in
+                        NavigationLink(value: Route.discover(list)) {
+                            Label(list.title, systemImage: list.systemImage)
+                        }
+                    }
                 }
+                Section("Miscellaneous") {
+                    NavigationLink(value: Route.letterboxd) {
+                        Label("Letterboxd", systemImage: "film.stack")
+                    }
+                }
+            }
+            .navigationTitle("Browse")
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .discover(let list):
+                    DiscoverListContent(list: list)
+                case .letterboxd:
+                    LetterboxdContent()
+                }
+            }
         }
     }
 }
 
-/// iPhone Discover tab for a single list: a navigation stack pushing detail on
-/// selection.
-private struct DiscoverListStack: View {
+/// A Discover list and its detail push, without its own navigation stack (it's
+/// pushed inside the Browse stack).
+private struct DiscoverListContent: View {
 
     let list: DiscoverList
     @State private var selection: BrowseSelection?
 
     var body: some View {
-        NavigationStack {
-            DiscoverColumn(list: list, selection: $selection)
-                .navigationDestination(item: $selection) { selection in
-                    DiscoverDetailColumn(selection: selection)
-                        .navigationTitle(selection.result.title)
-                        .navigationBarTitleDisplayMode(.inline)
-                }
-        }
+        DiscoverColumn(list: list, selection: $selection)
+            .navigationDestination(item: $selection) { selection in
+                DiscoverDetailColumn(selection: selection)
+                    .navigationTitle(selection.result.title)
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+    }
+}
+
+private struct LetterboxdContent: View {
+
+    @State private var selection: BrowseSelection?
+
+    var body: some View {
+        LetterboxdColumn(selection: $selection)
+            .navigationDestination(item: $selection) { selection in
+                DiscoverDetailColumn(selection: selection)
+                    .navigationTitle(selection.result.title)
+                    .navigationBarTitleDisplayMode(.inline)
+            }
     }
 }
 
