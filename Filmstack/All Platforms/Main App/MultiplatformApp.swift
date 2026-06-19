@@ -37,7 +37,6 @@ struct FilmstackApp: App {
             MainSceneView()
                 .appEnvironment(.default)
                 .preferredColorScheme(.dark)
-                .scrollEdgeEffectStyle(.soft, for: .top)
                 #if os(macOS)
                 .terminatesAppWhenClosed()
                 #endif

@@ -58,6 +58,7 @@ struct DiscoverDetailColumn: View {
                         .padding(.bottom, 24)
                 }
             }
+            .scrollEdgeEffectStyle(.soft, for: .top)
             actionBar
         }
         .background(Palette.base)

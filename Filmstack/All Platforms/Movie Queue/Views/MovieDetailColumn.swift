@@ -102,6 +102,7 @@ struct MovieDetailColumn: View {
                     .padding(.bottom, 24)
                 }
             }
+            .scrollEdgeEffectStyle(.soft, for: .top)
 
             actionBar(for: movie)
         }
