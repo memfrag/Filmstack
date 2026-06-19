@@ -25,11 +25,21 @@ struct PhoneTabRoot: View {
                     MovieSectionStack(section: section)
                 }
             }
-            Tab("Discover", systemImage: "sparkles", value: .discover(.nowPlaying)) {
-                DiscoverTabStack()
+
+            TabSection("Discover") {
+                ForEach(DiscoverList.allCases, id: \.self) { list in
+                    Tab(list.title, systemImage: list.systemImage,
+                        value: MainRouting.Selectable.discover(list)) {
+                        DiscoverListStack(list: list)
+                    }
+                }
             }
-            Tab("Letterboxd", systemImage: "film.stack", value: .letterboxd) {
-                LetterboxdTabStack()
+
+            TabSection("Miscellaneous") {
+                Tab("Letterboxd", systemImage: "film.stack",
+                    value: MainRouting.Selectable.letterboxd) {
+                    LetterboxdTabStack()
+                }
             }
         }
     }
@@ -52,30 +62,20 @@ private struct LetterboxdTabStack: View {
     }
 }
 
-/// iPhone Discover tab: a navigation stack with a picker to switch lists.
-private struct DiscoverTabStack: View {
+/// iPhone Discover tab for a single list: a navigation stack pushing detail on
+/// selection.
+private struct DiscoverListStack: View {
 
-    @State private var list: DiscoverList = .nowPlaying
+    let list: DiscoverList
     @State private var selection: BrowseSelection?
 
     var body: some View {
         NavigationStack {
             DiscoverColumn(list: list, selection: $selection)
-                .id(list)
                 .navigationDestination(item: $selection) { selection in
                     DiscoverDetailColumn(selection: selection)
                         .navigationTitle(selection.result.title)
                         .navigationBarTitleDisplayMode(.inline)
-                }
-                .toolbar {
-                    ToolbarItem(placement: .principal) {
-                        Picker("List", selection: $list) {
-                            ForEach(DiscoverList.allCases, id: \.self) { list in
-                                Text(list.title).tag(list)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                    }
                 }
         }
     }
