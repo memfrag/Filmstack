@@ -133,10 +133,35 @@ struct DiscoverDetailColumn: View {
                 if let director = details?.director, !director.isEmpty {
                     labeledField("Director", director).padding(.top, 4)
                 }
+                if let rating = selection.rating {
+                    letterboxdRatingField(rating).padding(.top, 4)
+                }
             }
             .padding(.bottom, 6)
             Spacer(minLength: 0)
         }
+    }
+
+    private func letterboxdRatingField(_ rating: Double) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("YOUR LETTERBOXD RATING")
+                .font(.caption2.bold())
+                .foregroundStyle(Palette.accentBright)
+            HStack(spacing: 5) {
+                Text(Self.starString(rating))
+                    .foregroundStyle(.yellow)
+                Text(String(format: "%.1f", rating))
+                    .foregroundStyle(Palette.textSecondary)
+            }
+            .font(.subheadline)
+        }
+    }
+
+    /// Renders a 0–5 rating as filled stars plus a half-star, e.g. "★★★★½".
+    private static func starString(_ rating: Double) -> String {
+        let full = Int(rating)
+        let half = rating - Double(full) >= 0.5
+        return String(repeating: "★", count: full) + (half ? "½" : "")
     }
 
     @ViewBuilder private var poster: some View {
