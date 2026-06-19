@@ -80,11 +80,11 @@ struct WatchProvidersView: View {
         if let justWatchURL {
             Link("Powered by JustWatch", destination: justWatchURL)
                 .font(.caption2)
-                .foregroundStyle(Palette.textSecondary)
+                .foregroundStyle(Palette.textSecondary.opacity(0.3))
         } else {
             Text("Powered by JustWatch")
                 .font(.caption2)
-                .foregroundStyle(Palette.textSecondary)
+                .foregroundStyle(Palette.textSecondary.opacity(0.3))
         }
     }
 }

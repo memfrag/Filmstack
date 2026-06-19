@@ -92,7 +92,7 @@ private struct MovieSectionStack: View {
             MovieListColumn(section: section, selection: $selectedMovie)
                 .navigationDestination(item: $selectedMovie) { movie in
                     MovieDetailColumn(selection: $selectedMovie)
-                        .navigationTitle(movie.title)
+                        .navigationTitle("" /*movie.title*/)
                         .navigationBarTitleDisplayMode(.inline)
                 }
         }

@@ -128,7 +128,12 @@ struct MovieListColumn: View {
             }
         }
         .filmWindowBackground()
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("")
+        #else
         .navigationTitle(section.title)
+        #endif
         .searchable(text: $searchText, prompt: "Search \(section.title.lowercased())")
         .toolbar { toolbarContent }
         .sheet(isPresented: $showingAddSheet) {

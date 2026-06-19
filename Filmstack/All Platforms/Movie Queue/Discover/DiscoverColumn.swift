@@ -30,7 +30,12 @@ struct DiscoverColumn: View {
             content
         }
         .filmWindowBackground()
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("")
+        #else
         .navigationTitle(list.title)
+        #endif
         .toolbar {
             ToolbarItem {
                 Button {

@@ -26,6 +26,9 @@ struct MovieDetailColumn: View {
         Group {
             if let movie = selection {
                 content(for: movie)
+                    #if os(iOS)
+                    .ignoresSafeArea(edges: .top)
+                    #endif
                     .sheet(isPresented: $showingEditSheet) {
                         MovieFormSheet(mode: .edit(movie))
                     }

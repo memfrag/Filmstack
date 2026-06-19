@@ -181,11 +181,6 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				ORGANIZATIONNAME = "Apparata AB";
-				TargetAttributes = {
-					51640C82865023B9C28F7B21 = {
-						DevelopmentTeam = DR5YAK7GKS;
-					};
-				};
 			};
 			buildConfigurationList = 3C42F3E103B728D3FE5967C2 /* Build configuration list for PBXProject "Filmstack" */;
 			developmentRegion = en;
@@ -277,12 +272,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = DefaultAppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
-				"CODE_SIGN_STYLE[sdk=iphoneos*]" = Automatic;
+				CODE_SIGN_ENTITLEMENTS = Filmstack/Filmstack.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Filmstack/Preview Content\"";
+				DEVELOPMENT_TEAM = DR5YAK7GKS;
 				"ENABLE_APP_SANDBOX[sdk=macosx*]" = YES;
 				"ENABLE_OUTGOING_NETWORK_CONNECTIONS[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = YES;
@@ -291,6 +286,7 @@
 				INFOPLIST_FILE = Filmstack/macOS/Info.plist;
 				"INFOPLIST_FILE[sdk=iphoneos*]" = Filmstack/iOS/Info.plist;
 				"INFOPLIST_FILE[sdk=macosx*]" = Filmstack/macOS/Info.plist;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 Apparata AB. All rights reserved.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				"INFOPLIST_KEY_UISupportedInterfaceOrientations[sdk=iphoneos*]" = UIInterfaceOrientationPortrait;
@@ -301,7 +297,7 @@
 				);
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = io.apparata.Filmstack;
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
@@ -453,12 +449,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = DefaultAppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
-				"CODE_SIGN_STYLE[sdk=iphoneos*]" = Automatic;
+				CODE_SIGN_ENTITLEMENTS = Filmstack/Filmstack.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Filmstack/Preview Content\"";
+				DEVELOPMENT_TEAM = DR5YAK7GKS;
 				"ENABLE_APP_SANDBOX[sdk=macosx*]" = YES;
 				"ENABLE_OUTGOING_NETWORK_CONNECTIONS[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = YES;
@@ -467,6 +463,7 @@
 				INFOPLIST_FILE = Filmstack/macOS/Info.plist;
 				"INFOPLIST_FILE[sdk=iphoneos*]" = Filmstack/iOS/Info.plist;
 				"INFOPLIST_FILE[sdk=macosx*]" = Filmstack/macOS/Info.plist;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 Apparata AB. All rights reserved.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				"INFOPLIST_KEY_UISupportedInterfaceOrientations[sdk=iphoneos*]" = UIInterfaceOrientationPortrait;
@@ -477,7 +474,7 @@
 				);
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = io.apparata.Filmstack;
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
