@@ -62,6 +62,9 @@ struct DiscoverDetailColumn: View {
             actionBar
         }
         .background(Palette.base)
+        #if os(iOS)
+        .ignoresSafeArea(edges: .top)
+        #endif
         .task(id: result.id) { await load() }
         .confirmationDialog(
             "You already watched this movie. Add it again?",

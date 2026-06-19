@@ -25,7 +25,12 @@ struct LetterboxdColumn: View {
             content
         }
         .filmWindowBackground()
+        #if os(iOS)
+        .navigationTitle("")
+        .toolbarTitleDisplayMode(.inline)
+        #else
         .navigationTitle("Letterboxd")
+        #endif
         .toolbar {
             if !username.isEmpty {
                 ToolbarItem {
