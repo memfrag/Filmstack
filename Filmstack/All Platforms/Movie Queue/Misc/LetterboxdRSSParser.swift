@@ -8,7 +8,9 @@ import Foundation
 ///
 /// Letterboxd publishes a public RSS feed per user at `letterboxd.com/<user>/rss/`.
 /// Diary watch items carry custom `letterboxd:` and `tmdb:` elements we read here.
-final class LetterboxdRSSParser: NSObject, XMLParserDelegate {
+///
+/// Marked `nonisolated` so parsing can run off the main actor (feeds can be large).
+nonisolated final class LetterboxdRSSParser: NSObject, XMLParserDelegate {
 
     static func parse(_ data: Data) -> [LetterboxdEntry] {
         let parser = LetterboxdRSSParser()

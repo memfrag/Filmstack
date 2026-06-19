@@ -63,8 +63,11 @@ final class LetterboxdStore {
                 phase = .failed("No Letterboxd account found for '\(normalized)'.")
                 return
             }
-            let entries = LetterboxdRSSParser.parse(data)
-                .sorted { ($0.watchedDate ?? .distantPast) > ($1.watchedDate ?? .distantPast) }
+            // Parse off the main actor — feeds can be large enough to jank the UI.
+            let entries = await Task.detached(priority: .userInitiated) {
+                LetterboxdRSSParser.parse(data)
+                    .sorted { ($0.watchedDate ?? .distantPast) > ($1.watchedDate ?? .distantPast) }
+            }.value
             loadedUsername = normalized
             phase = .loaded(entries)
         } catch {
