@@ -59,6 +59,7 @@ private struct BrowseTab: View {
                     .listRowBackground(Color.clear)
                 }
             }
+            .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .filmWindowBackground()
             .navigationTitle("Browse")
