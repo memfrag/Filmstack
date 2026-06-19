@@ -49,14 +49,18 @@ private struct BrowseTab: View {
                         NavigationLink(value: Route.discover(list)) {
                             Label(list.title, systemImage: list.systemImage)
                         }
+                        .listRowBackground(Color.clear)
                     }
                 }
                 Section("Miscellaneous") {
                     NavigationLink(value: Route.letterboxd) {
                         Label("Letterboxd", systemImage: "film.stack")
                     }
+                    .listRowBackground(Color.clear)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .filmWindowBackground()
             .navigationTitle("Browse")
             .navigationDestination(for: Route.self) { route in
                 switch route {
