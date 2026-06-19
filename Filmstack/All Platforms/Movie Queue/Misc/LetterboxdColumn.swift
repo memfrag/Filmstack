@@ -3,7 +3,6 @@
 //
 
 import SwiftUI
-import SwiftData
 import NukeUI
 
 /// Shows films watched on Letterboxd (from the user's diary RSS feed) as a poster
@@ -14,16 +13,11 @@ struct LetterboxdColumn: View {
 
     @Environment(AppSettings.self) private var appSettings
     @Environment(\.openURL) private var openURL
-    @Query private var libraryMovies: [Movie]
 
     private let store = LetterboxdStore.shared
     @State private var usernameInput = ""
 
     private var username: String { appSettings.letterboxdUsername }
-
-    private var libraryTMDBIDs: Set<Int> {
-        Set(libraryMovies.compactMap(\.tmdbID))
-    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -142,7 +136,6 @@ struct LetterboxdColumn: View {
     }
 
     private func card(_ entry: LetterboxdEntry) -> some View {
-        let inLibrary = entry.tmdbID.map { libraryTMDBIDs.contains($0) } ?? false
         let isSelected = entry.tmdbID != nil && selection?.id == entry.tmdbID
         return Button {
             if let result = entry.asSearchResult {
@@ -163,9 +156,6 @@ struct LetterboxdColumn: View {
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
                             .strokeBorder(isSelected ? Palette.accent : Palette.hairline,
                                           lineWidth: isSelected ? 3 : 1)
-                    }
-                    .overlay(alignment: .topTrailing) {
-                        if inLibrary { libraryBadge.padding(6) }
                     }
                     .shadow(color: isSelected ? Palette.accent.opacity(0.4) : .black.opacity(0.4),
                             radius: isSelected ? 10 : 5, y: 3)
@@ -205,16 +195,5 @@ struct LetterboxdColumn: View {
     private var posterPlaceholder: some View {
         Rectangle().fill(.fill.tertiary)
             .overlay { Image(systemName: "film").foregroundStyle(.secondary) }
-    }
-
-    private var libraryBadge: some View {
-        Image(systemName: "checkmark")
-            .font(.caption2.weight(.bold))
-            .foregroundStyle(.white)
-            .padding(5)
-            .background(Palette.accent, in: Circle())
-            .overlay { Circle().strokeBorder(.white.opacity(0.25)) }
-            .shadow(color: .black.opacity(0.4), radius: 3, y: 1)
-            .accessibilityLabel("In your library")
     }
 }
