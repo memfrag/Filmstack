@@ -343,6 +343,9 @@ struct MovieDetailColumn: View {
             do {
                 let availability = try await AppEnvironment.default.movieAPIClient
                     .fetchWatchProviders(tmdbID: tmdbID, region: appSettings.releaseRegion)
+                // The movie may have been deleted while the request was in flight;
+                // don't write back to a detached object.
+                guard movie.modelContext != nil else { return }
                 movie.watchProviders = availability.providers
                 movie.justWatchURL = availability.link
                 movie.watchProvidersUpdatedAt = Date()
