@@ -11,7 +11,7 @@ import AppDesign
 struct SplashScreen: View {
     
     var body: some View {
-        Gradients.window
+        Color("LaunchBackground")
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea()
     }
