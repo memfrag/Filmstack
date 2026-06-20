@@ -11,12 +11,9 @@ import AppDesign
 struct SplashScreen: View {
     
     var body: some View {
-        VStack {
-            Text("Splash Screen")
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.green)
-        .ignoresSafeArea()
+        Gradients.window
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .ignoresSafeArea()
     }
 }
 
