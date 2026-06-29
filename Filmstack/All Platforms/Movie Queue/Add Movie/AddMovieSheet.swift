@@ -49,7 +49,9 @@ struct AddMovieSheet: View {
                 MovieFormSheet(mode: .add(defaultStatus: defaultStatus))
             }
         }
+        #if os(macOS)
         .frame(minWidth: 520, minHeight: 560)
+        #endif
         .task(id: model.query) {
             try? await Task.sleep(for: .milliseconds(350))
             guard !Task.isCancelled else { return }

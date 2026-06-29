@@ -86,7 +86,9 @@ struct MovieFormSheet: View {
                 Button("Cancel", role: .cancel) {}
             }
         }
+        #if os(macOS)
         .frame(minWidth: 420, minHeight: 440)
+        #endif
         .onAppear(perform: loadInitialValues)
     }
 
