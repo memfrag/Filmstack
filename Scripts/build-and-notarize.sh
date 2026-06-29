@@ -15,7 +15,7 @@ set -euo pipefail
 # -----------------------------------------------------------------------------
 
 # --- Constants ---
-SCHEME="Filmstack"
+SCHEME="Filmstack (Release)"
 APP_NAME="Filmstack"
 KEYCHAIN_PROFILE="notary"
 SPARKLE_VERSION="2.9.1"
