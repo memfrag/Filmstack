@@ -111,7 +111,7 @@ xcodebuild archive \
     -scheme "$SCHEME" \
     -archivePath "$ARCHIVE_PATH" \
     -configuration Release \
-    -arch arm64 \
+    -destination 'generic/platform=macOS' \
     ENABLE_HARDENED_RUNTIME=YES \
     2>&1 | tee "$BUILD_DIR/archive.log" | tail -5
 
