@@ -1,0 +1,14 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>Filmstack</title>
+        <item>
+            <title>1.0.0</title>
+            <pubDate>Mon, 29 Jun 2026 22:10:41 +0200</pubDate>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.3</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/memfrag/Filmstack/releases/download/1.0.0/Filmstack-1.0.0.dmg" length="6776122" type="application/octet-stream" sparkle:edSignature="mLXTT2CYPrJX2kMe+39aqvYrNdl/+aCPgXQIxrgB1vVazR86qGW0E34CY/glxyWxsAbeQ7S+ljvyRbJIrzaVDA=="/>
+        </item>
+    </channel>
+</rss>
