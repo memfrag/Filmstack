@@ -11,7 +11,7 @@ set -euo pipefail
 #   - Sparkle EdDSA keys in keychain (run: ./Sparkle-tools/bin/generate_keys)
 #
 # Usage:
-#   ./scripts/build-and-notarize.sh
+#   ./Scripts/build-and-notarize.sh
 # -----------------------------------------------------------------------------
 
 # --- Constants ---
@@ -29,7 +29,7 @@ SPARKLE_TOOLS_DIR="$PROJECT_DIR/Sparkle-tools"
 ARCHIVE_PATH="$BUILD_DIR/$APP_NAME.xcarchive"
 EXPORT_DIR="$BUILD_DIR/export"
 EXPORT_OPTIONS="$SCRIPT_DIR/ExportOptions.plist"
-INFO_PLIST="$PROJECT_DIR/$APP_NAME/Info.plist"
+INFO_PLIST="$PROJECT_DIR/$APP_NAME/macOS/Info.plist"
 PBXPROJ="$PROJECT_DIR/$APP_NAME.xcodeproj/project.pbxproj"
 
 # --- Helpers ---
@@ -89,25 +89,17 @@ fi
 
 if [ "$VERSION" != "$CURRENT_VERSION" ]; then
     echo "==> Updating version to $VERSION..."
-    /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$INFO_PLIST" 2>/dev/null \
-        || /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string $VERSION" "$INFO_PLIST" \
-        || error "Failed to update CFBundleShortVersionString in Info.plist"
-    /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "$INFO_PLIST" 2>/dev/null \
-        || /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string $VERSION" "$INFO_PLIST" \
-        || error "Failed to update CFBundleVersion in Info.plist"
+    # Version is generated from these build settings (GENERATE_INFOPLIST_FILE = YES).
     sed -i '' "s/MARKETING_VERSION = [^;]*/MARKETING_VERSION = $VERSION/" "$PBXPROJ" || error "Failed to update MARKETING_VERSION in project.pbxproj"
     sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*/CURRENT_PROJECT_VERSION = $VERSION/" "$PBXPROJ" || error "Failed to update CURRENT_PROJECT_VERSION in project.pbxproj"
+    # Best-effort: keep any explicit Info.plist version keys in sync (no-op when generated).
+    /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$INFO_PLIST" 2>/dev/null || true
+    /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "$INFO_PLIST" 2>/dev/null || true
     cd "$PROJECT_DIR"
-    git add "$INFO_PLIST" "$PBXPROJ"
+    git add "$PBXPROJ"
     git commit -m "Bump version to $VERSION"
     git push origin HEAD
     echo "    Version updated and pushed."
-else
-    # Ensure Info.plist matches even if no bump needed
-    /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$INFO_PLIST" 2>/dev/null \
-        || /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string $VERSION" "$INFO_PLIST" 2>/dev/null || true
-    /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "$INFO_PLIST" 2>/dev/null \
-        || /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string $VERSION" "$INFO_PLIST" 2>/dev/null || true
 fi
 
 TAG="$VERSION"

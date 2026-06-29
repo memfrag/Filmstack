@@ -43,8 +43,6 @@
 			membershipExceptions = (
 				iOS/Info.plist,
 				macOS/Info.plist,
-				"macOS/scripts/build-and-notarize.sh",
-				macOS/scripts/ExportOptions.plist,
 			);
 			target = 51640C82865023B9C28F7B21 /* Filmstack */;
 		};
