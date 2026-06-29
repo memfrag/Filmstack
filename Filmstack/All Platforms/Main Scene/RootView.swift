@@ -37,7 +37,9 @@ struct RootView: View {
 
 // MARK: - Preview
 
+#if DEBUG
 #Preview {
     RootView()
         .appEnvironment(.mock())
 }
+#endif

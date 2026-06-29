@@ -202,8 +202,10 @@ private struct SearchResultRow: View {
     }
 }
 
+#if DEBUG
 #Preview {
     AddMovieSheet(defaultStatus: .queued)
         .appEnvironment(.mock())
         .modelContainer(MovieStore.previewContainer)
 }
+#endif

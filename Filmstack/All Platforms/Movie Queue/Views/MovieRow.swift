@@ -64,6 +64,7 @@ struct MovieRow: View {
     }
 }
 
+#if DEBUG
 #Preview {
     List {
         MovieRow(movie: SampleMovies.makeMovies()[0], position: 1, isSelected: true)
@@ -72,3 +73,4 @@ struct MovieRow: View {
     .scrollContentBackground(.hidden)
     .filmWindowBackground()
 }
+#endif

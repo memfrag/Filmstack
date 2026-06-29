@@ -88,8 +88,10 @@ struct SplitRoot: View {
     }
 }
 
+#if DEBUG
 #Preview {
     SplitRoot()
         .appEnvironment(.mock())
         .modelContainer(MovieStore.previewContainer)
 }
+#endif

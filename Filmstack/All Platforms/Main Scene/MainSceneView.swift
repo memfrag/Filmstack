@@ -69,7 +69,9 @@ struct MainSceneView: View {
 
 // MARK: - Preview
 
+#if DEBUG
 #Preview {
     MainSceneView()
         .appEnvironment(.mock())
 }
+#endif

@@ -124,10 +124,12 @@ private struct MovieSectionStack: View {
     }
 }
 
+#if DEBUG
 #Preview {
     PhoneTabRoot()
         .appEnvironment(.mock())
         .modelContainer(MovieStore.previewContainer)
 }
+#endif
 
 #endif

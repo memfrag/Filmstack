@@ -104,6 +104,7 @@ private extension Bundle {
     }
 }
 
+#if DEBUG
 #Preview {
     NavigationSplitView {
         Sidebar(selection: .constant(.queue))
@@ -112,3 +113,4 @@ private extension Bundle {
     }
     .modelContainer(MovieStore.previewContainer)
 }
+#endif

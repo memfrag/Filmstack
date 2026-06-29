@@ -60,6 +60,7 @@ struct PosterView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     HStack {
         PosterView(movie: Movie(title: "No Poster"))
@@ -69,3 +70,4 @@ struct PosterView: View {
     }
     .padding()
 }
+#endif

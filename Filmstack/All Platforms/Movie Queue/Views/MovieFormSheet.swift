@@ -167,7 +167,9 @@ private extension String {
     }
 }
 
+#if DEBUG
 #Preview("Add") {
     MovieFormSheet(mode: .add(defaultStatus: .queued))
         .modelContainer(MovieStore.previewContainer)
 }
+#endif

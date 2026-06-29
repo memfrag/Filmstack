@@ -114,6 +114,7 @@ struct TMDBKeySettings: View {
     }
 }
 
+#if DEBUG
 #Preview("Missing") {
     NavigationStack {
         TMDBKeySettings(model: TMDBKeySettingsModel(
@@ -135,3 +136,4 @@ struct TMDBKeySettings: View {
     .environment(AppSettings.mock())
     .frame(width: 480, height: 420)
 }
+#endif

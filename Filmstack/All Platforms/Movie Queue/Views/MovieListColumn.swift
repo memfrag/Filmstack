@@ -578,9 +578,11 @@ private struct MovieDropDelegate: DropDelegate {
     }
 }
 
+#if DEBUG
 #Preview {
     NavigationStack {
         MovieListColumn(section: .queue, selection: .constant(nil))
     }
     .modelContainer(MovieStore.previewContainer)
 }
+#endif

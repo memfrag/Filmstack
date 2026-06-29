@@ -444,9 +444,11 @@ struct MovieDetailColumn: View {
     }
 }
 
+#if DEBUG
 #Preview {
     MovieDetailColumn(selection: .constant(SampleMovies.makeMovies().first))
         .appEnvironment(.mock())
         .modelContainer(MovieStore.previewContainer)
         .frame(width: 420, height: 760)
 }
+#endif

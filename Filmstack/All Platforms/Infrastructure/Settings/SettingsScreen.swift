@@ -57,9 +57,11 @@ private extension AppColorScheme {
 
 // MARK: - Preview
 
+#if DEBUG
 #Preview {
     NavigationStack {
         SettingsScreen()
             .appEnvironment(.mock())
     }
 }
+#endif
