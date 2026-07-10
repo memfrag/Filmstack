@@ -221,7 +221,7 @@ struct MovieListColumn: View {
     private func row(for movie: Movie) -> some View {
         let selected = movie.persistentModelID == selection?.persistentModelID
         MovieRow(movie: movie, position: position(for: movie), isSelected: selected,
-                 showsReleaseDate: section == .upcoming)
+                 showsReleaseDate: section == .upcoming || section == .queue)
             .tag(movie)
             .listRowBackground(Color.clear)
             //.listRowSeparator(.hidden)
@@ -277,10 +277,16 @@ struct MovieListColumn: View {
                 .shadow(color: selected ? Palette.accent.opacity(0.4) : .black.opacity(0.4),
                         radius: selected ? 10 : 5, y: 3)
 
-            Text(movie.title)
-                .font(.caption.weight(.medium))
-                .foregroundStyle(selected ? Palette.textPrimary : Palette.textSecondary)
-                .lineLimit(1)
+            Group {
+                if section == .queue, movie.isUpcoming {
+                    Text("\(Image(systemName: "calendar")) \(movie.title)")
+                } else {
+                    Text(movie.title)
+                }
+            }
+            .font(.caption.weight(.medium))
+            .foregroundStyle(selected ? Palette.textPrimary : Palette.textSecondary)
+            .lineLimit(1)
 
             if section == .upcoming, movie.isUpcoming, let release = movie.releaseDateShortText {
                 Text(release)
