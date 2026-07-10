@@ -50,9 +50,14 @@ extension Movie {
         releaseDate?.formatted(date: .long, time: .omitted)
     }
 
-    /// Compact release date, e.g. "Jul 12, 2026".
+    /// Compact release date, e.g. "Jul 12, 2027". Omits the year when it's the current year ("Jul 12").
     var releaseDateShortText: String? {
-        releaseDate?.formatted(date: .abbreviated, time: .omitted)
+        guard let releaseDate else { return nil }
+        let calendar = Calendar.current
+        if calendar.component(.year, from: releaseDate) == calendar.component(.year, from: Date()) {
+            return releaseDate.formatted(.dateTime.month(.abbreviated).day())
+        }
+        return releaseDate.formatted(date: .abbreviated, time: .omitted)
     }
 
     /// Whether the movie's release date is in the future.
