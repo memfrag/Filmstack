@@ -220,7 +220,8 @@ struct MovieListColumn: View {
     @ViewBuilder
     private func row(for movie: Movie) -> some View {
         let selected = movie.persistentModelID == selection?.persistentModelID
-        MovieRow(movie: movie, position: position(for: movie), isSelected: selected)
+        MovieRow(movie: movie, position: position(for: movie), isSelected: selected,
+                 showsReleaseDate: section == .upcoming)
             .tag(movie)
             .listRowBackground(Color.clear)
             //.listRowSeparator(.hidden)
@@ -281,7 +282,7 @@ struct MovieListColumn: View {
                 .foregroundStyle(selected ? Palette.textPrimary : Palette.textSecondary)
                 .lineLimit(1)
 
-            if movie.isUpcoming, let release = movie.releaseDateShortText {
+            if section == .upcoming, movie.isUpcoming, let release = movie.releaseDateShortText {
                 Text(release)
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(Palette.accent)

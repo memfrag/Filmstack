@@ -11,6 +11,8 @@ struct MovieRow: View {
     /// Position number shown for queued movies (1-based). `nil` hides it.
     var position: Int?
     var isSelected: Bool = false
+    /// Shows the release date subline (only meaningful in the Upcoming section).
+    var showsReleaseDate: Bool = false
 
     var body: some View {
         HStack(alignment: .center, spacing: 14) {
@@ -36,7 +38,7 @@ struct MovieRow: View {
                     .foregroundStyle(isSelected ? Color.white.opacity(0.8) : Palette.textSecondary)
                     .lineLimit(1)
 
-                if movie.isUpcoming, let release = movie.releaseDateShortText {
+                if showsReleaseDate, movie.isUpcoming, let release = movie.releaseDateShortText {
                     Text("Releases \(release)")
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(isSelected ? Color.white.opacity(0.85) : Palette.accent)
