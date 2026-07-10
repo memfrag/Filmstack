@@ -280,6 +280,13 @@ struct MovieListColumn: View {
                 .font(.caption.weight(.medium))
                 .foregroundStyle(selected ? Palette.textPrimary : Palette.textSecondary)
                 .lineLimit(1)
+
+            if movie.isUpcoming, let release = movie.releaseDateShortText {
+                Text(release)
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(Palette.accent)
+                    .lineLimit(1)
+            }
         }
         .contentShape(Rectangle())
         .onTapGesture { selection = movie }

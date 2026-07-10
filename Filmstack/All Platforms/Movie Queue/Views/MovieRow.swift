@@ -36,7 +36,12 @@ struct MovieRow: View {
                     .foregroundStyle(isSelected ? Color.white.opacity(0.8) : Palette.textSecondary)
                     .lineLimit(1)
 
-                if !movie.userNotes.isEmpty {
+                if movie.isUpcoming, let release = movie.releaseDateShortText {
+                    Text("Releases \(release)")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(isSelected ? Color.white.opacity(0.85) : Palette.accent)
+                        .lineLimit(1)
+                } else if !movie.userNotes.isEmpty {
                     Text(movie.userNotes)
                         .font(.subheadline)
                         .foregroundStyle(isSelected ? Color.white.opacity(0.7) : Palette.textSecondary.opacity(0.85))

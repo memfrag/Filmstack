@@ -50,6 +50,11 @@ extension Movie {
         releaseDate?.formatted(date: .long, time: .omitted)
     }
 
+    /// Compact release date, e.g. "Jul 12, 2026".
+    var releaseDateShortText: String? {
+        releaseDate?.formatted(date: .abbreviated, time: .omitted)
+    }
+
     /// Whether the movie's release date is in the future.
     var isUpcoming: Bool {
         guard let releaseDate else { return false }
