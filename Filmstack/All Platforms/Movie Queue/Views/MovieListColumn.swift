@@ -114,22 +114,14 @@ struct MovieListColumn: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            if filter.isActive {
-                filterChips
-                    .transition(.move(edge: .top).combined(with: .opacity))
-            }
-            if sectionMovies.isEmpty {
-                emptyState
-            } else if filteredMovies.isEmpty {
-                noMatchesState
-            } else if viewMode == .grid {
-                grid
-                    .transition(.opacity)
-            } else {
-                list
-                    .transition(.opacity)
+        content
+        .safeAreaBar(edge: .top) {
+            VStack(spacing: 0) {
+                header
+                if filter.isActive {
+                    filterChips
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
             }
         }
         .animation(.smooth(duration: 0.25), value: filter.isActive)
@@ -158,6 +150,23 @@ struct MovieListColumn: View {
             }
         }
         #endif
+    }
+
+    /// The section's movies, or whichever empty state applies. Kept separate from
+    /// `body` so the header can be attached as a top bar that the content scrolls
+    /// beneath.
+    @ViewBuilder private var content: some View {
+        if sectionMovies.isEmpty {
+            emptyState
+        } else if filteredMovies.isEmpty {
+            noMatchesState
+        } else if viewMode == .grid {
+            grid
+                .transition(.opacity)
+        } else {
+            list
+                .transition(.opacity)
+        }
     }
 
     // MARK: - Header
