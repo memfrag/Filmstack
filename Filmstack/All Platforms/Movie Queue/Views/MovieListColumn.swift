@@ -167,7 +167,7 @@ struct MovieListColumn: View {
         }
         .padding(.horizontal, 22)
         .padding(.top, 16)
-        .padding(.bottom, 8)
+        .padding(.bottom, 12)
     }
 
     // MARK: - Filter chips
