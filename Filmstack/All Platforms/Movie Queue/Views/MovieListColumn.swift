@@ -28,6 +28,8 @@ struct MovieListColumn: View {
     @State private var showingAddSheet = false
     @State private var filter = LibraryFilter()
     @State private var showingFilterPopover = false
+    @State private var showingSearch = false
+    @FocusState private var searchFocused: Bool
     @State private var draggingMovie: Movie?
     @AppStorage("filmstack.libraryViewMode") private var viewModeRaw = LibraryViewMode.list.rawValue
     #if os(iOS)
@@ -131,6 +133,7 @@ struct MovieListColumn: View {
             }
         }
         .animation(.smooth(duration: 0.25), value: filter.isActive)
+        .animation(.smooth(duration: 0.25), value: showingSearch)
         .animation(.smooth(duration: 0.3), value: viewMode)
         .filmWindowBackground()
         #if os(iOS)
@@ -139,7 +142,6 @@ struct MovieListColumn: View {
         #else
         .navigationTitle(section.title)
         #endif
-        .searchable(text: $searchText, prompt: "Search \(section.title.lowercased())")
         .toolbar { toolbarContent }
         .sheet(isPresented: $showingAddSheet) {
             AddMovieSheet(defaultStatus: section.defaultAddStatus ?? .queued)
@@ -161,20 +163,75 @@ struct MovieListColumn: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Text(section.title)
-                .font(.system(size: 28, weight: .bold))
-                .foregroundStyle(Palette.textPrimary)
-            Text(countText)
-                .font(.title3)
-                .foregroundStyle(Palette.textSecondary)
-                .contentTransition(.numericText(value: Double(filteredMovies.count)))
-                .animation(.smooth(duration: 0.25), value: filteredMovies.count)
-            Spacer()
+        VStack(spacing: 12) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(section.title)
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundStyle(Palette.textPrimary)
+                Text(countText)
+                    .font(.title3)
+                    .foregroundStyle(Palette.textSecondary)
+                    .contentTransition(.numericText(value: Double(filteredMovies.count)))
+                    .animation(.smooth(duration: 0.25), value: filteredMovies.count)
+                Spacer()
+            }
+            if showingSearch {
+                searchField
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
         }
         .padding(.horizontal, 22)
         .padding(.top, 16)
         .padding(.bottom, 12)
+    }
+
+    /// Lives in the header rather than the navigation bar: as a `.searchable`
+    /// field it had to collapse on scroll, and that tracking was unreliable
+    /// because the section's scroll view sits below this non-scrolling header.
+    private var searchField: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(Palette.textSecondary)
+
+            TextField("Search \(section.title.lowercased())", text: $searchText)
+                .textFieldStyle(.plain)
+                .focused($searchFocused)
+                .autocorrectionDisabled()
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
+                #endif
+
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Palette.textSecondary)
+                .accessibilityLabel("Clear search")
+                .transition(.opacity)
+            }
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .background(Palette.card, in: Capsule())
+        .overlay { Capsule().strokeBorder(Palette.hairline) }
+        .padding(.bottom, 4)
+        .animation(.smooth(duration: 0.2), value: searchText.isEmpty)
+        // Focus once the field is actually in the hierarchy — setting it in the
+        // same update as the toggle doesn't take.
+        .task { searchFocused = true }
+    }
+
+    /// Hiding search also drops the query, so the list is never left filtered by
+    /// text the user can't see.
+    private func toggleSearch() {
+        showingSearch.toggle()
+        if !showingSearch {
+            searchText = ""
+            searchFocused = false
+        }
     }
 
     // MARK: - Filter chips
@@ -218,7 +275,7 @@ struct MovieListColumn: View {
             .padding(.horizontal, 22)
             .animation(.smooth(duration: 0.25), value: filter)
         }
-        .padding(.bottom, 14)
+        .padding(.bottom, 16)
     }
 
     // MARK: - List
@@ -507,6 +564,16 @@ struct MovieListColumn: View {
                       systemImage: viewMode == .grid ? "list.bullet" : "square.grid.2x2")
             }
         }
+        ToolbarSpacer(.fixed)
+        ToolbarItem {
+            Button {
+                toggleSearch()
+            } label: {
+                Label("Search", systemImage: showingSearch
+                      ? "magnifyingglass.circle.fill"
+                      : "magnifyingglass")
+            }
+        }
         if hasFilters {
             ToolbarItem {
                 Button {
@@ -514,7 +581,7 @@ struct MovieListColumn: View {
                 } label: {
                     Label("Filter", systemImage: filter.isActive
                           ? "line.3.horizontal.decrease.circle.fill"
-                          : "line.3.horizontal.decrease.circle")
+                          : "line.3.horizontal.decrease")
                 }
                 .popover(isPresented: $showingFilterPopover, arrowEdge: .bottom) {
                     FilterPopover(
@@ -525,8 +592,8 @@ struct MovieListColumn: View {
                     )
                 }
             }
-            ToolbarSpacer(.fixed)
         }
+        ToolbarSpacer(.fixed)
         if section.defaultAddStatus != nil {
             ToolbarItem {
                 Button {
