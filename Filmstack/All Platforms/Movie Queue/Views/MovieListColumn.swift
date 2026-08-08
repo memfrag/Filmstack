@@ -5,6 +5,9 @@
 import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
+#if os(iOS)
+import UIKit
+#endif
 
 /// How the section's movies are laid out.
 enum LibraryViewMode: String {
@@ -236,10 +239,26 @@ struct MovieListColumn: View {
     /// Hiding search also drops the query, so the list is never left filtered by
     /// text the user can't see.
     private func toggleSearch() {
-        showingSearch.toggle()
-        if !showingSearch {
-            searchText = ""
+        guard showingSearch else {
+            showingSearch = true
+            return
+        }
+        // Dismissing through the responder chain rather than `@FocusState`, which
+        // drops the keyboard without animating it. The field stays mounted until
+        // the keyboard is down — removing the first responder's view mid-flight
+        // also kills the animation.
+        searchText = ""
+        #if os(iOS)
+        UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil
+        )
+        #else
+        searchFocused = false
+        #endif
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(0.25))
             searchFocused = false
+            showingSearch = false
         }
     }
 
