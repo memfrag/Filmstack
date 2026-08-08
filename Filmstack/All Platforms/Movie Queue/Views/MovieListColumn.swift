@@ -116,6 +116,7 @@ struct MovieListColumn: View {
             header
             if filter.isActive {
                 filterChips
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
             if sectionMovies.isEmpty {
                 emptyState
@@ -127,6 +128,7 @@ struct MovieListColumn: View {
                 list
             }
         }
+        .animation(.smooth(duration: 0.25), value: filter.isActive)
         .filmWindowBackground()
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -163,6 +165,8 @@ struct MovieListColumn: View {
             Text(countText)
                 .font(.title3)
                 .foregroundStyle(Palette.textSecondary)
+                .contentTransition(.numericText(value: Double(filteredMovies.count)))
+                .animation(.smooth(duration: 0.25), value: filteredMovies.count)
             Spacer()
         }
         .padding(.horizontal, 22)
@@ -172,6 +176,12 @@ struct MovieListColumn: View {
 
     // MARK: - Filter chips
 
+    /// Chips grow out of / shrink into their leading edge so the row reflows
+    /// sideways rather than popping.
+    private var chipTransition: AnyTransition {
+        .scale(scale: 0.8, anchor: .leading).combined(with: .opacity)
+    }
+
     private var filterChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
@@ -179,16 +189,19 @@ struct MovieListColumn: View {
                     FilterChip(label: genre, systemImage: "theatermasks") {
                         filter.toggleGenre(genre)
                     }
+                    .transition(chipTransition)
                 }
                 ForEach(filter.sources.sorted(), id: \.self) { source in
                     FilterChip(label: source, systemImage: "sparkles") {
                         filter.toggleSource(source)
                     }
+                    .transition(chipTransition)
                 }
                 ForEach(filter.locations.sorted(), id: \.self) { location in
                     FilterChip(label: location, systemImage: "play.tv") {
                         filter.toggleLocation(location)
                     }
+                    .transition(chipTransition)
                 }
                 if filter.activeCount > 1 {
                     Button("Clear All") { filter.clear() }
@@ -196,11 +209,13 @@ struct MovieListColumn: View {
                         .buttonStyle(.plain)
                         .foregroundStyle(Palette.textSecondary)
                         .padding(.leading, 2)
+                        .transition(.opacity)
                 }
             }
             .padding(.horizontal, 22)
-            .padding(.bottom, 10)
+            .animation(.smooth(duration: 0.25), value: filter)
         }
+        .padding(.bottom, 14)
     }
 
     // MARK: - List
