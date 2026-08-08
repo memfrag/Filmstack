@@ -298,7 +298,6 @@ struct MovieListColumn: View {
         .contentShape(Rectangle())
         .onTapGesture { selection = movie }
         .contextMenu { rowMenu(for: movie) }
-        .opacity(draggingMovie?.persistentModelID == movie.persistentModelID ? 0.4 : 1)
         .modifier(GridReorderModifier(
             movie: movie,
             enabled: canReorder,
