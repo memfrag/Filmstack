@@ -124,11 +124,14 @@ struct MovieListColumn: View {
                 noMatchesState
             } else if viewMode == .grid {
                 grid
+                    .transition(.opacity)
             } else {
                 list
+                    .transition(.opacity)
             }
         }
         .animation(.smooth(duration: 0.25), value: filter.isActive)
+        .animation(.smooth(duration: 0.3), value: viewMode)
         .filmWindowBackground()
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -146,8 +149,8 @@ struct MovieListColumn: View {
             NavigationStack {
                 SettingsScreen()
                     .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") { showingSettings = false }
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Close", systemImage: "xmark", role: .close) { showingSettings = false }
                         }
                     }
             }

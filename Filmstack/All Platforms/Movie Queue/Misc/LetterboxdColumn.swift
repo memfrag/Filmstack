@@ -41,7 +41,7 @@ struct LetterboxdColumn: View {
                             appSettings.letterboxdUsername = ""
                         }
                     } label: {
-                        Label("Options", systemImage: "ellipsis.circle")
+                        Label("Options", systemImage: "ellipsis")
                     }
                 }
             }

@@ -407,16 +407,17 @@ struct MovieDetailColumn: View {
                 Button {
                     MovieActions.moveBackToQueue(movie, in: context)
                 } label: {
-                    Label("Move to Queue", systemImage: "arrow.uturn.left.circle.fill")
+                    Label("Move to Queue", systemImage: "arrow.uturn.left")
                 }
             } else {
                 Button {
                     MovieActions.markWatched(movie, in: context)
                 } label: {
-                    Label("Mark as Watched", systemImage: "checkmark.circle.fill")
+                    Label("Mark as Watched", systemImage: "checkmark")
                 }
             }
         }
+        ToolbarSpacer(placement: .topBarTrailing)
         ToolbarItem(placement: .topBarTrailing) {
             Menu {
                 Button { showingEditSheet = true } label: { Label("Edit", systemImage: "pencil") }
