@@ -15,7 +15,8 @@ struct WatchedStatsView: View {
     @Environment(\.dismiss) private var dismiss
 
     /// The month whose bar was tapped; its movies are listed below the chart.
-    @State private var selectedMonth: Date?
+    /// Starts on the current month.
+    @State private var selectedMonth: Date? = Calendar.current.dateInterval(of: .month, for: Date())?.start
 
     private struct MonthCount: Identifiable {
         let month: Date
@@ -60,7 +61,14 @@ struct WatchedStatsView: View {
                     } else {
                         summary(data)
                         chartCard(data)
-                        monthMovies
+                        // Overlapping layers, so the old and new month cross-fade
+                        // in place instead of stacking.
+                        ZStack(alignment: .top) {
+                            monthMovies
+                                .id(selectedMonth)
+                                .transition(.opacity)
+                        }
+                        .animation(.easeInOut(duration: 0.2), value: selectedMonth)
                     }
                 }
                 .padding(20)
@@ -174,10 +182,6 @@ struct WatchedStatsView: View {
             }
             .animation(.smooth(duration: 0.25), value: selectedMonth)
             .frame(height: 240)
-
-            Text(selectedMonth == nil ? "Tap a bar to see that month's movies." : "Tap the bar again to clear.")
-                .font(.caption)
-                .foregroundStyle(Palette.textSecondary)
         }
         .padding(16)
         .filmCard()
@@ -227,6 +231,10 @@ struct WatchedStatsView: View {
                                 }
                             }
                             Spacer(minLength: 0)
+                            if let rating = movie.userRating {
+                                StarRatingView(rating: .constant(rating), isEditable: false,
+                                               starSize: 12, spacing: 2)
+                            }
                         }
                         .accessibilityElement(children: .combine)
                     }
