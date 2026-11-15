@@ -23,6 +23,7 @@ struct SettingsScreen: View {
                     }
                 }
             }
+            .filmSettingsRows()
 
             Section {
                 Toggle("Show Maybe Later", isOn: $appSettings.showsMaybeLater)
@@ -31,6 +32,7 @@ struct SettingsScreen: View {
             } footer: {
                 Text("A separate list for movies you're not sure about yet.")
             }
+            .filmSettingsRows()
 
             Section {
                 Toggle("Depth of Field Blur", isOn: $appSettings.pickerDepthOfField)
@@ -39,6 +41,7 @@ struct SettingsScreen: View {
             } footer: {
                 Text("Softens cases away from the one in focus, like a camera lens. Scrolling may be less smooth on slower devices.")
             }
+            .filmSettingsRows()
 
             Section("Movie Database") {
                 NavigationLink {
@@ -47,6 +50,7 @@ struct SettingsScreen: View {
                     Label("TMDB API Key", systemImage: "film")
                 }
             }
+            .filmSettingsRows()
 
             Section {
                 NavigationLink {
@@ -55,12 +59,34 @@ struct SettingsScreen: View {
                     Label("About Filmstack", systemImage: "info.circle")
                 }
             }
+            .filmSettingsRows()
         }
         .navigationTitle("Settings")
         .formStyle(.grouped)
+        .filmSettingsForm()
+    }
+}
+
+extension View {
+
+    /// On iOS, puts a settings form on the app's purple wash instead of the
+    /// system grouped background. A no-op on macOS (Settings window).
+    func filmSettingsForm() -> some View {
         #if os(iOS)
-        .scrollContentBackground(.hidden)
-        .filmWindowBackground()
+        scrollContentBackground(.hidden)
+            .filmWindowBackground()
+        #else
+        self
+        #endif
+    }
+
+    /// On iOS, gives a settings form section glassy rows that match the app's
+    /// cards, instead of the system's opaque grey ones. A no-op on macOS.
+    func filmSettingsRows() -> some View {
+        #if os(iOS)
+        listRowBackground(Palette.elevated.opacity(0.75))
+        #else
+        self
         #endif
     }
 }

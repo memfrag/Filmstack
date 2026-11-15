@@ -34,10 +34,17 @@ struct TMDBKeySettings: View {
         Form {
             Section {
                 LabeledContent("Provider", value: "TMDB")
-                LabeledContent("Status") { statusBadge }
+                // A plain row rather than LabeledContent, which gave this
+                // one-line row a large empty area below it.
+                HStack {
+                    Text("Status")
+                    Spacer()
+                    statusBadge
+                }
             } footer: {
                 Text("This product uses the TMDB API but is not endorsed or certified by TMDB.")
             }
+            .filmSettingsRows()
 
             Section {
                 SecureField("Paste Read Access Token", text: $model.tokenInput)
@@ -58,6 +65,7 @@ struct TMDBKeySettings: View {
                 Link("Get a token from your TMDB account settings", destination: tokenURL)
                     .font(.footnote)
             }
+            .filmSettingsRows()
 
             Section {
                 Button("Test Connection") {
@@ -70,6 +78,7 @@ struct TMDBKeySettings: View {
                 }
                 .disabled(!model.isConfigured || model.isBusy)
             }
+            .filmSettingsRows()
 
             Section {
                 Picker("Region", selection: $appSettings.releaseRegion) {
@@ -83,6 +92,7 @@ struct TMDBKeySettings: View {
                 Text("Used to show the release date for your region when available, "
                      + "falling back to TMDB's primary release date.")
             }
+            .filmSettingsRows()
 
             if let feedback = model.feedback {
                 Section {
@@ -92,9 +102,11 @@ struct TMDBKeySettings: View {
                         .foregroundStyle(feedback.kind == .success ? Color.green : Color.red)
                         .font(.callout)
                 }
+                .filmSettingsRows()
             }
         }
         .formStyle(.grouped)
+        .filmSettingsForm()
         .navigationTitle("TMDB API Key")
         .onAppear { model.refreshStatus() }
     }
