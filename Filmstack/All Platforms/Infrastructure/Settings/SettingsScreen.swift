@@ -3,6 +3,8 @@
 //
 
 import SwiftUI
+import SwiftData
+import UniformTypeIdentifiers
 
 /// Cross-platform settings UI. Hosted by:
 /// - macOS: the `Settings` scene (`SettingsWindow`), reachable from the sidebar.

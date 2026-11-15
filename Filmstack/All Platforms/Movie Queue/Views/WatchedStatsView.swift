@@ -145,6 +145,13 @@ struct WatchedStatsView: View {
 
             AchievementsSection(title: achievementsTitle, achievements: scoped.achievements)
 
+            // Everything watched that year, before the month-by-month view.
+            if let yearStart = scoped.span?.start {
+                PosterHistorySection(stats: scoped, granularity: .year, period: yearStart,
+                                     movie: movie, onOpen: open)
+                    .id(yearStart)
+            }
+
             VStack(alignment: .leading, spacing: 16) {
                 ActivityChartSection(stats: scoped, granularity: granularity, selection: $selectedPeriod)
                 if let selectedPeriod {
