@@ -32,7 +32,7 @@ struct SplitRoot: View {
                     DiscoverColumn(list: list, selection: $discoverSelection)
                 } else if router.activeSelectable == .letterboxd {
                     LetterboxdColumn(selection: $discoverSelection)
-                } else if router.activeSelectable == .settings {
+                } else if router.activeSelectable == .profile {
                     NavigationStack {
                         SettingsScreen()
                     }
@@ -56,13 +56,13 @@ struct SplitRoot: View {
         #if os(macOS)
         // macOS has a Settings window instead of a Settings section.
         .onAppear {
-            if router.activeSelectable == .settings { router.activeSelectable = .queue }
+            if router.activeSelectable == .profile { router.activeSelectable = .queue }
         }
         #endif
     }
 
     @ViewBuilder private var detailColumn: some View {
-        if router.activeSelectable == .settings {
+        if router.activeSelectable == .profile {
             Palette.base
         } else if router.activeSelectable.isExternalBrowse {
             if let result = discoverSelection {

@@ -49,7 +49,11 @@ struct SettingsScreen: View {
             }
             .filmSettingsRows()
         }
+        #if os(iOS)
+        .navigationTitle("Profile")
+        #else
         .navigationTitle("Settings")
+        #endif
         .formStyle(.grouped)
         .filmSettingsForm()
     }

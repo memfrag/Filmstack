@@ -30,7 +30,7 @@ struct PhoneTabRoot: View {
                 value: MainRouting.Selectable.discover(.nowPlaying)) {
                 BrowseTab()
             }
-            Tab("Settings", systemImage: "gearshape", value: MainRouting.Selectable.settings) {
+            Tab("Profile", systemImage: "person.crop.circle", value: MainRouting.Selectable.profile) {
                 NavigationStack {
                     SettingsScreen()
                 }

@@ -17,9 +17,9 @@ struct MainRouting: Routing {
         case maybeLater
         case discover(DiscoverList)
         case letterboxd
-        /// The app's settings (a tab on iPhone, a sidebar row on iPad; macOS
-        /// uses its Settings window instead).
-        case settings
+        /// The Profile tab with the app's settings (a tab on iPhone, a sidebar
+        /// row on iPad; macOS uses its Settings window instead).
+        case profile
 
         /// Library sections.
         static let libraryCases: [Selectable] = [.queue, .upcoming, .watched, .maybeLater]
@@ -32,7 +32,7 @@ struct MainRouting: Routing {
         /// Miscellaneous sections.
         static let miscCases: [Selectable] = [.letterboxd]
 
-        static var allCases: [Selectable] { libraryCases + discoverCases + miscCases + [.settings] }
+        static var allCases: [Selectable] { libraryCases + discoverCases + miscCases + [.profile] }
 
         var title: String {
             switch self {
@@ -42,7 +42,7 @@ struct MainRouting: Routing {
             case .maybeLater: "Maybe Later"
             case .discover(let list): list.title
             case .letterboxd: "Letterboxd"
-            case .settings: "Settings"
+            case .profile: "Profile"
             }
         }
 
@@ -54,7 +54,7 @@ struct MainRouting: Routing {
             case .maybeLater: "clock"
             case .discover(let list): list.systemImage
             case .letterboxd: "film.stack"
-            case .settings: "gearshape"
+            case .profile: "person.crop.circle"
             }
         }
 
@@ -65,7 +65,7 @@ struct MainRouting: Routing {
             case .queue: .queued
             case .watched: .watched
             case .maybeLater: .maybeLater
-            case .upcoming, .discover, .letterboxd, .settings: nil
+            case .upcoming, .discover, .letterboxd, .profile: nil
             }
         }
 
@@ -75,7 +75,7 @@ struct MainRouting: Routing {
             switch self {
             case .queue, .upcoming: .queued
             case .maybeLater: .maybeLater
-            case .watched, .discover, .letterboxd, .settings: nil
+            case .watched, .discover, .letterboxd, .profile: nil
             }
         }
 
