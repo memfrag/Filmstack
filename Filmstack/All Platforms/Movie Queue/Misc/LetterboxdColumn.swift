@@ -19,11 +19,12 @@ struct LetterboxdColumn: View {
     private var username: String { appSettings.letterboxdUsername }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            content
-        }
-        .filmWindowBackground()
+        // The header is a top bar the content scrolls beneath, as in the
+        // library sections.
+        content
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .safeAreaBar(edge: .top) { header }
+            .filmWindowBackground()
         #if os(iOS)
         .navigationTitle("")
         .toolbarTitleDisplayMode(.inline)
@@ -108,7 +109,7 @@ struct LetterboxdColumn: View {
     private func grid(_ entries: [LetterboxdEntry]) -> some View {
         ScrollView {
             LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 116, maximum: 150), spacing: 16)],
+                columns: [GridItem(.adaptive(minimum: 100, maximum: 150), spacing: 16)],
                 spacing: 18
             ) {
                 ForEach(entries) { entry in
@@ -116,6 +117,7 @@ struct LetterboxdColumn: View {
                 }
             }
             .padding(.horizontal, 20)
+            .padding(.top, 2)
             .padding(.bottom, 16)
         }
     }

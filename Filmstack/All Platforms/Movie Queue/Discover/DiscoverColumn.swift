@@ -25,11 +25,12 @@ struct DiscoverColumn: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            content
-        }
-        .filmWindowBackground()
+        // The header is a top bar the content scrolls beneath, as in the
+        // library sections.
+        content
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .safeAreaBar(edge: .top) { header }
+            .filmWindowBackground()
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("")
@@ -95,7 +96,7 @@ struct DiscoverColumn: View {
     private func grid(_ movies: [MovieSearchResult]) -> some View {
         ScrollView {
             LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 116, maximum: 150), spacing: 16)],
+                columns: [GridItem(.adaptive(minimum: 100, maximum: 150), spacing: 16)],
                 spacing: 18
             ) {
                 ForEach(movies) { movie in
@@ -103,6 +104,7 @@ struct DiscoverColumn: View {
                 }
             }
             .padding(.horizontal, 20)
+            .padding(.top, 2)
             .padding(.bottom, 16)
         }
     }

@@ -451,7 +451,7 @@ struct MovieListColumn: View {
     private var grid: some View {
         ScrollView {
             LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 116, maximum: 150), spacing: 16)],
+                columns: [GridItem(.adaptive(minimum: 100, maximum: 150), spacing: 16)],
                 spacing: 18
             ) {
                 ForEach(filteredMovies, id: \.persistentModelID) { movie in
