@@ -51,7 +51,7 @@ struct UpcomingCalendarView<MenuContent: View>: View {
 
     private func monthView(_ month: Date, byDay: [Date: [Movie]]) -> some View {
         let days = daysInMonth(month)
-        let releaseCount = days.compactMap { $0 }.reduce(0) { $0 + (byDay[$1]?.count ?? 0) }
+        let releaseCount = days.filter(\.inMonth).reduce(0) { $0 + (byDay[$1.date]?.count ?? 0) }
 
         return VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
@@ -74,26 +74,30 @@ struct UpcomingCalendarView<MenuContent: View>: View {
                         .frame(maxWidth: .infinity)
                         .padding(.bottom, 2)
                 }
-                ForEach(Array(days.enumerated()), id: \.offset) { _, day in
-                    if let day {
-                        dayCell(day, movies: byDay[day] ?? [])
+                ForEach(days, id: \.date) { day in
+                    if day.inMonth {
+                        dayCell(day.date, movies: byDay[day.date] ?? [])
                     } else {
-                        Color.clear.aspectRatio(2.0 / 3.0, contentMode: .fit)
+                        outsideDayCell(day.date)
                     }
                 }
             }
         }
     }
 
-    /// The month's days, padded with `nil` so the first day lands on its weekday.
-    private func daysInMonth(_ month: Date) -> [Date?] {
-        guard let range = calendar.range(of: .day, in: .month, for: month) else { return [] }
+    /// The month's days as whole weeks: the first and last weeks are filled out
+    /// with the neighbouring months' days (`inMonth == false`), so every month is
+    /// a full rectangle.
+    private func daysInMonth(_ month: Date) -> [(date: Date, inMonth: Bool)] {
+        guard let count = calendar.range(of: .day, in: .month, for: month)?.count else { return [] }
         let firstWeekday = calendar.component(.weekday, from: month)
         let leading = (firstWeekday - calendar.firstWeekday + 7) % 7
-        let days: [Date?] = range.compactMap {
-            calendar.date(byAdding: .day, value: $0 - 1, to: month)
+        let total = Int((Double(leading + count) / 7).rounded(.up)) * 7
+        return (0..<total).compactMap { index in
+            let offset = index - leading
+            guard let date = calendar.date(byAdding: .day, value: offset, to: month) else { return nil }
+            return (date, offset >= 0 && offset < count)
         }
-        return Array(repeating: nil, count: leading) + days
     }
 
     /// Very short weekday symbols, starting at the locale's first weekday.
@@ -152,6 +156,21 @@ struct UpcomingCalendarView<MenuContent: View>: View {
                 }
                 .accessibilityHidden(true)
         }
+    }
+
+    /// A day from the previous or next month that pads out a week: a faint tile
+    /// with its number, never a poster (that month shows the release itself).
+    private func outsideDayCell(_ day: Date) -> some View {
+        RoundedRectangle(cornerRadius: 6, style: .continuous)
+            .fill(Palette.card.opacity(0.4))
+            .aspectRatio(2.0 / 3.0, contentMode: .fit)
+            .overlay(alignment: .topLeading) {
+                Text("\(calendar.component(.day, from: day))")
+                    .font(.caption2.weight(.medium).monospacedDigit())
+                    .foregroundStyle(Palette.textSecondary.opacity(0.22))
+                    .padding(5)
+            }
+            .accessibilityHidden(true)
     }
 
     private func posterCell(_ movie: Movie, day: Int, extra: Int, selected: Bool) -> some View {
