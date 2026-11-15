@@ -22,8 +22,8 @@ struct AboutScreen: View {
             VStack(spacing: 22) {
                 appHeader
                 tmdbCredit
-                privacyNote
                 links
+                privacyNote
             }
             .padding(24)
             .frame(maxWidth: 460)
