@@ -5,14 +5,14 @@
 import SwiftUI
 import NukeUI
 
-/// A large card for the Browse tab: a list's name over a fanned collage of
+/// A large card for the Browse tab: a list's name next to a fanned collage of
 /// its top posters, on a soft, blurred wash of the first one.
 struct BrowseCard: View {
 
     let title: String
     let subtitle: String
     let systemImage: String
-    /// Poster images, front first; up to three are fanned out.
+    /// Poster images, front first; up to four are fanned out.
     let posterURLs: [URL]
 
     private let height: CGFloat = 132
@@ -21,7 +21,7 @@ struct BrowseCard: View {
         ZStack(alignment: .bottomLeading) {
             fan
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
-                .padding(.trailing, 18)
+                .padding(.trailing, 14)
             label
                 .padding(16)
         }
@@ -58,9 +58,11 @@ struct BrowseCard: View {
         }
     }
 
-    /// Up to three posters fanned out on the right, the first in front.
+    /// The posters fanned out on the right: the first in front, the next two
+    /// tilting away to the left behind it, and a fourth tilting to the right
+    /// from behind the front one.
     @ViewBuilder private var fan: some View {
-        let urls = Array(posterURLs.prefix(3))
+        let urls = Array(posterURLs.prefix(4))
         if urls.isEmpty {
             Image(systemName: systemImage)
                 .font(.system(size: 44, weight: .light))
@@ -68,16 +70,32 @@ struct BrowseCard: View {
                 .padding(.trailing, 12)
         } else {
             ZStack {
-                // Back to front, so the first poster ends up on top.
-                ForEach(Array(urls.enumerated()).reversed(), id: \.offset) { index, url in
-                    poster(url)
-                        .rotationEffect(.degrees(Double(index) * -7))
-                        .offset(x: CGFloat(index) * -30, y: CGFloat(index) * 4)
+                // Drawn back to front.
+                ForEach(Self.drawOrder.filter { $0 < urls.count }, id: \.self) { index in
+                    let slot = Self.slots[index]
+                    poster(urls[index])
+                        .rotationEffect(.degrees(slot.angle))
+                        .offset(x: slot.x, y: slot.y)
                 }
             }
-            .padding(.trailing, CGFloat(urls.count - 1) * 30)
+            // Room for the posters fanned out to the left of the front one. The
+            // one tilting right is left to spill off the card's right edge.
+            .padding(.leading, urls.count > 1 ? CGFloat(min(urls.count, 3) - 1) * 40 : 0)
+            // Larger than the card, so the posters spill off its bottom edge.
+            .offset(y: 26)
         }
     }
+
+    /// Where each poster sits relative to the front one.
+    private static let slots: [(x: CGFloat, y: CGFloat, angle: Double)] = [
+        (0, 0, 0),        // front
+        (-40, 4, -7),     // behind, left
+        (-80, 8, -14),    // further behind, left
+        (50, 4, 8),       // behind the front, right; spills off the edge
+    ]
+
+    /// Back to front: the far left, the right one, the near left, the front.
+    private static let drawOrder = [2, 3, 1, 0]
 
     private func poster(_ url: URL) -> some View {
         LazyImage(url: url) { state in
@@ -87,7 +105,7 @@ struct BrowseCard: View {
                 Palette.card
             }
         }
-        .frame(width: 62, height: 93)
+        .frame(width: 88, height: 132)
         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 6, style: .continuous)

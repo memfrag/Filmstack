@@ -125,7 +125,7 @@ private struct BrowseTab: View {
 
     private func posterURLs(for list: DiscoverList) -> [URL] {
         guard case .loaded(let movies) = discover.phase(for: list) else { return [] }
-        return movies.prefix(3).compactMap { TMDBImage.posterURL(path: $0.posterPath, size: .queue) }
+        return movies.prefix(4).compactMap { TMDBImage.posterURL(path: $0.posterPath, size: .queue) }
     }
 
     private func subtitle(for list: DiscoverList) -> String {
@@ -141,7 +141,7 @@ private struct BrowseTab: View {
 
     private var letterboxdPosterURLs: [URL] {
         guard case .loaded(let entries) = letterboxd.phase else { return [] }
-        return entries.prefix(3).compactMap(\.posterURL)
+        return entries.prefix(4).compactMap(\.posterURL)
     }
 
     private var letterboxdSubtitle: String {
