@@ -55,6 +55,14 @@ struct Sidebar: View {
                 Text("Miscellaneous")
                     .foregroundStyle(Palette.textSecondary)
             }
+
+            #if os(iOS)
+            Section {
+                NavigationLink(value: MainRouting.Selectable.settings) {
+                    Label("Settings", systemImage: "gearshape")
+                }
+            }
+            #endif
         }
         .scrollContentBackground(.hidden)
         .background(Palette.sidebar)

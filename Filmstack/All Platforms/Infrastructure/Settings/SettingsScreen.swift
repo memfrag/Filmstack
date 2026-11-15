@@ -58,6 +58,10 @@ struct SettingsScreen: View {
         }
         .navigationTitle("Settings")
         .formStyle(.grouped)
+        #if os(iOS)
+        .scrollContentBackground(.hidden)
+        .filmWindowBackground()
+        #endif
     }
 }
 

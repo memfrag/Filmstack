@@ -30,6 +30,11 @@ struct PhoneTabRoot: View {
                 value: MainRouting.Selectable.discover(.nowPlaying)) {
                 BrowseTab()
             }
+            Tab("Settings", systemImage: "gearshape", value: MainRouting.Selectable.settings) {
+                NavigationStack {
+                    SettingsScreen()
+                }
+            }
         }
         .onChange(of: appSettings.showsMaybeLater) { _, shows in
             if !shows && router.activeSelectable == .maybeLater { router.activeSelectable = .queue }

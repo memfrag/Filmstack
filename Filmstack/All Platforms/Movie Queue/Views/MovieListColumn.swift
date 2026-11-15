@@ -42,9 +42,6 @@ struct MovieListColumn: View {
     @AppStorage("filmstack.upcomingCalendar") private var upcomingCalendar = true
     /// Watched only: show watch dates as a calendar (off by default).
     @AppStorage("filmstack.watchedCalendar") private var watchedCalendar = false
-    #if os(iOS)
-    @State private var showingSettings = false
-    #endif
 
     private var viewMode: LibraryViewMode {
         LibraryViewMode(rawValue: viewModeRaw) ?? .list
@@ -85,7 +82,7 @@ struct MovieListColumn: View {
             // Any non-watched movie; future-dated ones are kept in `sectionMovies`.
             predicate = #Predicate { $0.statusRawValue != watchedRaw }
             sort = [SortDescriptor(\.releaseDate, order: .forward)]
-        case .discover, .letterboxd:
+        case .discover, .letterboxd, .settings:
             // External-browse sections use their own columns, never this view.
             predicate = #Predicate { _ in false }
             sort = []
@@ -180,18 +177,6 @@ struct MovieListColumn: View {
                 .frame(minWidth: 560, idealWidth: 640, minHeight: 480, idealHeight: 560)
                 #endif
         }
-        #if os(iOS)
-        .sheet(isPresented: $showingSettings) {
-            NavigationStack {
-                SettingsScreen()
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Close", systemImage: "xmark", role: .close) { showingSettings = false }
-                        }
-                    }
-            }
-        }
-        #endif
     }
 
     /// The section's movies, or whichever empty state applies. Kept separate from
@@ -378,7 +363,7 @@ struct MovieListColumn: View {
                             row(for: movie)
                         }
                     } header: {
-                        monthHeader(group.month)
+                        monthHeader(group.month, count: group.movies.count)
                     }
                 }
             } else {
@@ -405,15 +390,21 @@ struct MovieListColumn: View {
             .map { (month: $0.key, movies: $0.value) }
     }
 
-    private func monthHeader(_ month: Date?) -> some View {
-        Text(month?.formatted(.dateTime.month(.wide).year()) ?? String(localized: "No Date"))
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Palette.textSecondary)
-            .padding(.horizontal, 22)
-            .padding(.top, 8)
-            .padding(.bottom, 4)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .listRowInsets(EdgeInsets())
+    private func monthHeader(_ month: Date?, count: Int) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(month?.formatted(.dateTime.month(.wide).year()) ?? String(localized: "No Date"))
+                .font(.subheadline.weight(.semibold))
+            Spacer()
+            Text(count == 1 ? "1 movie" : "\(count) movies")
+                .font(.subheadline)
+                .monospacedDigit()
+        }
+        .foregroundStyle(Palette.textSecondary)
+        .padding(.horizontal, 22)
+        .padding(.top, 8)
+        .padding(.bottom, 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .listRowInsets(EdgeInsets())
     }
 
     @ViewBuilder
@@ -647,7 +638,7 @@ struct MovieListColumn: View {
         case .upcoming: "Nothing upcoming"
         case .watched: "Nothing watched yet"
         case .maybeLater: "Nothing on the maybe list"
-        case .discover, .letterboxd: ""
+        case .discover, .letterboxd, .settings: ""
         }
     }
 
@@ -657,7 +648,7 @@ struct MovieListColumn: View {
         case .upcoming: "Movies in your library with a future release date show up here."
         case .watched: "Movies you mark as watched will show up here."
         case .maybeLater: "Park movies here when you're not sure yet."
-        case .discover, .letterboxd: ""
+        case .discover, .letterboxd, .settings: ""
         }
     }
 
@@ -791,15 +782,6 @@ struct MovieListColumn: View {
                 }
             }
         }
-        #if os(iOS)
-        ToolbarItem(placement: .topBarLeading) {
-            Button {
-                showingSettings = true
-            } label: {
-                Label("Settings", systemImage: "gearshape")
-            }
-        }
-        #endif
     }
 }
 

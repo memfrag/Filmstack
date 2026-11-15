@@ -32,6 +32,10 @@ struct SplitRoot: View {
                     DiscoverColumn(list: list, selection: $discoverSelection)
                 } else if router.activeSelectable == .letterboxd {
                     LetterboxdColumn(selection: $discoverSelection)
+                } else if router.activeSelectable == .settings {
+                    NavigationStack {
+                        SettingsScreen()
+                    }
                 } else {
                     MovieListColumn(
                         section: router.activeSelectable,
@@ -49,10 +53,18 @@ struct SplitRoot: View {
         .toolbarBackground(.clear, for: .windowToolbar)
         #endif
         .onChange(of: router.activeSelectable) { discoverSelection = nil }
+        #if os(macOS)
+        // macOS has a Settings window instead of a Settings section.
+        .onAppear {
+            if router.activeSelectable == .settings { router.activeSelectable = .queue }
+        }
+        #endif
     }
 
     @ViewBuilder private var detailColumn: some View {
-        if router.activeSelectable.isExternalBrowse {
+        if router.activeSelectable == .settings {
+            Palette.base
+        } else if router.activeSelectable.isExternalBrowse {
             if let result = discoverSelection {
                 DiscoverDetailColumn(selection: result)
             } else {
