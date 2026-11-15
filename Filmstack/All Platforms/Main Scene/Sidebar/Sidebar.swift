@@ -59,7 +59,7 @@ struct Sidebar: View {
             #if os(iOS)
             Section {
                 NavigationLink(value: MainRouting.Selectable.profile) {
-                    Label("Profile", systemImage: "person.crop.circle")
+                    Label("Profile", systemImage: "person.fill")
                 }
             }
             #endif

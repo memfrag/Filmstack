@@ -54,7 +54,7 @@ struct MainRouting: Routing {
             case .maybeLater: "clock"
             case .discover(let list): list.systemImage
             case .letterboxd: "film.stack"
-            case .profile: "person.crop.circle"
+            case .profile: "person.fill"
             }
         }
 
