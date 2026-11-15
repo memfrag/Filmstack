@@ -22,12 +22,30 @@ struct SettingsScreen: View {
                 } label: {
                     Label("About Filmstack", systemImage: "info.circle")
                 }
-                .filmSettingsRow()
+            }
+            .filmSettingsRows()
+
+            Section {
                 NavigationLink {
                     TMDBKeySettings()
                 } label: {
                     Label("TMDB API Key", systemImage: "film")
                 }
+                .filmSettingsRow()
+                LabeledContent {
+                    TextField("Username", text: $appSettings.letterboxdUsername)
+                        .multilineTextAlignment(.trailing)
+                        .autocorrectionDisabled()
+                        #if os(iOS)
+                        .textInputAutocapitalization(.never)
+                        #endif
+                } label: {
+                    Label("Letterboxd", systemImage: "person.crop.square")
+                }
+            } header: {
+                Text("Accounts")
+            } footer: {
+                Text("Your Letterboxd username shows the films from your public diary in Browse.")
             }
             .filmSettingsRows()
 
@@ -37,19 +55,6 @@ struct SettingsScreen: View {
                 Text("Library")
             } footer: {
                 Text("A separate list for movies you're not sure about yet.")
-            }
-            .filmSettingsRows()
-
-            Section {
-                TextField("Username", text: $appSettings.letterboxdUsername)
-                    .autocorrectionDisabled()
-                    #if os(iOS)
-                    .textInputAutocapitalization(.never)
-                    #endif
-            } header: {
-                Text("Letterboxd")
-            } footer: {
-                Text("Shows the films from your public Letterboxd diary in Browse.")
             }
             .filmSettingsRows()
 
