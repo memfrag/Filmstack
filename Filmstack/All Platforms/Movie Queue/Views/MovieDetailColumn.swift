@@ -3,6 +3,7 @@
 //
 
 import SwiftUI
+import SwiftData
 import NukeUI
 import SwiftUIToolbox
 

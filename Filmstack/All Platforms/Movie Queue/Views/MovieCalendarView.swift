@@ -3,6 +3,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 /// A "poster wall" calendar: one month grid per month that has movies, where
 /// each day is filled by its movie's poster and

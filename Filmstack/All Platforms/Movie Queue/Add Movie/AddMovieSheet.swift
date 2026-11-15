@@ -3,6 +3,7 @@
 //
 
 import SwiftUI
+import SwiftData
 import PhotosUI
 import NukeUI
 
@@ -98,10 +99,12 @@ struct AddMovieSheet: View {
                 .foregroundStyle(.secondary)
             }
             if FilmstackAI.canSeeImages {
+                // The label closure is Sendable, so the main-actor palette
+                // colour is applied outside it.
                 PhotosPicker(selection: $photoItem, matching: .images) {
                     Image(systemName: "photo.badge.magnifyingglass")
-                        .foregroundStyle(Palette.accentBright)
                 }
+                .foregroundStyle(Palette.accentBright)
                 .buttonStyle(.plain)
                 .disabled(isReadingPhoto)
                 .help("Find a movie from a photo of its poster or listing")

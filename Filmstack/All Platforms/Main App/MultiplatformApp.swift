@@ -3,6 +3,7 @@
 //
 
 import SwiftUI
+import SwiftData
 import AppDesign
 #if os(macOS)
 import Sparkle
