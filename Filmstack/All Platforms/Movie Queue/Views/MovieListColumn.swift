@@ -36,9 +36,12 @@ struct MovieListColumn: View {
     @FocusState private var searchFocused: Bool
     @State private var draggingMovie: Movie?
     @State private var showingPicker = false
+    @State private var showingStats = false
     @AppStorage("filmstack.libraryViewMode") private var viewModeRaw = LibraryViewMode.list.rawValue
     /// Upcoming only: show releases as a poster-wall calendar (the default) instead of list/grid.
     @AppStorage("filmstack.upcomingCalendar") private var upcomingCalendar = true
+    /// Watched only: show watch dates as a calendar (off by default).
+    @AppStorage("filmstack.watchedCalendar") private var watchedCalendar = false
     #if os(iOS)
     @State private var showingSettings = false
     #endif
@@ -47,7 +50,16 @@ struct MovieListColumn: View {
         LibraryViewMode(rawValue: viewModeRaw) ?? .list
     }
 
-    private var showsCalendar: Bool { section == .upcoming && upcomingCalendar }
+    private var showsCalendar: Bool {
+        switch section {
+        case .upcoming: upcomingCalendar
+        case .watched: watchedCalendar
+        default: false
+        }
+    }
+
+    /// Whether this section offers a calendar layout.
+    private var hasCalendar: Bool { section == .upcoming || section == .watched }
 
     init(section: MainRouting.Selectable, selection: Binding<Movie?>) {
         self.section = section
@@ -162,6 +174,12 @@ struct MovieListColumn: View {
                 .frame(minWidth: 900, idealWidth: 960, minHeight: 640, idealHeight: 700)
         }
         #endif
+        .sheet(isPresented: $showingStats) {
+            WatchedStatsView(movies: sectionMovies)
+                #if os(macOS)
+                .frame(minWidth: 560, idealWidth: 640, minHeight: 480, idealHeight: 560)
+                #endif
+        }
         #if os(iOS)
         .sheet(isPresented: $showingSettings) {
             NavigationStack {
@@ -185,7 +203,9 @@ struct MovieListColumn: View {
         } else if filteredMovies.isEmpty {
             noMatchesState
         } else if showsCalendar {
-            UpcomingCalendarView(movies: filteredMovies, selection: $selection) { movie in
+            MovieCalendarView(movies: filteredMovies,
+                              kind: section == .watched ? .watched : .release,
+                              selection: $selection) { movie in
                 rowMenu(for: movie)
             }
             .transition(.opacity)
@@ -653,7 +673,7 @@ struct MovieListColumn: View {
 
     // MARK: - Toolbar
 
-    private enum UpcomingLayout: Hashable {
+    private enum SectionLayout: Hashable {
         case list, grid, calendar
 
         var systemImage: String {
@@ -665,12 +685,17 @@ struct MovieListColumn: View {
         }
     }
 
-    /// Upcoming's layout: the shared list/grid mode, or its own calendar.
-    private var upcomingLayout: Binding<UpcomingLayout> {
+    /// The section's layout: the shared list/grid mode, or its own calendar
+    /// (Upcoming and Watched only).
+    private var sectionLayout: Binding<SectionLayout> {
         Binding {
-            upcomingCalendar ? .calendar : (viewMode == .grid ? .grid : .list)
+            showsCalendar ? .calendar : (viewMode == .grid ? .grid : .list)
         } set: { layout in
-            upcomingCalendar = layout == .calendar
+            if section == .watched {
+                watchedCalendar = layout == .calendar
+            } else {
+                upcomingCalendar = layout == .calendar
+            }
             if layout != .calendar {
                 viewModeRaw = (layout == .grid ? LibraryViewMode.grid : .list).rawValue
             }
@@ -694,17 +719,27 @@ struct MovieListColumn: View {
             }
             ToolbarSpacer(.fixed)
         }
-        if section == .upcoming {
+        if section == .watched, !sectionMovies.isEmpty {
+            ToolbarItem {
+                Button {
+                    showingStats = true
+                } label: {
+                    Label("Statistics", systemImage: "chart.bar.xaxis")
+                }
+            }
+            ToolbarSpacer(.fixed)
+        }
+        if hasCalendar {
             ToolbarItem {
                 Menu {
-                    Picker("View", selection: upcomingLayout) {
-                        Label("List", systemImage: "list.bullet").tag(UpcomingLayout.list)
-                        Label("Grid", systemImage: "square.grid.2x2").tag(UpcomingLayout.grid)
-                        Label("Calendar", systemImage: "calendar").tag(UpcomingLayout.calendar)
+                    Picker("View", selection: sectionLayout) {
+                        Label("List", systemImage: "list.bullet").tag(SectionLayout.list)
+                        Label("Grid", systemImage: "square.grid.2x2").tag(SectionLayout.grid)
+                        Label("Calendar", systemImage: "calendar").tag(SectionLayout.calendar)
                     }
                     .pickerStyle(.inline)
                 } label: {
-                    Label("View", systemImage: upcomingLayout.wrappedValue.systemImage)
+                    Label("View", systemImage: sectionLayout.wrappedValue.systemImage)
                 }
             }
         } else {

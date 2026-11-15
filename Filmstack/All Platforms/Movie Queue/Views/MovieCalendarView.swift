@@ -4,32 +4,51 @@
 
 import SwiftUI
 
-/// A "poster wall" release calendar for the Upcoming section: one month grid per
-/// month that has releases, where each release day is filled by its poster and
+/// A "poster wall" calendar: one month grid per month that has movies, where
+/// each day is filled by its movie's poster and
 /// empty days recede. Tapping a poster selects the movie; a day with several
 /// releases opens a menu to pick one.
-struct UpcomingCalendarView<MenuContent: View>: View {
+struct MovieCalendarView<MenuContent: View>: View {
+
+    /// What a calendar date means for a movie in this section.
+    enum DateKind {
+        /// Upcoming: release dates, oldest month first.
+        case release
+        /// Watched: watch dates, newest month first.
+        case watched
+    }
 
     let movies: [Movie]
+    var kind: DateKind = .release
     @Binding var selection: Movie?
     @ViewBuilder var menu: (Movie) -> MenuContent
 
     private let calendar = Calendar.current
     private let cellSpacing: CGFloat = 4
 
-    /// Movies grouped by the start of their release day.
-    private var moviesByDay: [Date: [Movie]] {
-        Dictionary(grouping: movies.filter { $0.releaseDate != nil }) {
-            calendar.startOfDay(for: $0.releaseDate!)
+    private func date(of movie: Movie) -> Date? {
+        switch kind {
+        case .release: movie.releaseDate
+        case .watched: movie.dateWatched
         }
     }
 
-    /// The first day of every month that has at least one release, in order.
+    /// Movies grouped by the start of their day.
+    private var moviesByDay: [Date: [Movie]] {
+        var result: [Date: [Movie]] = [:]
+        for movie in movies {
+            guard let date = date(of: movie) else { continue }
+            result[calendar.startOfDay(for: date), default: []].append(movie)
+        }
+        return result
+    }
+
+    /// The first day of every month that has at least one movie, in order.
     private var months: [Date] {
         let starts = Set(moviesByDay.keys.compactMap {
             calendar.dateInterval(of: .month, for: $0)?.start
         })
-        return starts.sorted()
+        return kind == .watched ? starts.sorted(by: >) : starts.sorted()
     }
 
     var body: some View {
@@ -59,29 +78,47 @@ struct UpcomingCalendarView<MenuContent: View>: View {
                     .font(.title3.weight(.bold))
                     .foregroundStyle(Palette.textPrimary)
                 Spacer()
-                Text(releaseCount == 1 ? "1 release" : "\(releaseCount) releases")
+                Text(countText(releaseCount))
                     .font(.subheadline)
                     .foregroundStyle(Palette.textSecondary)
             }
             .padding(.horizontal, 4)
 
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: cellSpacing), count: 7),
-                      spacing: cellSpacing) {
-                ForEach(Array(weekdaySymbols.enumerated()), id: \.offset) { _, symbol in
-                    Text(symbol)
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(Palette.textSecondary.opacity(0.7))
-                        .frame(maxWidth: .infinity)
-                        .padding(.bottom, 2)
+            // Plain stacks, not a lazy grid: a lazy grid inside the lazy month
+            // stack only sizes its rows as they scroll in, so the next month's
+            // header kept moving down while scrolling.
+            VStack(spacing: cellSpacing) {
+                HStack(spacing: cellSpacing) {
+                    ForEach(Array(weekdaySymbols.enumerated()), id: \.offset) { _, symbol in
+                        Text(symbol)
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(Palette.textSecondary.opacity(0.7))
+                            .frame(maxWidth: .infinity)
+                    }
                 }
-                ForEach(days, id: \.date) { day in
-                    if day.inMonth {
-                        dayCell(day.date, movies: byDay[day.date] ?? [])
-                    } else {
-                        outsideDayCell(day.date)
+                .padding(.bottom, 2)
+                ForEach(0..<(days.count / 7), id: \.self) { week in
+                    HStack(spacing: cellSpacing) {
+                        ForEach(days[(week * 7)..<(week * 7 + 7)], id: \.date) { day in
+                            Group {
+                                if day.inMonth {
+                                    dayCell(day.date, movies: byDay[day.date] ?? [])
+                                } else {
+                                    outsideDayCell(day.date)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
                     }
                 }
             }
+        }
+    }
+
+    private func countText(_ count: Int) -> String {
+        switch kind {
+        case .release: count == 1 ? String(localized: "1 release") : String(localized: "\(count) releases")
+        case .watched: count == 1 ? String(localized: "1 movie") : String(localized: "\(count) movies")
         }
     }
 
@@ -113,6 +150,8 @@ struct UpcomingCalendarView<MenuContent: View>: View {
     private func dayCell(_ day: Date, movies: [Movie]) -> some View {
         let isToday = calendar.isDateInToday(day)
         let isPast = day < calendar.startOfDay(for: Date())
+        // Upcoming dims days already gone; Watched dims days still to come.
+        let isDimmed = kind == .release ? isPast : (!isPast && !isToday)
         let dayNumber = calendar.component(.day, from: day)
 
         if let first = movies.first {
@@ -146,7 +185,7 @@ struct UpcomingCalendarView<MenuContent: View>: View {
                     Text("\(dayNumber)")
                         .font(.caption2.weight(isToday ? .bold : .medium).monospacedDigit())
                         .foregroundStyle(isToday ? Palette.accentBright
-                                         : Palette.textSecondary.opacity(isPast ? 0.3 : 0.6))
+                                         : Palette.textSecondary.opacity(isDimmed ? 0.3 : 0.6))
                         .padding(5)
                 }
                 .overlay {
@@ -206,7 +245,7 @@ struct UpcomingCalendarView<MenuContent: View>: View {
 
 #if DEBUG
 #Preview {
-    UpcomingCalendarView(
+    MovieCalendarView(
         movies: SampleMovies.makeMovies(),
         selection: .constant(nil)
     ) { _ in EmptyView() }
