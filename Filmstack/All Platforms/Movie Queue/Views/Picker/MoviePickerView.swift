@@ -113,6 +113,8 @@ struct MoviePickerView: View {
     @State private var askingSmartPick = false
     @State private var smartPickRequest = ""
     @State private var isSmartPicking = false
+    /// What Smart Pick is looking for, shown in the header while it thinks.
+    @State private var smartPickQuery = ""
     @State private var smartPickError: String?
     /// The movie Smart Pick chose and why; shown under its title.
     @State private var smartPickReason: (id: PersistentIdentifier, text: String)?
@@ -140,6 +142,12 @@ struct MoviePickerView: View {
                 onOpenDetails: openDetails
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Out of focus while Smart Pick thinks; it sharpens again as the
+            // shelf slides to the pick.
+            .blur(radius: isSmartPicking ? 10 : 0)
+            .opacity(isSmartPicking ? 0.7 : 1)
+            .allowsHitTesting(!isSmartPicking)
+            .animation(.smooth(duration: 0.45), value: isSmartPicking)
             bottomBar
                 .opacity(chromeVisible ? 1 : 0)
                 .offset(y: chromeVisible ? 0 : 20)
@@ -259,10 +267,27 @@ struct MoviePickerView: View {
                     Text(subtitle(for: movie))
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.white.opacity(0.75))
-                    if let reason = smartPickReason, reason.id == movie.persistentModelID {
+                    if isSmartPicking {
+                        // Where the pick's reason will appear, so it's clear
+                        // what's happening and what it's looking for.
+                        HStack(spacing: 6) {
+                            Image(systemName: "sparkles")
+                                .symbolEffect(.variableColor.iterative.reversing, isActive: true)
+                            Text("Finding “\(smartPickQuery)”…")
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        }
+                        .font(.footnote.weight(.medium))
+                        // White like the subtitle: an accent colour clashes
+                        // with some posters' backgrounds.
+                        .foregroundStyle(.white.opacity(0.9))
+                        .padding(.top, 4)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Smart Pick is finding \(smartPickQuery)")
+                    } else if let reason = smartPickReason, reason.id == movie.persistentModelID {
                         Label(reason.text, systemImage: "sparkles")
                             .font(.footnote.weight(.medium))
-                            .foregroundStyle(Palette.accentBright)
+                            .foregroundStyle(.white.opacity(0.9))
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
                             .padding(.top, 4)
@@ -305,22 +330,26 @@ struct MoviePickerView: View {
                             .padding(.horizontal, 10)
                     }
                     .buttonStyle(.filmGlass)
-                    .disabled(!isSettled)
+                    .disabled(!isSettled || isSmartPicking)
 
                     if FilmstackAI.isAvailable {
                         Button {
                             askingSmartPick = true
                         } label: {
-                            if isSmartPicking {
-                                ProgressView().controlSize(.small)
-                                    .padding(.horizontal, 10)
-                            } else {
-                                Label("Smart", systemImage: "sparkles")
-                                    .padding(.horizontal, 10)
+                            Label {
+                                Text(isSmartPicking ? "Thinking…" : "Smart")
+                            } icon: {
+                                Image(systemName: "sparkles")
+                                    .symbolEffect(.variableColor.iterative.reversing, isActive: isSmartPicking)
                             }
+                            .padding(.horizontal, 10)
+                            .contentTransition(.opacity)
                         }
                         .buttonStyle(.filmGlass)
-                        .disabled(!isSettled || isSmartPicking)
+                        // Not dimmed while thinking: it's the busy indicator.
+                        .disabled(!isSettled)
+                        .allowsHitTesting(!isSmartPicking)
+                        .animation(.smooth(duration: 0.25), value: isSmartPicking)
                     }
                 }
             }
@@ -469,9 +498,10 @@ struct MoviePickerView: View {
     private func smartPick() {
         let request = smartPickRequest.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !request.isEmpty else { return }
-        isSmartPicking = true
+        smartPickQuery = request
+        withAnimation(.smooth(duration: 0.25)) { isSmartPicking = true }
         Task {
-            defer { isSmartPicking = false }
+            defer { withAnimation(.smooth(duration: 0.25)) { isSmartPicking = false } }
             do {
                 let result = try await SmartPicker.pick(from: movies, request: request)
                 guard movies.indices.contains(result.index) else { return }
