@@ -41,6 +41,19 @@ struct SettingsScreen: View {
             .filmSettingsRows()
 
             Section {
+                TextField("Username", text: $appSettings.letterboxdUsername)
+                    .autocorrectionDisabled()
+                    #if os(iOS)
+                    .textInputAutocapitalization(.never)
+                    #endif
+            } header: {
+                Text("Letterboxd")
+            } footer: {
+                Text("Shows the films from your public Letterboxd diary in Browse.")
+            }
+            .filmSettingsRows()
+
+            Section {
                 Toggle("Depth of Field Blur", isOn: $appSettings.pickerDepthOfField)
             } header: {
                 Text("Movie Picker")

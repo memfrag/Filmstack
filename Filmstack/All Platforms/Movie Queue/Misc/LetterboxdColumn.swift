@@ -15,7 +15,6 @@ struct LetterboxdColumn: View {
     @Environment(\.openURL) private var openURL
 
     private let store = LetterboxdStore.shared
-    @State private var usernameInput = ""
 
     private var username: String { appSettings.letterboxdUsername }
 
@@ -34,15 +33,12 @@ struct LetterboxdColumn: View {
         .toolbar {
             if !username.isEmpty {
                 ToolbarItem {
-                    Menu {
-                        Button("Refresh") { Task { await store.refresh(username: username) } }
-                        Button("Change Username…") {
-                            usernameInput = username
-                            appSettings.letterboxdUsername = ""
-                        }
+                    Button {
+                        Task { await store.refresh(username: username) }
                     } label: {
-                        Label("Options", systemImage: "ellipsis")
+                        Label("Refresh", systemImage: "arrow.clockwise")
                     }
+                    .disabled(store.phase == .loading)
                 }
             }
         }
@@ -87,40 +83,24 @@ struct LetterboxdColumn: View {
                     Text(message)
                 } actions: {
                     Button("Try Again") { Task { await store.refresh(username: username) } }
-                    Button("Change Username") { appSettings.letterboxdUsername = "" }
                 }
             }
         }
     }
 
-    // MARK: - Username prompt
+    // MARK: - No username
 
+    /// Shown until a username is set in Profile (Settings on macOS).
     private var usernamePrompt: some View {
-        VStack(spacing: 14) {
-            Image(systemName: "person.crop.circle.badge.questionmark")
-                .font(.system(size: 44, weight: .light))
-                .foregroundStyle(Palette.accent.opacity(0.85))
-            Text("Connect Letterboxd")
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(Palette.textPrimary)
-            Text("Enter your Letterboxd username to show films from your public diary.")
-                .foregroundStyle(Palette.textSecondary)
-                .multilineTextAlignment(.center)
-
-            HStack {
-                TextField("username", text: $usernameInput)
-                    .textFieldStyle(.roundedBorder)
-                    .autocorrectionDisabled()
-                    .frame(maxWidth: 220)
-                Button("Load") {
-                    appSettings.letterboxdUsername = usernameInput
-                }
-                .buttonStyle(.filmAccent)
-                .disabled(usernameInput.trimmingCharacters(in: .whitespaces).isEmpty)
-            }
+        ContentUnavailableView {
+            Label("Connect Letterboxd", systemImage: "person.crop.circle.badge.questionmark")
+        } description: {
+            #if os(iOS)
+            Text("Add your Letterboxd username in Profile to show films from your public diary.")
+            #else
+            Text("Add your Letterboxd username in Settings to show films from your public diary.")
+            #endif
         }
-        .padding(40)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Grid
