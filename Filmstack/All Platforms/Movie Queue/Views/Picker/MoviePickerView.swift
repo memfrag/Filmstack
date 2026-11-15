@@ -210,6 +210,7 @@ struct MoviePickerView: View {
                 .glassEffect(.regular.interactive(), in: Circle())
                 .accessibilityLabel("Close")
                 Spacer()
+                confirmButton
             }
         }
         .padding(.horizontal, 16)
@@ -420,6 +421,25 @@ struct MoviePickerView: View {
         withAnimation(.smooth(duration: 0.9)) {
             scroll.scrollTo(id: id, anchor: .center)
         }
+    }
+
+    /// Confirms the movie named in the header: closes the picker and opens
+    /// its details. Disabled until the shelf has come to rest on it.
+    private var confirmButton: some View {
+        Button {
+            if let movie = backgroundMovie { openDetails(movie) }
+        } label: {
+            Image(systemName: "checkmark")
+                .font(.body.weight(.bold))
+                .frame(width: 36, height: 36)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.white)
+        .glassEffect(.regular.tint(Palette.accent.opacity(0.7)).interactive(), in: Circle())
+        .disabled(!isSettled || isMoving || backgroundMovie == nil)
+        .opacity(!isSettled || isMoving ? 0.5 : 1)
+        .animation(.smooth(duration: 0.2), value: isMoving)
+        .accessibilityLabel("Choose \(backgroundMovie?.title ?? "Movie")")
     }
 
     private func openDetails(_ movie: Movie) {
