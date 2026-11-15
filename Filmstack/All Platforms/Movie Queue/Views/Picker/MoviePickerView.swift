@@ -8,7 +8,7 @@ import NukeUI
 
 /// A modal "help me pick" view: the queue as a 3D shelf of DVD cases.
 ///
-/// The cases stream in on open and settle with the middle movie pulled out.
+/// The cases stream in on open and settle with a random movie pulled out.
 /// Tapping the front case flips it to its back cover; "Open Full Details"
 /// dismisses and selects the movie in the queue.
 struct MoviePickerView: View {
@@ -49,11 +49,12 @@ struct MoviePickerView: View {
         self.title = title
         self.position = position
         self.onOpenDetails = onOpenDetails
-        let middle = movies.count / 2
-        self.initialIndex = middle
-        _offset = State(initialValue: CGFloat(middle))
-        if movies.indices.contains(middle) {
-            _scroll = State(initialValue: ScrollPosition(id: movies[middle].persistentModelID, anchor: .center))
+        // Open on a random movie, so the picker doesn't always suggest the same one.
+        let start = movies.indices.randomElement() ?? 0
+        self.initialIndex = start
+        _offset = State(initialValue: CGFloat(start))
+        if movies.indices.contains(start) {
+            _scroll = State(initialValue: ScrollPosition(id: movies[start].persistentModelID, anchor: .center))
         } else {
             _scroll = State(initialValue: ScrollPosition(idType: PersistentIdentifier.self))
         }
