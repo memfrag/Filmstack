@@ -168,7 +168,11 @@ struct ShelfGeometry {
         let center = applyTilt(position)
         let depth = CGFloat(center.z)
         let magnification = 1 / max(0.05, 1 - depth / eyeDistance)
-        let blur = min(14, max(0, (magnification - 1.45) * 10))
+        let nearBlur = min(14, max(0, (magnification - 1.45) * 10))
+        // Depth of field: cases behind the focus soften gradually the further
+        // back they stand; the focus and the cases in front of it stay sharp.
+        let farBlur = smoothstep(1.5, 12, u) * 3.5
+        let blur = max(nearBlur, farBlur)
         // Fade cases out well before any part of them reaches the eye plane,
         // where the projection would flip them over to the other side.
         var opacity: CGFloat = 1 - smoothstep(eyeDistance * 0.4, eyeDistance * 0.55, depth)
