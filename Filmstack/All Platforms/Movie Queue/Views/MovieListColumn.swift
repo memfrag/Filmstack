@@ -4,7 +4,6 @@
 
 import SwiftUI
 import SwiftData
-import UniformTypeIdentifiers
 #if os(iOS)
 import UIKit
 #endif
@@ -34,9 +33,9 @@ struct MovieListColumn: View {
     @State private var showingFilterPopover = false
     @State private var showingSearch = false
     @FocusState private var searchFocused: Bool
-    @State private var draggingMovie: Movie?
     @State private var showingPicker = false
     @State private var showingStats = false
+    /// List or grid, remembered per section (see `init`).
     @AppStorage("filmstack.libraryViewMode") private var viewModeRaw = LibraryViewMode.list.rawValue
     /// Upcoming only: show releases as a poster-wall calendar (the default) instead of list/grid.
     @AppStorage("filmstack.upcomingCalendar") private var upcomingCalendar = true
@@ -61,6 +60,8 @@ struct MovieListColumn: View {
     init(section: MainRouting.Selectable, selection: Binding<Movie?>) {
         self.section = section
         self._selection = selection
+        _viewModeRaw = AppStorage(wrappedValue: LibraryViewMode.list.rawValue,
+                                  "filmstack.libraryViewMode.\(Self.storageName(for: section))")
 
         let predicate: Predicate<Movie>
         let sort: [SortDescriptor<Movie>]
@@ -88,6 +89,19 @@ struct MovieListColumn: View {
             sort = []
         }
         _movies = Query(filter: predicate, sort: sort)
+    }
+
+    /// A stable name for a section in stored preferences.
+    private static func storageName(for section: MainRouting.Selectable) -> String {
+        switch section {
+        case .queue: "queue"
+        case .upcoming: "upcoming"
+        case .watched: "watched"
+        case .maybeLater: "maybeLater"
+        case .discover(let list): "discover.\(list.rawValue)"
+        case .letterboxd: "letterboxd"
+        case .settings: "settings"
+        }
     }
 
     private var canReorder: Bool {
@@ -443,6 +457,12 @@ struct MovieListColumn: View {
                 ForEach(filteredMovies, id: \.persistentModelID) { movie in
                     gridCell(for: movie)
                 }
+                .reorderable()
+            }
+            // Drag-to-reorder the queue (only when unfiltered). The move is
+            // applied once, on drop.
+            .reorderContainer(for: Movie.self, itemID: \.persistentModelID, isEnabled: canReorder) { difference in
+                applyReorder(difference)
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 16)
@@ -488,13 +508,24 @@ struct MovieListColumn: View {
         .contentShape(Rectangle())
         .onTapGesture { selection = movie }
         .contextMenu { rowMenu(for: movie) }
-        .modifier(GridReorderModifier(
-            movie: movie,
-            enabled: canReorder,
-            movies: filteredMovies,
-            dragging: $draggingMovie,
-            reorder: { MovieActions.reorderQueue($0, in: context) }
-        ))
+    }
+
+    /// Applies a grid drag: takes the dragged movies out of the queue and puts
+    /// them back, in their current order, before the destination movie (or at
+    /// the end).
+    private func applyReorder(_ difference: ReorderDifference<PersistentIdentifier, ReorderableSingleCollectionIdentifier>) {
+        let moving = Set(difference.sources)
+        let moved = movies.filter { moving.contains($0.persistentModelID) }
+        var reordered = movies.filter { !moving.contains($0.persistentModelID) }
+        let insertAt: Int
+        switch difference.destination.position {
+        case .before(let id):
+            insertAt = reordered.firstIndex { $0.persistentModelID == id } ?? reordered.endIndex
+        case .end:
+            insertAt = reordered.endIndex
+        }
+        reordered.insert(contentsOf: moved, at: insertAt)
+        MovieActions.reorderQueue(reordered, in: context)
     }
 
     private func positionBadge(_ position: Int) -> some View {
@@ -782,67 +813,6 @@ struct MovieListColumn: View {
                 }
             }
         }
-    }
-}
-
-// MARK: - Grid reordering
-
-/// Applies drag-and-drop reordering to a grid cell when `enabled`. Reordering is
-/// applied live through the data source, so the grid reflows as you drag.
-private struct GridReorderModifier: ViewModifier {
-    let movie: Movie
-    let enabled: Bool
-    let movies: [Movie]
-    @Binding var dragging: Movie?
-    let reorder: ([Movie]) -> Void
-
-    func body(content: Content) -> some View {
-        if enabled {
-            content
-                .onDrag {
-                    dragging = movie
-                    return NSItemProvider(object: NSString(string: movie.id.uuidString))
-                }
-                .onDrop(
-                    of: [.text],
-                    delegate: MovieDropDelegate(
-                        target: movie,
-                        movies: movies,
-                        dragging: $dragging,
-                        reorder: reorder
-                    )
-                )
-        } else {
-            content
-        }
-    }
-}
-
-private struct MovieDropDelegate: DropDelegate {
-    let target: Movie
-    let movies: [Movie]
-    @Binding var dragging: Movie?
-    let reorder: ([Movie]) -> Void
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        DropProposal(operation: .move)
-    }
-
-    func dropEntered(info: DropInfo) {
-        guard let dragging,
-              dragging.persistentModelID != target.persistentModelID,
-              let from = movies.firstIndex(where: { $0.persistentModelID == dragging.persistentModelID }),
-              let to = movies.firstIndex(where: { $0.persistentModelID == target.persistentModelID })
-        else { return }
-
-        var newOrder = movies
-        newOrder.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
-        reorder(newOrder)
-    }
-
-    func performDrop(info: DropInfo) -> Bool {
-        dragging = nil
-        return true
     }
 }
 
