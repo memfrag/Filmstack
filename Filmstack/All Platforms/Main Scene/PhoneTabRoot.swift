@@ -5,6 +5,7 @@
 #if os(iOS)
 
 import SwiftUI
+import SwiftData
 import AppDesign
 import AppRouting
 
@@ -17,13 +18,33 @@ struct PhoneTabRoot: View {
     @Environment(Router<MainRouting>.self) private var router
     @Environment(AppSettings.self) private var appSettings
 
+    /// Movies not yet watched, to find today's premieres.
+    @Query(filter: #Predicate<Movie> { $0.statusRawValue != "watched" })
+    private var unwatchedMovies: [Movie]
+
+    /// The movie pushed in each library tab, so the premiere accessory can
+    /// open one.
+    @State private var selections: [MainRouting.Selectable: Movie] = [:]
+
+    private var premieresToday: [Movie] {
+        unwatchedMovies.filter { PremiereAccessory.premieresToday($0.releaseDate) }
+    }
+
+    private func selection(for section: MainRouting.Selectable) -> Binding<Movie?> {
+        Binding(
+            get: { selections[section] },
+            set: { selections[section] = $0 }
+        )
+    }
+
     var body: some View {
         @Bindable var router = router
+        let premieres = premieresToday
 
         TabView(selection: $router.activeSelectable) {
             ForEach(MainRouting.Selectable.visibleLibraryCases(showingMaybeLater: appSettings.showsMaybeLater), id: \.self) { section in
                 Tab(section.title, systemImage: section.systemImage, value: section) {
-                    MovieSectionStack(section: section)
+                    MovieSectionStack(section: section, selectedMovie: selection(for: section))
                 }
             }
             Tab("Browse", systemImage: "sparkles",
@@ -34,6 +55,12 @@ struct PhoneTabRoot: View {
                 NavigationStack {
                     SettingsScreen()
                 }
+            }
+        }
+        .tabViewBottomAccessory(isEnabled: !premieres.isEmpty) {
+            PremiereAccessory(movies: premieres) { movie in
+                router.activeSelectable = .upcoming
+                selections[.upcoming] = movie
             }
         }
         .onChange(of: appSettings.showsMaybeLater) { _, shows in
@@ -186,7 +213,7 @@ private struct LetterboxdContent: View {
 private struct MovieSectionStack: View {
 
     let section: MainRouting.Selectable
-    @State private var selectedMovie: Movie?
+    @Binding var selectedMovie: Movie?
 
     var body: some View {
         NavigationStack {

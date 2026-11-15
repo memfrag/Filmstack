@@ -32,6 +32,9 @@ import KeyValueStore
         /// Whether the movie picker blurs cases away from the focus.
         case pickerDepthOfField
 
+        /// Whether release-day notifications are scheduled.
+        case releaseNotifications
+
         // <-- (1 / 3) Add key for new property here
     }
 
@@ -73,6 +76,14 @@ import KeyValueStore
         }
     }
 
+    /// Whether a notification is scheduled at 8:00 on the release day of
+    /// upcoming movies in the library. On by default.
+    public var releaseNotifications: Bool {
+        didSet {
+            store.save(releaseNotifications, for: .releaseNotifications)
+        }
+    }
+
     // <-- (2 / 3) Add property for new property here
 
     // MARK: Setup
@@ -92,6 +103,7 @@ import KeyValueStore
         letterboxdUsername = self.store.load(.letterboxdUsername, default: "")
         showsMaybeLater = self.store.load(.showsMaybeLater, default: false)
         pickerDepthOfField = self.store.load(.pickerDepthOfField, default: false)
+        releaseNotifications = self.store.load(.releaseNotifications, default: true)
 
         // <-- (3 / 3) Add initializer for new property here.
     }

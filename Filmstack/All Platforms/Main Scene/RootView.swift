@@ -23,6 +23,11 @@ struct RootView: View {
     #endif
 
     var body: some View {
+        root
+            .premiereNotifications()
+    }
+
+    @ViewBuilder private var root: some View {
         #if os(iOS)
         if horizontalSizeClass == .compact {
             PhoneTabRoot()

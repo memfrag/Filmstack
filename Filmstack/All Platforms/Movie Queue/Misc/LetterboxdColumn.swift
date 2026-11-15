@@ -15,6 +15,21 @@ struct LetterboxdColumn: View {
     @Environment(\.openURL) private var openURL
 
     private let store = LetterboxdStore.shared
+    /// List or grid; grid by default.
+    @AppStorage("filmstack.libraryViewMode.letterboxd") private var viewModeRaw = LibraryViewMode.grid.rawValue
+
+    private var viewMode: LibraryViewMode {
+        LibraryViewMode(rawValue: viewModeRaw) ?? .grid
+    }
+
+    private var viewPickerPlacement: ToolbarItemPlacement {
+        #if os(iOS)
+        .topBarLeading
+        #else
+        .navigation
+        #endif
+    }
+
 
     private var username: String { appSettings.letterboxdUsername }
 
@@ -33,6 +48,18 @@ struct LetterboxdColumn: View {
         #endif
         .toolbar {
             if !username.isEmpty {
+                ToolbarItem(placement: viewPickerPlacement) {
+            Menu {
+                Picker("View", selection: $viewModeRaw) {
+                    Label("List", systemImage: "list.bullet").tag(LibraryViewMode.list.rawValue)
+                    Label("Grid", systemImage: "square.grid.2x2").tag(LibraryViewMode.grid.rawValue)
+                }
+                .pickerStyle(.inline)
+            } label: {
+                Label("View", systemImage: viewMode == .grid ? "square.grid.2x2" : "list.bullet")
+            }
+        }
+
                 ToolbarItem {
                     Button {
                         Task { await store.refresh(username: username) }
@@ -76,7 +103,11 @@ struct LetterboxdColumn: View {
                 ContentUnavailableView("No Watched Films", systemImage: "film",
                                        description: Text("No diary entries found for @\(username)."))
             case .loaded(let entries):
-                grid(entries)
+                if viewMode == .grid {
+                    grid(entries)
+                } else {
+                    listView(entries)
+                }
             case .failed(let message):
                 ContentUnavailableView {
                     Label("Couldn't Load", systemImage: "exclamationmark.triangle")
@@ -122,18 +153,76 @@ struct LetterboxdColumn: View {
         }
     }
 
+    private func listView(_ entries: [LetterboxdEntry]) -> some View {
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                ForEach(entries) { entry in
+                    row(entry)
+                    Divider().overlay(Palette.hairline).padding(.leading, 20)
+                }
+            }
+            .padding(.top, 2)
+            .padding(.bottom, 16)
+        }
+    }
+
+    private func row(_ entry: LetterboxdEntry) -> some View {
+        let isSelected = entry.tmdbID != nil && selection?.id == entry.tmdbID
+        return Button {
+            open(entry)
+        } label: {
+            HStack(spacing: 14) {
+                poster(entry)
+                    .frame(width: 50, height: 75)
+                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .strokeBorder(isSelected ? Palette.accent : Palette.hairline,
+                                          lineWidth: isSelected ? 2 : 1)
+                    }
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(entry.title)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Palette.textPrimary)
+                        .lineLimit(2)
+                    if let watched = entry.watchedDateText {
+                        Text(watched)
+                            .font(.subheadline)
+                            .foregroundStyle(Palette.textSecondary)
+                    }
+                }
+                Spacer(minLength: 0)
+                if let rating = entry.rating {
+                    Text(String(format: "★ %.1f", rating))
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.yellow)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Shows the entry's movie in the detail pane, or opens it on Letterboxd
+    /// when it has no TMDB id.
+    private func open(_ entry: LetterboxdEntry) {
+        if let result = entry.asSearchResult {
+            selection = BrowseSelection(
+                result: result,
+                watchedDate: entry.watchedDate,
+                rating: entry.rating
+            )
+        } else if let link = entry.link {
+            openURL(link)
+        }
+    }
+
     private func card(_ entry: LetterboxdEntry) -> some View {
         let isSelected = entry.tmdbID != nil && selection?.id == entry.tmdbID
         return Button {
-            if let result = entry.asSearchResult {
-                selection = BrowseSelection(
-                    result: result,
-                    watchedDate: entry.watchedDate,
-                    rating: entry.rating
-                )
-            } else if let link = entry.link {
-                openURL(link)
-            }
+            open(entry)
         } label: {
             VStack(alignment: .leading, spacing: 6) {
                 poster(entry)

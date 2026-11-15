@@ -16,6 +16,28 @@ struct DiscoverColumn: View {
     @Environment(AppSettings.self) private var appSettings
     @Query private var libraryMovies: [Movie]
     private let store = DiscoverStore.shared
+    /// List or grid, remembered per list; grid by default.
+    @AppStorage private var viewModeRaw: String
+
+    init(list: DiscoverList, selection: Binding<BrowseSelection?>) {
+        self.list = list
+        self._selection = selection
+        _viewModeRaw = AppStorage(wrappedValue: LibraryViewMode.grid.rawValue,
+                                  "filmstack.libraryViewMode.discover.\(list.rawValue)")
+    }
+
+    private var viewMode: LibraryViewMode {
+        LibraryViewMode(rawValue: viewModeRaw) ?? .grid
+    }
+
+    private var viewPickerPlacement: ToolbarItemPlacement {
+        #if os(iOS)
+        .topBarLeading
+        #else
+        .navigation
+        #endif
+    }
+
 
     private var region: String? { appSettings.releaseRegion }
 
@@ -38,6 +60,17 @@ struct DiscoverColumn: View {
         .navigationTitle(list.title)
         #endif
         .toolbar {
+        ToolbarItem(placement: viewPickerPlacement) {
+            Menu {
+                Picker("View", selection: $viewModeRaw) {
+                    Label("List", systemImage: "list.bullet").tag(LibraryViewMode.list.rawValue)
+                    Label("Grid", systemImage: "square.grid.2x2").tag(LibraryViewMode.grid.rawValue)
+                }
+                .pickerStyle(.inline)
+            } label: {
+                Label("View", systemImage: viewMode == .grid ? "square.grid.2x2" : "list.bullet")
+            }
+        }
             ToolbarItem {
                 Button {
                     Task { await store.refresh(list, region: region) }
@@ -81,7 +114,11 @@ struct DiscoverColumn: View {
             ContentUnavailableView("Nothing Here", systemImage: "film",
                                    description: Text("TMDB returned no movies for this list."))
         case .loaded(let movies):
-            grid(movies)
+            if viewMode == .grid {
+                grid(movies)
+            } else {
+                listView(movies)
+            }
         case .failed(let message):
             ContentUnavailableView {
                 Label("Couldn't Load", systemImage: "exclamationmark.triangle")
@@ -107,6 +144,55 @@ struct DiscoverColumn: View {
             .padding(.top, 2)
             .padding(.bottom, 16)
         }
+    }
+
+    private func listView(_ movies: [MovieSearchResult]) -> some View {
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                ForEach(movies) { movie in
+                    row(movie)
+                    Divider().overlay(Palette.hairline).padding(.leading, 20)
+                }
+            }
+            .padding(.top, 2)
+            .padding(.bottom, 16)
+        }
+    }
+
+    private func row(_ movie: MovieSearchResult) -> some View {
+        let isSelected = selection?.id == movie.id
+        let inLibrary = libraryTMDBIDs.contains(movie.tmdbID)
+        return Button {
+            selection = BrowseSelection(result: movie)
+        } label: {
+            HStack(spacing: 14) {
+                poster(movie)
+                    .frame(width: 50, height: 75)
+                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .strokeBorder(isSelected ? Palette.accent : Palette.hairline,
+                                          lineWidth: isSelected ? 2 : 1)
+                    }
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(movie.title)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(inLibrary ? Palette.accentBright : Palette.textPrimary)
+                        .lineLimit(2)
+                    if let year = movie.releaseYear {
+                        Text(String(year))
+                            .font(.subheadline)
+                            .foregroundStyle(Palette.textSecondary)
+                    }
+                }
+                Spacer(minLength: 0)
+                if inLibrary { inLibraryBadge }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private func posterCard(_ movie: MovieSearchResult) -> some View {

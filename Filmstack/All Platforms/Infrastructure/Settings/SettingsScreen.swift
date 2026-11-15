@@ -59,6 +59,15 @@ struct SettingsScreen: View {
             .filmSettingsRows()
 
             Section {
+                Toggle("Release Day Reminders", isOn: $appSettings.releaseNotifications)
+            } header: {
+                Text("Notifications")
+            } footer: {
+                Text("A notification at 8:00 on the day a movie in your library comes out.")
+            }
+            .filmSettingsRows()
+
+            Section {
                 Toggle("Depth of Field Blur", isOn: $appSettings.pickerDepthOfField)
             } header: {
                 Text("Movie Picker")
