@@ -109,6 +109,14 @@ struct MoviePickerView: View {
     /// as soon as the animation starts, so it can't gate the pinned offset.
     @State private var introDone = false
 
+    // Smart Pick (Apple Intelligence)
+    @State private var askingSmartPick = false
+    @State private var smartPickRequest = ""
+    @State private var isSmartPicking = false
+    @State private var smartPickError: String?
+    /// The movie Smart Pick chose and why; shown under its title.
+    @State private var smartPickReason: (id: PersistentIdentifier, text: String)?
+
     private var isSettled: Bool { introDone }
 
     var body: some View {
@@ -188,6 +196,21 @@ struct MoviePickerView: View {
         .sensoryFeedback(.selection, trigger: focusedIndex)
         #endif
         .task { await playIntro() }
+        .alert("Smart Pick", isPresented: $askingSmartPick) {
+            TextField("Something short and funny", text: $smartPickRequest)
+            Button("Pick", action: smartPick)
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Describe what you're in the mood for.")
+        }
+        .alert("Couldn't Pick", isPresented: Binding(
+            get: { smartPickError != nil },
+            set: { if !$0 { smartPickError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(smartPickError ?? "")
+        }
     }
 
     // MARK: - Chrome
@@ -236,8 +259,17 @@ struct MoviePickerView: View {
                     Text(subtitle(for: movie))
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.white.opacity(0.75))
-                    ProviderIconRow(providers: movie.watchProviders)
-                        .padding(.top, 4)
+                    if let reason = smartPickReason, reason.id == movie.persistentModelID {
+                        Label(reason.text, systemImage: "sparkles")
+                            .font(.footnote.weight(.medium))
+                            .foregroundStyle(Palette.accentBright)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                            .padding(.top, 4)
+                    } else {
+                        ProviderIconRow(providers: movie.watchProviders)
+                            .padding(.top, 4)
+                    }
                 }
                 .id(movie.persistentModelID)
                 .transition(MotionBlurTransition(direction: titleDirection))
@@ -267,12 +299,30 @@ struct MoviePickerView: View {
     private var bottomBar: some View {
         VStack(spacing: 14) {
             if movies.count > 1 {
-                Button(action: pickForMe) {
-                    Label("Random Pick", systemImage: "shuffle")
-                        .padding(.horizontal, 10)
+                HStack(spacing: 12) {
+                    Button(action: pickForMe) {
+                        Label("Random", systemImage: "shuffle")
+                            .padding(.horizontal, 10)
+                    }
+                    .buttonStyle(.filmGlass)
+                    .disabled(!isSettled)
+
+                    if FilmstackAI.isAvailable {
+                        Button {
+                            askingSmartPick = true
+                        } label: {
+                            if isSmartPicking {
+                                ProgressView().controlSize(.small)
+                                    .padding(.horizontal, 10)
+                            } else {
+                                Label("Smart", systemImage: "sparkles")
+                                    .padding(.horizontal, 10)
+                            }
+                        }
+                        .buttonStyle(.filmGlass)
+                        .disabled(!isSettled || isSmartPicking)
+                    }
                 }
-                .buttonStyle(.filmGlass)
-                .disabled(!isSettled)
             }
         }
         .padding(.bottom, 20)
@@ -414,6 +464,29 @@ struct MoviePickerView: View {
         }
     }
 
+    /// Asks Apple Intelligence for the movie that best fits the request and
+    /// scrolls to it, showing the reason under its title.
+    private func smartPick() {
+        let request = smartPickRequest.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !request.isEmpty else { return }
+        isSmartPicking = true
+        Task {
+            defer { isSmartPicking = false }
+            do {
+                let result = try await SmartPicker.pick(from: movies, request: request)
+                guard movies.indices.contains(result.index) else { return }
+                let id = movies[result.index].persistentModelID
+                smartPickReason = (id, result.reason)
+                setFlipped(nil)
+                withAnimation(.smooth(duration: 0.9)) {
+                    scroll.scrollTo(id: id, anchor: .center)
+                }
+            } catch {
+                smartPickError = FilmstackAI.message(for: error)
+            }
+        }
+    }
+
     private func pickForMe() {
         let candidates = movies.indices.filter { $0 != focusedIndex }
         guard let pick = candidates.randomElement() else { return }
@@ -436,7 +509,7 @@ struct MoviePickerView: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(.white)
-        .glassEffect(.regular.tint(Palette.accent.opacity(0.7)).interactive(), in: Circle())
+        .glassEffect(.regular.interactive(), in: Circle())
         .disabled(!isSettled || isMoving || backgroundMovie == nil)
         .opacity(!isSettled || isMoving ? 0.5 : 1)
         .animation(.smooth(duration: 0.2), value: isMoving)

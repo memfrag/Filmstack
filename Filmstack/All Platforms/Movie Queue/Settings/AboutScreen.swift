@@ -130,6 +130,12 @@ struct AboutScreen: View {
             backend, or analytics. Your movie library is stored on your devices \
             and, if iCloud is on, synced between them through your own iCloud \
             account. Your TMDB token stays in this device's Keychain and isn't synced.
+
+            The Apple Intelligence features (moods, smart search, Smart Pick, \
+            photo lookup, recommendations and your year recap) run on your \
+            device. Some larger requests may use Apple's Private Cloud Compute, \
+            which processes them without storing your data or making it \
+            available to Apple. Nothing is sent to the developer.
             """)
             .font(.footnote)
             .foregroundStyle(Palette.textSecondary)

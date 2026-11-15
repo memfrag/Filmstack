@@ -31,6 +31,23 @@ final class Movie {
     var cast: [String] = []
     /// TMDB community rating (0–10).
     var tmdbRating: Double?
+    /// Moods from the on-device model (`Mood` raw values).
+    var moodTags: [String] = []
+    /// When mood tagging ran, so each movie is only tagged once.
+    var moodsTaggedAt: Date?
+
+    // Extra TMDB context for the AI features
+    /// TMDB keywords ("heist", "slow burn", "coming of age").
+    var keywords: [String] = []
+    var tagline: String?
+    /// Age rating in the release region, like "PG-13" or "15".
+    var certification: String?
+    /// ISO 639-1 code of the original language, like "ko".
+    var originalLanguage: String?
+    /// Production countries, by name.
+    var countries: [String] = []
+    /// When the context above was fetched; nil for movies added before it existed.
+    var contextFetchedAt: Date?
 
     // Streaming availability (TMDB watch/providers, powered by JustWatch)
     var watchProviders: [WatchProvider] = []

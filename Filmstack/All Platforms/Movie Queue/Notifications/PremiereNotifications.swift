@@ -33,7 +33,8 @@ struct PremiereNotificationsModifier: ViewModifier {
         return unwatchedMovies.compactMap { movie in
             guard let fireDate = PremiereNotifications.fireDate(forRelease: movie.releaseDate),
                   fireDate > Date() else { return nil }
-            return .init(id: movie.id, title: movie.title, fireDate: fireDate)
+            return .init(id: movie.id, title: movie.title, fireDate: fireDate,
+                         notes: movie.userNotes, overview: movie.overview)
         }
     }
 
@@ -41,7 +42,7 @@ struct PremiereNotificationsModifier: ViewModifier {
     private var signature: String {
         upcoming
             .sorted { $0.id.uuidString < $1.id.uuidString }
-            .map { "\($0.id)|\($0.title)|\($0.fireDate.timeIntervalSince1970)" }
+            .map { "\($0.id)|\($0.title)|\($0.fireDate.timeIntervalSince1970)|\($0.notes)" }
             .joined(separator: ",")
     }
 }
@@ -59,6 +60,28 @@ enum PremiereNotifications {
         let id: UUID
         let title: String
         let fireDate: Date
+        /// The user's own notes on the movie, worked into the reminder.
+        var notes: String = ""
+        var overview: String?
+    }
+
+    /// Premieres this close get a written reminder line from their notes;
+    /// later ones are rewritten when they come within range.
+    private static let personalizedWindow: TimeInterval = 14 * 24 * 60 * 60
+
+    /// The notification body: a line written from the user's notes when
+    /// there are any and a model is available, otherwise fixed text.
+    private static func body(for premiere: Premiere) async -> String {
+        let notes = premiere.notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !notes.isEmpty else {
+            return String(localized: "\(premiere.title) is out today.")
+        }
+        if premiere.fireDate.timeIntervalSinceNow < personalizedWindow,
+           let line = await ReminderWriter.line(title: premiere.title, notes: notes,
+                                                overview: premiere.overview) {
+            return line
+        }
+        return String(localized: "\(premiere.title) is out today. Your note: \(notes)")
     }
 
     private static let identifierPrefix = "premiere-"
@@ -92,7 +115,8 @@ enum PremiereNotifications {
         for premiere in soonest {
             let content = UNMutableNotificationContent()
             content.title = String(localized: "Premieres Today")
-            content.body = String(localized: "\(premiere.title) is out today.")
+            content.body = await body(for: premiere)
+            guard !Task.isCancelled else { return }
             content.sound = .default
             content.userInfo = ["movieID": premiere.id.uuidString]
 

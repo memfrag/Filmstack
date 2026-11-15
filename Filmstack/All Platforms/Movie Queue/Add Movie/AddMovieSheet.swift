@@ -3,6 +3,7 @@
 //
 
 import SwiftUI
+import PhotosUI
 import NukeUI
 
 /// Search-first Add Movie flow: type a title, search TMDB (debounced), pick a
@@ -16,6 +17,11 @@ struct AddMovieSheet: View {
     @State private var model = MovieSearchModel()
     @State private var showingManualAdd = false
     @FocusState private var searchFocused: Bool
+
+    // Add from a photo (Apple Intelligence)
+    @State private var photoItem: PhotosPickerItem?
+    @State private var isReadingPhoto = false
+    @State private var photoError: String?
 
     var body: some View {
         NavigationStack {
@@ -58,6 +64,14 @@ struct AddMovieSheet: View {
             await model.search()
         }
         .onAppear { searchFocused = true }
+        .alert("Couldn't Read Photo", isPresented: Binding(
+            get: { photoError != nil },
+            set: { if !$0 { photoError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(photoError ?? "")
+        }
     }
 
     // MARK: - Search field
@@ -70,7 +84,9 @@ struct AddMovieSheet: View {
                 .textFieldStyle(.plain)
                 .autocorrectionDisabled()
                 .focused($searchFocused)
-            if case .searching = model.phase {
+            if isReadingPhoto {
+                ProgressView().controlSize(.small)
+            } else if case .searching = model.phase {
                 ProgressView().controlSize(.small)
             } else if !model.query.isEmpty {
                 Button {
@@ -81,8 +97,43 @@ struct AddMovieSheet: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
             }
+            if FilmstackAI.canSeeImages {
+                PhotosPicker(selection: $photoItem, matching: .images) {
+                    Image(systemName: "photo.badge.magnifyingglass")
+                        .foregroundStyle(Palette.accentBright)
+                }
+                .buttonStyle(.plain)
+                .disabled(isReadingPhoto)
+                .help("Find a movie from a photo of its poster or listing")
+                .accessibilityLabel("Find a movie from a photo")
+            }
         }
         .padding(12)
+        .onChange(of: photoItem) { _, item in
+            guard let item else { return }
+            readPhoto(item)
+        }
+    }
+
+    /// Recognizes the movie in the chosen photo and searches TMDB for it.
+    private func readPhoto(_ item: PhotosPickerItem) {
+        isReadingPhoto = true
+        Task {
+            defer {
+                isReadingPhoto = false
+                photoItem = nil
+            }
+            do {
+                guard let data = try await item.loadTransferable(type: Data.self) else {
+                    throw MoviePhotoReader.ReadError.unreadableImage
+                }
+                let spotted = try await MoviePhotoReader.read(data)
+                // TMDB's search matches the title alone best.
+                model.query = spotted.title
+            } catch {
+                photoError = FilmstackAI.message(for: error)
+            }
+        }
     }
 
     // MARK: - Content

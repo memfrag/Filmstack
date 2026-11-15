@@ -15,6 +15,11 @@ struct MovieSearchResult: Identifiable, Codable, Sendable, Hashable {
     var overview: String?
     var posterPath: String?
     var posterThumbnailURL: URL?
+    /// Genre names (list endpoints only send IDs; see `TMDBGenre`). Optional so
+    /// older cached results still decode.
+    var genres: [String]?
+    /// TMDB community rating (0–10).
+    var tmdbRating: Double?
 }
 
 /// Full TMDB movie details, fetched after the user selects a search result.
@@ -39,6 +44,12 @@ struct MovieDetails: Codable, Sendable {
     var watchProviders: [WatchProvider]
     /// JustWatch availability page for the requested region.
     var watchLink: URL?
+    /// Extra context for the AI features; see `Movie`.
+    var keywords: [String] = []
+    var tagline: String?
+    var certification: String?
+    var originalLanguage: String?
+    var countries: [String] = []
 
     init(
         tmdbID: Int,
@@ -110,5 +121,19 @@ extension Movie {
             streamingLocation: streamingLocation,
             status: status
         )
+        applyContext(from: details)
+    }
+
+    /// Copies the AI context fields from fetched details.
+    func applyContext(from details: MovieDetails) {
+        keywords = details.keywords
+        tagline = details.tagline
+        certification = details.certification
+        originalLanguage = details.originalLanguage
+        countries = details.countries
+        if director == nil { director = details.director }
+        if cast.isEmpty { cast = details.cast }
+        if genres.isEmpty { genres = details.genres }
+        contextFetchedAt = Date()
     }
 }

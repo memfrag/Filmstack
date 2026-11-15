@@ -25,6 +25,8 @@ struct RootView: View {
     var body: some View {
         root
             .premiereNotifications()
+            .movieContextBackfill()
+            .moodTagging()
     }
 
     @ViewBuilder private var root: some View {

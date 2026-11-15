@@ -44,7 +44,9 @@ final class TMDBClient: MovieAPIClient {
                 releaseYear: parsed.year,
                 overview: item.overview?.nilIfBlank,
                 posterPath: item.posterPath,
-                posterThumbnailURL: TMDBImage.posterURL(path: item.posterPath, size: .thumbnail)
+                posterThumbnailURL: TMDBImage.posterURL(path: item.posterPath, size: .thumbnail),
+                genres: item.genreIDs.map { $0.compactMap(TMDBGenre.name(for:)) },
+                tmdbRating: item.voteAverage.flatMap { $0 > 0 ? $0 : nil }
             )
         }
     }
@@ -54,7 +56,7 @@ final class TMDBClient: MovieAPIClient {
     func fetchMovieDetails(tmdbID: Int, region: String?) async throws -> MovieDetails {
         let data = try await get("movie/\(tmdbID)", queryItems: [
             URLQueryItem(name: "language", value: "en-US"),
-            URLQueryItem(name: "append_to_response", value: "credits,release_dates,watch/providers")
+            URLQueryItem(name: "append_to_response", value: "credits,release_dates,watch/providers,keywords")
         ])
 
         let response = try decode(DetailsResponse.self, from: data)
@@ -69,7 +71,7 @@ final class TMDBClient: MovieAPIClient {
             effectiveDate = regional
         }
 
-        return MovieDetails(
+        var details = MovieDetails(
             tmdbID: response.id,
             title: response.title,
             originalTitle: response.originalTitle,
@@ -87,7 +89,16 @@ final class TMDBClient: MovieAPIClient {
             watchProviders: watch?.providers ?? [],
             watchLink: watch?.link
         )
+        details.keywords = (response.keywords?.keywords ?? []).prefix(Self.keywordLimit).map(\.name)
+        details.tagline = response.tagline?.nilIfBlank
+        details.certification = response.releaseDates?.certification(region: region)
+        details.originalLanguage = response.originalLanguage?.nilIfBlank
+        details.countries = (response.productionCountries ?? []).map(\.name)
+        return details
     }
+
+    /// Number of TMDB keywords to keep.
+    private static let keywordLimit = 15
 
     /// Number of top-billed cast members to keep.
     private static let castLimit = 8
@@ -141,7 +152,9 @@ final class TMDBClient: MovieAPIClient {
                 releaseYear: parsed.year,
                 overview: item.overview?.nilIfBlank,
                 posterPath: item.posterPath,
-                posterThumbnailURL: TMDBImage.posterURL(path: item.posterPath, size: .thumbnail)
+                posterThumbnailURL: TMDBImage.posterURL(path: item.posterPath, size: .thumbnail),
+                genres: item.genreIDs.map { $0.compactMap(TMDBGenre.name(for:)) },
+                tmdbRating: item.voteAverage.flatMap { $0 > 0 ? $0 : nil }
             )
         }
     }
@@ -252,12 +265,16 @@ private struct SearchResponse: Decodable {
         let overview: String?
         let posterPath: String?
         let releaseDate: String?
+        let genreIDs: [Int]?
+        let voteAverage: Double?
 
         enum CodingKeys: String, CodingKey {
             case id, title, overview
             case originalTitle = "original_title"
             case posterPath = "poster_path"
             case releaseDate = "release_date"
+            case genreIDs = "genre_ids"
+            case voteAverage = "vote_average"
         }
     }
 }
@@ -277,13 +294,27 @@ private struct DetailsResponse: Decodable {
     let imdbID: String?
     let releaseDates: ReleaseDates?
     let watchProviders: WatchProvidersResponse?
+    let keywords: Keywords?
+    let tagline: String?
+    let originalLanguage: String?
+    let productionCountries: [Named]?
 
     struct Genre: Decodable {
         let name: String
     }
 
+    struct Named: Decodable {
+        let name: String
+    }
+
+    struct Keywords: Decodable {
+        let keywords: [Named]
+    }
+
     enum CodingKeys: String, CodingKey {
-        case id, title, overview, runtime, genres, credits
+        case id, title, overview, runtime, genres, credits, keywords, tagline
+        case originalLanguage = "original_language"
+        case productionCountries = "production_countries"
         case originalTitle = "original_title"
         case posterPath = "poster_path"
         case backdropPath = "backdrop_path"
@@ -364,11 +395,24 @@ private struct ReleaseDates: Decodable {
     struct Release: Decodable {
         let type: Int
         let releaseDate: String
+        let certification: String?
 
         enum CodingKeys: String, CodingKey {
-            case type
+            case type, certification
             case releaseDate = "release_date"
         }
+    }
+
+    /// The age rating in the region, falling back to the US one.
+    func certification(region: String?) -> String? {
+        func rating(in code: String) -> String? {
+            results
+                .first { $0.iso31661.caseInsensitiveCompare(code) == .orderedSame }?
+                .releaseDates
+                .compactMap { $0.certification?.trimmingCharacters(in: .whitespaces) }
+                .first { !$0.isEmpty }
+        }
+        return region.flatMap(rating(in:)) ?? rating(in: "US")
     }
 
     /// The preferred release-date string for a region, by release-type priority:

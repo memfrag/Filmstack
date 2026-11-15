@@ -11,6 +11,8 @@ struct FilterPopover: View {
     let genres: [String]
     let sources: [String]
     var locations: [String] = []
+    /// `Mood` raw values present in the list.
+    var moods: [String] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -24,6 +26,15 @@ struct FilterPopover: View {
                             items: genres,
                             isOn: { filter.genres.contains($0) },
                             toggle: { filter.toggleGenre($0) }
+                        )
+                    }
+                    if !moods.isEmpty {
+                        group(
+                            "Mood",
+                            items: moods,
+                            label: Mood.title(for:),
+                            isOn: { filter.moods.contains($0) },
+                            toggle: { filter.toggleMood($0) }
                         )
                     }
                     if !sources.isEmpty {
@@ -73,6 +84,7 @@ struct FilterPopover: View {
     private func group(
         _ title: String,
         items: [String],
+        label: @escaping (String) -> String = { $0 },
         isOn: @escaping (String) -> Bool,
         toggle: @escaping (String) -> Void
     ) -> some View {
@@ -89,7 +101,7 @@ struct FilterPopover: View {
                     HStack(spacing: 8) {
                         Image(systemName: isOn(item) ? "checkmark.circle.fill" : "circle")
                             .foregroundStyle(isOn(item) ? Palette.accent : Palette.textSecondary)
-                        Text(item)
+                        Text(label(item))
                             .foregroundStyle(Palette.textPrimary)
                         Spacer(minLength: 0)
                     }

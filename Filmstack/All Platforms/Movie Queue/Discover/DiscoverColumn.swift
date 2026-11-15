@@ -26,6 +26,60 @@ struct DiscoverColumn: View {
                                   "filmstack.libraryViewMode.discover.\(list.rawValue)")
     }
 
+    /// "For You" picks per list, best first, with why each might appeal.
+    @State private var picks: [DiscoverList: [(tmdbID: Int, reason: String)]] = [:]
+    @State private var showsForYou = false
+    @State private var isRecommending = false
+    @State private var recommendError: String?
+
+    private var currentPicks: [(tmdbID: Int, reason: String)] {
+        showsForYou ? picks[list] ?? [] : []
+    }
+
+    private func reason(for movie: MovieSearchResult) -> String? {
+        currentPicks.first { $0.tmdbID == movie.tmdbID }?.reason
+    }
+
+    /// With For You on, the picks lead the list in rank order.
+    private func ordered(_ movies: [MovieSearchResult]) -> [MovieSearchResult] {
+        let ranks = Dictionary(uniqueKeysWithValues: currentPicks.enumerated().map { ($1.tmdbID, $0) })
+        guard !ranks.isEmpty else { return movies }
+        return movies.enumerated()
+            .sorted { lhs, rhs in
+                (ranks[lhs.element.tmdbID] ?? Int.max, lhs.offset) < (ranks[rhs.element.tmdbID] ?? Int.max, rhs.offset)
+            }
+            .map(\.element)
+    }
+
+    private var hasMovies: Bool {
+        if case .loaded(let movies) = store.phase(for: list) { !movies.isEmpty } else { false }
+    }
+
+    private func toggleForYou() {
+        if showsForYou {
+            withAnimation { showsForYou = false }
+            return
+        }
+        if picks[list] != nil {
+            withAnimation { showsForYou = true }
+            return
+        }
+        guard case .loaded(let movies) = store.phase(for: list) else { return }
+        isRecommending = true
+        let list = list
+        Task {
+            defer { isRecommending = false }
+            do {
+                let result = try await DiscoverRecommender.recommend(from: movies, library: libraryMovies)
+                picks[list] = result
+                withAnimation { showsForYou = true }
+            } catch is CancellationError {
+            } catch {
+                recommendError = FilmstackAI.message(for: error)
+            }
+        }
+    }
+
     private var viewMode: LibraryViewMode {
         LibraryViewMode(rawValue: viewModeRaw) ?? .grid
     }
@@ -71,8 +125,22 @@ struct DiscoverColumn: View {
                 Label("View", systemImage: viewMode == .grid ? "square.grid.2x2" : "list.bullet")
             }
         }
+            if FilmstackAI.isAvailable {
+                ToolbarItem {
+                    Button(action: toggleForYou) {
+                        if isRecommending {
+                            ProgressView()
+                        } else {
+                            Label("For You", systemImage: showsForYou ? "sparkles.rectangle.stack.fill" : "sparkles")
+                        }
+                    }
+                    .help("Put the movies most like your favorites first")
+                    .disabled(isRecommending || !hasMovies)
+                }
+            }
             ToolbarItem {
                 Button {
+                    picks[list] = nil
                     Task { await store.refresh(list, region: region) }
                 } label: {
                     Label("Refresh", systemImage: "arrow.clockwise")
@@ -81,7 +149,16 @@ struct DiscoverColumn: View {
             }
         }
         .task(id: list) {
+            showsForYou = false
             await store.ensureLoaded(list, region: region)
+        }
+        .alert("Couldn't Recommend", isPresented: Binding(
+            get: { recommendError != nil },
+            set: { if !$0 { recommendError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(recommendError ?? "")
         }
     }
 
@@ -92,7 +169,11 @@ struct DiscoverColumn: View {
             Text(list.title)
                 .font(.system(size: 28, weight: .bold))
                 .foregroundStyle(Palette.textPrimary)
-            if case .loaded(let movies) = store.phase(for: list) {
+            if !currentPicks.isEmpty {
+                Label("\(currentPicks.count) for you", systemImage: "sparkles")
+                    .font(.title3)
+                    .foregroundStyle(Palette.accentBright)
+            } else if case .loaded(let movies) = store.phase(for: list) {
                 Text("\(movies.count) movies")
                     .font(.title3)
                     .foregroundStyle(Palette.textSecondary)
@@ -136,7 +217,7 @@ struct DiscoverColumn: View {
                 columns: [GridItem(.adaptive(minimum: 100, maximum: 150), spacing: 16)],
                 spacing: 18
             ) {
-                ForEach(movies) { movie in
+                ForEach(ordered(movies)) { movie in
                     posterCard(movie)
                 }
             }
@@ -149,7 +230,7 @@ struct DiscoverColumn: View {
     private func listView(_ movies: [MovieSearchResult]) -> some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                ForEach(movies) { movie in
+                ForEach(ordered(movies)) { movie in
                     row(movie)
                     Divider().overlay(Palette.hairline).padding(.leading, 20)
                 }
@@ -183,6 +264,12 @@ struct DiscoverColumn: View {
                         Text(String(year))
                             .font(.subheadline)
                             .foregroundStyle(Palette.textSecondary)
+                    }
+                    if let reason = reason(for: movie) {
+                        Label(reason, systemImage: "sparkles")
+                            .font(.footnote)
+                            .foregroundStyle(Palette.accentBright)
+                            .lineLimit(2)
                     }
                 }
                 Spacer(minLength: 0)
@@ -220,6 +307,12 @@ struct DiscoverColumn: View {
                     .font(.caption.weight(.medium))
                     .foregroundStyle(inLibrary ? Palette.accentBright : Palette.textSecondary)
                     .lineLimit(1)
+                if let reason = reason(for: movie) {
+                    Text(reason)
+                        .font(.caption2)
+                        .foregroundStyle(Palette.accentBright)
+                        .lineLimit(2, reservesSpace: true)
+                }
             }
             .opacity(inLibrary ? 0.92 : 1)
         }

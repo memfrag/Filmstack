@@ -35,6 +35,9 @@ struct MovieListColumn: View {
     @FocusState private var searchFocused: Bool
     @State private var showingPicker = false
     @State private var showingStats = false
+    /// Plain-language search in progress, and its last error.
+    @State private var isInterpretingSearch = false
+    @State private var searchError: String?
     /// List or grid, remembered per section (see `init`).
     @AppStorage("filmstack.libraryViewMode") private var viewModeRaw = LibraryViewMode.list.rawValue
     /// Upcoming only: show releases as a poster-wall calendar (the default) instead of list/grid.
@@ -141,8 +144,15 @@ struct MovieListColumn: View {
             .filter { !$0.isEmpty }).sorted()
     }
 
+    /// Moods present in this section, in `Mood` order.
+    private var availableMoods: [String] {
+        let present = Set(sectionMovies.flatMap(\.moodTags))
+        return Mood.allCases.map(\.rawValue).filter(present.contains)
+    }
+
     private var hasFilters: Bool {
         !availableGenres.isEmpty || !availableSources.isEmpty || !availableLocations.isEmpty
+            || !availableMoods.isEmpty
     }
 
     var body: some View {
@@ -185,6 +195,14 @@ struct MovieListColumn: View {
                 .frame(minWidth: 900, idealWidth: 960, minHeight: 640, idealHeight: 700)
         }
         #endif
+        .alert("Couldn't Search", isPresented: Binding(
+            get: { searchError != nil },
+            set: { if !$0 { searchError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(searchError ?? "")
+        }
         .sheet(isPresented: $showingStats) {
             WatchedStatsView(movies: sectionMovies)
                 #if os(macOS)
@@ -260,6 +278,27 @@ struct MovieListColumn: View {
     /// Lives in the header rather than the navigation bar: as a `.searchable`
     /// field it had to collapse on scroll, and that tracking was unreliable
     /// because the section's scroll view sits below this non-scrolling header.
+    /// Turns the typed request ("tense thrillers under two hours") into
+    /// filters, keeping only real title words as the search text.
+    private func interpretSearch() {
+        let query = searchText
+        isInterpretingSearch = true
+        Task {
+            defer { isInterpretingSearch = false }
+            do {
+                let result = try await LibrarySearchInterpreter.interpret(
+                    query, availableGenres: availableGenres, availableMoods: availableMoods
+                )
+                withAnimation(.smooth(duration: 0.25)) {
+                    filter = result.filter
+                    searchText = result.titleText
+                }
+            } catch {
+                searchError = FilmstackAI.message(for: error)
+            }
+        }
+    }
+
     private var searchField: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
@@ -282,6 +321,22 @@ struct MovieListColumn: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(Palette.textSecondary)
                 .accessibilityLabel("Clear search")
+                .transition(.opacity)
+            }
+
+            if !searchText.isEmpty, FilmstackAI.isAvailable {
+                Button(action: interpretSearch) {
+                    if isInterpretingSearch {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Image(systemName: "sparkles")
+                            .foregroundStyle(Palette.accentBright)
+                    }
+                }
+                .buttonStyle(.plain)
+                .disabled(isInterpretingSearch)
+                .help("Turn this into filters with Apple Intelligence")
+                .accessibilityLabel("Search with Apple Intelligence")
                 .transition(.opacity)
             }
         }
@@ -336,6 +391,25 @@ struct MovieListColumn: View {
                 ForEach(filter.genres.sorted(), id: \.self) { genre in
                     FilterChip(label: genre, systemImage: "theatermasks") {
                         filter.toggleGenre(genre)
+                    }
+                    .transition(chipTransition)
+                }
+                ForEach(Mood.allCases.map(\.rawValue).filter(filter.moods.contains), id: \.self) { mood in
+                    FilterChip(label: Mood.title(for: mood), systemImage: "face.smiling") {
+                        filter.toggleMood(mood)
+                    }
+                    .transition(chipTransition)
+                }
+                if let max = filter.maxRuntimeMinutes {
+                    FilterChip(label: String(localized: "Under \(max) min"), systemImage: "clock") {
+                        filter.maxRuntimeMinutes = nil
+                    }
+                    .transition(chipTransition)
+                }
+                if let years = filter.yearRangeLabel {
+                    FilterChip(label: years, systemImage: "calendar") {
+                        filter.minYear = nil
+                        filter.maxYear = nil
                     }
                     .transition(chipTransition)
                 }
@@ -781,7 +855,8 @@ struct MovieListColumn: View {
                         filter: $filter,
                         genres: availableGenres,
                         sources: availableSources,
-                        locations: availableLocations
+                        locations: availableLocations,
+                        moods: availableMoods
                     )
                 }
             }

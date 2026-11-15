@@ -45,6 +45,27 @@ struct WatchedStatsView: View {
 
     private let calendar = Calendar.current
 
+    /// The written "your year" recap, once asked for.
+    @State private var yearSummary: YearSummarizer.Recap?
+    @State private var isWritingYear = false
+    @State private var yearError: String?
+    /// Whether the whole recap shows, rather than its first few lines.
+    @State private var isYearExpanded = false
+    /// The recap's full height, to know whether it needs collapsing.
+    @State private var yearRecapHeight: CGFloat = 0
+    /// One line of the recap's text, scaling with Dynamic Type.
+    @ScaledMetric(relativeTo: .subheadline) private var recapLineHeight: CGFloat = 20
+
+    private var collapsedRecapHeight: CGFloat { recapLineHeight * 4 }
+    private var recapOverflows: Bool { yearRecapHeight > collapsedRecapHeight + 1 }
+    private var isYearCollapsed: Bool { recapOverflows && !isYearExpanded }
+
+    private var currentYear: Int { calendar.component(.year, from: Date()) }
+
+    private var moviesThisYear: [Movie] {
+        movies.filter { $0.dateWatched.map { calendar.component(.year, from: $0) == currentYear } ?? false }
+    }
+
     private func start(of date: Date) -> Date {
         calendar.dateInterval(of: period.component, for: date)?.start ?? date
     }
@@ -91,6 +112,9 @@ struct WatchedStatsView: View {
                             selectedPeriod = start(of: Date())
                         }
                         summary(data)
+                        if FilmstackAI.isAvailable, moviesThisYear.count >= 3 {
+                            yearCard
+                        }
                         chartCard(data)
                         // Overlapping layers, so the old and new month cross-fade
                         // in place instead of stacking.
@@ -173,6 +197,108 @@ struct WatchedStatsView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
         .filmCard()
+    }
+
+    // MARK: - Your year
+
+    private var yearCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Label("Your \(String(currentYear))", systemImage: "sparkles")
+                    .font(.headline)
+                    .foregroundStyle(Palette.textPrimary)
+                Spacer()
+                if yearSummary != nil, !isWritingYear {
+                    Button("Rewrite", systemImage: "arrow.clockwise", action: writeYear)
+                        .labelStyle(.iconOnly)
+                        .font(.subheadline)
+                        .foregroundStyle(Palette.textSecondary)
+                        .buttonStyle(.plain)
+                }
+            }
+            if isWritingYear {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("Writing…")
+                        .foregroundStyle(Palette.textSecondary)
+                }
+                .font(.subheadline)
+            } else if let yearSummary {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(yearSummary.headline)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Palette.textPrimary)
+                    ForEach(Array(yearSummary.highlights.enumerated()), id: \.offset) { _, highlight in
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Circle()
+                                .fill(Palette.accentBright)
+                                .frame(width: 5, height: 5)
+                                .alignmentGuide(.firstTextBaseline) { $0[.bottom] + 2 }
+                            Text(highlight)
+                                .foregroundStyle(Palette.textPrimary.opacity(0.85))
+                        }
+                        .font(.subheadline)
+                    }
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .textSelection(.enabled)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { yearRecapHeight = $0 }
+                // Collapsed: about four lines, fading out at the bottom.
+                .frame(maxHeight: isYearCollapsed ? collapsedRecapHeight : nil, alignment: .top)
+                .clipped()
+                .mask {
+                    LinearGradient(
+                        stops: isYearCollapsed
+                            ? [.init(color: .black, location: 0.45), .init(color: .clear, location: 1)]
+                            : [.init(color: .black, location: 0), .init(color: .black, location: 1)],
+                        startPoint: .top, endPoint: .bottom
+                    )
+                }
+                if recapOverflows {
+                    Button {
+                        withAnimation(.smooth(duration: 0.3)) { isYearExpanded.toggle() }
+                    } label: {
+                        Label(isYearExpanded ? "Show Less" : "Show More",
+                              systemImage: isYearExpanded ? "chevron.up" : "chevron.down")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Palette.accentBright)
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else {
+                Text("A short recap of the \(moviesThisYear.count) movies you've watched this year.")
+                    .font(.subheadline)
+                    .foregroundStyle(Palette.textSecondary)
+                Button("Write My Year", systemImage: "sparkles", action: writeYear)
+                    .buttonStyle(.filmGlass)
+            }
+            if let yearError {
+                Text(yearError)
+                    .font(.footnote)
+                    .foregroundStyle(Palette.textSecondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .filmCard()
+        .animation(.easeInOut(duration: 0.2), value: isWritingYear)
+    }
+
+    private func writeYear() {
+        isWritingYear = true
+        yearError = nil
+        let movies = moviesThisYear
+        let year = currentYear
+        Task {
+            defer { isWritingYear = false }
+            do {
+                yearSummary = try await YearSummarizer.summary(of: movies, year: year)
+                isYearExpanded = false
+            } catch is CancellationError {
+            } catch {
+                yearError = FilmstackAI.message(for: error)
+            }
+        }
     }
 
     // MARK: - Chart
