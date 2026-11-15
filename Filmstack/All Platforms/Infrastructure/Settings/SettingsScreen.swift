@@ -22,6 +22,11 @@ struct SettingsScreen: View {
                 } label: {
                     Label("About Filmstack", systemImage: "info.circle")
                 }
+                NavigationLink {
+                    TMDBKeySettings()
+                } label: {
+                    Label("TMDB API Key", systemImage: "film")
+                }
             }
             .filmSettingsRows()
 
@@ -40,15 +45,6 @@ struct SettingsScreen: View {
                 Text("Movie Picker")
             } footer: {
                 Text("Softens cases away from the one in focus, like a camera lens. Scrolling may be less smooth on slower devices.")
-            }
-            .filmSettingsRows()
-
-            Section("Movie Database") {
-                NavigationLink {
-                    TMDBKeySettings()
-                } label: {
-                    Label("TMDB API Key", systemImage: "film")
-                }
             }
             .filmSettingsRows()
         }
