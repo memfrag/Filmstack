@@ -224,12 +224,13 @@ struct MoviePickerView: View {
         VStack(spacing: 6) {
             if let movie = backgroundMovie {
                 Group {
+                    // One line: shrink to fit first, then truncate.
                     Text(movie.title)
                         .font(.system(size: 28, weight: .bold))
                         .foregroundStyle(.white)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                        .truncationMode(.tail)
                     Text(subtitle(for: movie))
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.white.opacity(0.75))
@@ -240,7 +241,10 @@ struct MoviePickerView: View {
                 .transition(MotionBlurTransition(direction: titleDirection))
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 76, alignment: .top)
+        // Fixed height (title, subtitle and icon row), so the header never
+        // moves the crate below it, whatever it contains.
+        .frame(maxWidth: .infinity)
+        .frame(height: 92, alignment: .top)
         .padding(.horizontal, 24)
         .padding(.top, 14)
         .animation(.smooth(duration: 0.45), value: backgroundMovie?.persistentModelID)
