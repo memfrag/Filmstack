@@ -30,7 +30,12 @@ struct AboutScreen: View {
             .frame(maxWidth: .infinity)
         }
         .background(Palette.base)
+        #if os(macOS)
         .navigationTitle("About")
+        #else
+        // The icon and app name head the page, so no title above them.
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
         .sheet(isPresented: $showingLicenses) {
             licensesSheet
         }
@@ -40,14 +45,7 @@ struct AboutScreen: View {
 
     private var appHeader: some View {
         VStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Gradients.accentButton)
-                .frame(width: 88, height: 88)
-                .overlay {
-                    Image(systemName: "film.stack.fill")
-                        .font(.system(size: 40, weight: .medium))
-                        .foregroundStyle(.white)
-                }
+            AppIconView(size: 88)
                 .shadow(color: Palette.accent.opacity(0.5), radius: 16, y: 8)
 
             Text("Filmstack")

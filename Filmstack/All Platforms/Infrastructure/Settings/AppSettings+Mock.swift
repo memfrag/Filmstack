@@ -19,7 +19,7 @@ extension AppSettings {
     ///
     @MainActor public static func mock() -> AppSettings {
         let store = InMemoryKeyValueStore(keyedBy: Key.self, initialContent: [
-            .colorScheme: AppColorScheme.system
+            .showsMaybeLater: false
         ])
         return AppSettings(store: store.eraseToAnyKeyValueStore())
     }

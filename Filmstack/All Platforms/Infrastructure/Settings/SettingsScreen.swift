@@ -16,15 +16,6 @@ struct SettingsScreen: View {
         @Bindable var appSettings = appSettings
 
         Form {
-            Section("Appearance") {
-                Picker("Color Scheme", selection: $appSettings.colorScheme) {
-                    ForEach(AppColorScheme.allCases, id: \.self) { scheme in
-                        Text(scheme.label).tag(scheme)
-                    }
-                }
-            }
-            .filmSettingsRows()
-
             Section {
                 Toggle("Show Maybe Later", isOn: $appSettings.showsMaybeLater)
             } header: {
@@ -88,16 +79,6 @@ extension View {
         #else
         self
         #endif
-    }
-}
-
-private extension AppColorScheme {
-    var label: String {
-        switch self {
-        case .system: "System"
-        case .light: "Light"
-        case .dark: "Dark"
-        }
     }
 }
 

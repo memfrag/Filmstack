@@ -20,9 +20,6 @@ import KeyValueStore
 
     /// The keys used to store and retrieve settings from the underlying store.
     public enum Key: String {
-        /// The preferred color scheme for the app.
-        case colorScheme
-
         /// The ISO 3166-1 region used to resolve release dates.
         case releaseRegion
 
@@ -39,13 +36,6 @@ import KeyValueStore
     }
 
     // MARK: Properties
-
-    /// The app's current color scheme preference.
-    public var colorScheme: AppColorScheme {
-        didSet {
-            store.save(colorScheme, for: .colorScheme)
-        }
-    }
 
     /// The ISO 3166-1 region code (e.g. "US", "SE") used to pick a local release
     /// date for movies. Defaults to the device's current region.
@@ -98,7 +88,6 @@ import KeyValueStore
     ///
     public init(store: AnyKeyValueStore<AppSettings.Key>? = nil) {
         self.store = store ?? .defaultStore
-        colorScheme = self.store.load(.colorScheme, default: .system)
         releaseRegion = self.store.load(.releaseRegion, default: AppSettings.defaultRegion)
         letterboxdUsername = self.store.load(.letterboxdUsername, default: "")
         showsMaybeLater = self.store.load(.showsMaybeLater, default: false)
