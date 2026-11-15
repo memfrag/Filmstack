@@ -17,6 +17,15 @@ struct SettingsScreen: View {
 
         Form {
             Section {
+                NavigationLink {
+                    AboutScreen()
+                } label: {
+                    Label("About Filmstack", systemImage: "info.circle")
+                }
+            }
+            .filmSettingsRows()
+
+            Section {
                 Toggle("Show Maybe Later", isOn: $appSettings.showsMaybeLater)
             } header: {
                 Text("Library")
@@ -39,15 +48,6 @@ struct SettingsScreen: View {
                     TMDBKeySettings()
                 } label: {
                     Label("TMDB API Key", systemImage: "film")
-                }
-            }
-            .filmSettingsRows()
-
-            Section {
-                NavigationLink {
-                    AboutScreen()
-                } label: {
-                    Label("About Filmstack", systemImage: "info.circle")
                 }
             }
             .filmSettingsRows()

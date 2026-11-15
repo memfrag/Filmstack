@@ -127,8 +127,9 @@ struct AboutScreen: View {
                 .foregroundStyle(Palette.accentBright)
             Text("""
             Filmstack is for personal, non-commercial use. There's no account, \
-            backend, or analytics. Your movie library is stored locally on this \
-            device, and your TMDB token is kept in the system Keychain.
+            backend, or analytics. Your movie library is stored on your devices \
+            and, if iCloud is on, synced between them through your own iCloud \
+            account. Your TMDB token stays in this device's Keychain and isn't synced.
             """)
             .font(.footnote)
             .foregroundStyle(Palette.textSecondary)
