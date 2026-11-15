@@ -407,8 +407,8 @@ struct MovieListColumn: View {
 
     private func monthHeader(_ month: Date?) -> some View {
         Text(month?.formatted(.dateTime.month(.wide).year()) ?? String(localized: "No Date"))
-            .font(.headline)
-            .foregroundStyle(Palette.textPrimary)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Palette.textSecondary)
             .padding(.horizontal, 22)
             .padding(.top, 8)
             .padding(.bottom, 4)
