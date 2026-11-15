@@ -78,6 +78,8 @@ struct SettingsScreen: View {
             }
             .filmSettingsRows()
 
+            LetterboxdImportSection()
+
             Section {
                 Toggle("Depth of Field Blur", isOn: $appSettings.pickerDepthOfField)
             } header: {
@@ -178,6 +180,81 @@ private struct SettingsRowBackground: View {
     }
 }
 #endif
+
+/// Imports a Letterboxd diary CSV as watched movies.
+private struct LetterboxdImportSection: View {
+
+    @Environment(\.modelContext) private var context
+    @Environment(AppSettings.self) private var appSettings
+
+    @State private var choosingFile = false
+    @State private var task: Task<Void, Never>?
+    @State private var progress: (done: Int, total: Int)?
+    @State private var result: String?
+
+    var body: some View {
+        Section {
+            if let progress {
+                HStack {
+                    ProgressView(value: Double(progress.done), total: Double(max(progress.total, 1)))
+                    Text("\(progress.done)/\(progress.total)")
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                    Button("Stop", role: .cancel) { task?.cancel() }
+                }
+            } else {
+                Button("Import Letterboxd Diary…", systemImage: "square.and.arrow.down") {
+                    choosingFile = true
+                }
+            }
+        } header: {
+            Text("Import")
+        } footer: {
+            Text("Adds the movies in diary.csv from Letterboxd's data export (Settings → Import & Export on letterboxd.com) as watched, with their dates and ratings and details from TMDB. Movies already watched on the same day are skipped.")
+        }
+        .filmSettingsRows()
+        .fileImporter(isPresented: $choosingFile, allowedContentTypes: [.commaSeparatedText, .plainText]) { picked in
+            if case .success(let url) = picked { start(url) }
+        }
+        .alert("Import Finished", isPresented: Binding(get: { result != nil }, set: { if !$0 { result = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(result ?? "")
+        }
+    }
+
+    private func start(_ url: URL) {
+        let access = url.startAccessingSecurityScopedResource()
+        defer { if access { url.stopAccessingSecurityScopedResource() } }
+        guard let text = try? String(contentsOf: url, encoding: .utf8) else {
+            result = "Couldn't read that file."
+            return
+        }
+        let rows = LetterboxdDiaryImport.parse(text)
+        guard !rows.isEmpty else {
+            result = "No diary rows found. Use diary.csv from Letterboxd's data export."
+            return
+        }
+        progress = (0, rows.count)
+        task = Task {
+            defer { progress = nil }
+            do {
+                let summary = try await LetterboxdDiaryImport.run(
+                    rows, context: context, client: AppEnvironment.default.movieAPIClient,
+                    region: appSettings.releaseRegion) { done in progress = (done, rows.count) }
+                var lines = ["Added \(summary.added.count), skipped \(summary.skipped) already in the library."]
+                if !summary.notFound.isEmpty {
+                    lines.append("Not found on TMDB: \(summary.notFound.joined(separator: ", ")).")
+                }
+                result = lines.joined(separator: "\n\n")
+            } catch is CancellationError {
+                result = "Import stopped."
+            } catch {
+                result = "Import stopped: \(error.localizedDescription)"
+            }
+        }
+    }
+}
 
 // MARK: - Preview
 

@@ -8,6 +8,7 @@ import SwiftUI
 /// when none are earned yet.
 struct AchievementsSection: View {
 
+    var title: LocalizedStringKey = "Achievements"
     let achievements: [WatchedStats.Achievement]
 
     /// Flips once on appear to give each badge a single bounce.
@@ -16,7 +17,7 @@ struct AchievementsSection: View {
     var body: some View {
         if !achievements.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
-                StatsSectionTitle(title: "Achievements")
+                StatsSectionTitle(title: title)
                 ScrollView(.horizontal) {
                     HStack(spacing: 12) {
                         ForEach(achievements) { badge($0) }

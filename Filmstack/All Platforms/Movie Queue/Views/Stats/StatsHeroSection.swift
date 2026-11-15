@@ -29,8 +29,13 @@ struct StatsSectionTitle: View {
 /// The big total and a few supporting numbers.
 struct StatsHeroSection: View {
 
+    /// Statistics already scoped to the selected year (or all time).
     let stats: WatchedStats
-    let granularity: WatchedStats.Granularity
+    let scope: WatchedStatsView.Scope
+    /// Movies watched the year before, for a comparison tile.
+    let previousYearCount: Int?
+
+    private var granularity: WatchedStats.Granularity { scope.granularity }
 
     /// The total as drawn; counts up from zero when the screen appears.
     @State private var shownTotal = 0
@@ -49,7 +54,7 @@ struct StatsHeroSection: View {
         }
         .onAppear { reveal() }
         .onChange(of: stats.total) { reveal() }
-        .onChange(of: granularity) { reveal() }
+        .onChange(of: scope) { reveal() }
     }
 
     private func reveal() {
@@ -75,10 +80,11 @@ struct StatsHeroSection: View {
                 .foregroundStyle(Palette.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
-            if let first = stats.months.first?.start {
-                Text("Since \(first.formatted(.dateTime.month(.wide).year()))")
+            if let caption {
+                Text(caption)
                     .font(.subheadline)
                     .foregroundStyle(Palette.textSecondary)
+                    .contentTransition(.opacity)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -105,20 +111,24 @@ struct StatsHeroSection: View {
         .accessibilityLabel("\(stats.total) movies watched")
     }
 
+    /// "So far in 2026", "In 2025" or "Since May 2025".
+    private var caption: String? {
+        switch scope {
+        case .year(let year):
+            year == stats.currentYear
+                ? String(localized: "So far in \(String(year))")
+                : String(localized: "In \(String(year))")
+        case .allTime:
+            stats.entries.last.map {
+                String(localized: "Since \($0.dateWatched.formatted(.dateTime.month(.wide).year()))")
+            }
+        }
+    }
+
     // MARK: - Secondary
 
     @ViewBuilder private var secondaryTiles: some View {
-        let year = stats.currentYear
-        let thisYear = stats.count(inYear: year)
         let best = stats.best(granularity)
-        // "In 2026" says nothing new when everything was watched this year,
-        // or when this year is also the best year shown beside it.
-        let showsThisYear = thisYear != stats.total
-            && !(granularity == .year && best.map { stats.calendar.component(.year, from: $0.start) == year } == true)
-
-        if showsThisYear {
-            tile("In \(String(year))", value: "\(thisYear)")
-        }
         tile(granularity == .month ? "Per Month" : "Per Year",
              value: stats.average(granularity).formatted(.number.precision(.fractionLength(1))))
         if let best {
@@ -126,6 +136,11 @@ struct StatsHeroSection: View {
                  detail: granularity == .month
                     ? best.start.formatted(.dateTime.month(.abbreviated).year())
                     : best.start.formatted(.dateTime.year()))
+        }
+        if case .year(let year) = scope, let previous = previousYearCount {
+            let change = stats.total - previous
+            tile("vs \(String(year - 1))", value: change > 0 ? "+\(change)" : "\(change)",
+                 detail: "from \(previous)")
         }
     }
 

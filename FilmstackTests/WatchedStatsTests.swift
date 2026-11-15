@@ -67,6 +67,36 @@ struct WatchedStatsTests {
         #expect(result.latestActive(.month) == result.start(of: date(2026, 9, 1), .month))
     }
 
+    // MARK: - Year scope
+
+    @Test func pastYearCoversJanuaryToDecember() {
+        let all = stats([entry("A", date(2025, 3, 5)), entry("B", date(2025, 3, 9)), entry("C", date(2026, 2, 1))])
+        let year = all.scoped(toYear: 2025)
+        #expect(year.total == 2)
+        #expect(year.months.count == 12)
+        #expect(year.months.first?.start == year.start(of: date(2025, 1, 1), .month))
+        #expect(year.months.map(\.count).reduce(0, +) == 2)
+        #expect(abs(year.average(.month) - 2.0 / 12) < 1e-9)
+        #expect(year.best(.month)?.count == 2)
+    }
+
+    @Test func currentYearStopsAtTheCurrentMonth() {
+        let year = stats([entry("A", date(2026, 2, 1))]).scoped(toYear: 2026)
+        #expect(year.months.count == 11)  // January through November
+        #expect(year.latestActive(.month) == year.start(of: date(2026, 2, 1), .month))
+    }
+
+    @Test func watchedYearsAreMostRecentFirst() {
+        let all = stats([entry("A", date(2024, 6, 1)), entry("B", date(2026, 1, 1)), entry("C", date(2024, 7, 1))])
+        #expect(all.watchedYears == [2026, 2024])
+    }
+
+    @Test func scopedAchievementsOnlyCountThatYear() {
+        let all = stats((1...8).map { entry("m\($0)", date(2025, 7, $0), rating: 5) })
+        #expect(all.scoped(toYear: 2025).achievements.map(\.kind) == [.marathon, .perfectScore])
+        #expect(all.scoped(toYear: 2026).achievements.isEmpty)
+    }
+
     // MARK: - Recap facts
 
     private var busyYear: WatchedStats {
@@ -182,3 +212,27 @@ struct YearRecapTextTests {
         #expect(YearSummarizer.cleanHeadline("Your 15-Movie Year") == "Your Year in Movies")
     }
 }
+
+/// The developer-only Letterboxd diary import's CSV parsing.
+@MainActor
+struct LetterboxdDiaryImportTests {
+
+    @Test func parsesTheLetterboxdExportFormat() {
+        let csv = """
+        Date,Name,Year,Letterboxd URI,Rating,Rewatch,Tags,Watched Date
+        2025-01-03,"Crouching Tiger, Hidden Dragon",2000,https://boxd.it/a,4.5,,,2024-12-30
+        2025-02-01,"The ""Best"" Movie",2019,https://boxd.it/b,,Yes,,2025-02-01
+        2025-02-02,No Watched Date,2019,https://boxd.it/c,3,,,
+        """
+        let rows = LetterboxdDiaryImport.parse(csv)
+        #expect(rows.count == 3)
+        #expect(rows[0].title == "Crouching Tiger, Hidden Dragon")
+        #expect(rows[0].year == 2000)
+        #expect(rows[0].rating == 4.5)
+        #expect(rows[0].watched == DateComponents(year: 2024, month: 12, day: 30))  // the Watched Date column
+        #expect(rows[1].title == "The \"Best\" Movie")
+        #expect(rows[1].rating == nil)
+        #expect(rows[2].watched == DateComponents(year: 2025, month: 2, day: 2))  // falls back to Date
+    }
+}
+

@@ -5,21 +5,39 @@
 import SwiftUI
 import SwiftData
 
-/// Statistics for the Watched section: the total and supporting numbers, a
-/// recap of the year, achievements, an interactive chart of movies watched
-/// per month or year, posters from the picked period, and a shareable card.
+/// Statistics for the Watched section, for one year at a time or for all
+/// time, picked with the chips at the top.
 ///
-/// Every number comes from one `WatchedStats`, computed when the movies
-/// change, so the sections can't disagree. Movies without a watch date are
-/// left out.
+/// - A year: its total, a recap with highlights and a shareable card, the
+///   achievements earned that year, and a month-by-month chart.
+/// - All time: the lifetime total, achievements and a year-by-year chart.
+///
+/// The chart picks a month (or year) whose posters show below it. Every
+/// number comes from one `WatchedStats`, so the sections can't disagree.
+/// Movies without a watch date are left out.
 struct WatchedStatsView: View {
+
+    /// What the screen covers.
+    enum Scope: Hashable {
+        case year(Int)
+        case allTime
+
+        /// Years are charted by month; all time by year.
+        var granularity: WatchedStats.Granularity {
+            switch self {
+            case .year: .month
+            case .allTime: .year
+            }
+        }
+    }
 
     let movies: [Movie]
 
     @Environment(\.dismiss) private var dismiss
 
+    /// Everything watched; scoped copies are derived from it.
     @State private var stats: WatchedStats
-    @State private var granularity: WatchedStats.Granularity = .month
+    @State private var scope: Scope
     /// The period picked on the chart; its posters show below it.
     @State private var selectedPeriod: Date?
     /// The written recap headline, shared by the recap and the share card.
@@ -30,8 +48,22 @@ struct WatchedStatsView: View {
     init(movies: [Movie]) {
         self.movies = movies
         let stats = WatchedStats(entries: movies.compactMap(\.watchedEntry))
+        let scope = Self.defaultScope(for: stats)
         _stats = State(initialValue: stats)
-        _selectedPeriod = State(initialValue: stats.latestActive(.month))
+        _scope = State(initialValue: scope)
+        _selectedPeriod = State(initialValue: Self.scoped(stats, to: scope).latestActive(scope.granularity))
+    }
+
+    /// The most recent year with anything watched.
+    private static func defaultScope(for stats: WatchedStats) -> Scope {
+        stats.watchedYears.first.map(Scope.year) ?? .allTime
+    }
+
+    private static func scoped(_ stats: WatchedStats, to scope: Scope) -> WatchedStats {
+        switch scope {
+        case .year(let year): stats.scoped(toYear: year)
+        case .allTime: stats
+        }
     }
 
     /// Changes whenever anything the statistics use changes.
@@ -81,8 +113,11 @@ struct WatchedStatsView: View {
         }
         .onChange(of: moviesSignature) {
             stats = WatchedStats(entries: movies.compactMap(\.watchedEntry))
-            if let selectedPeriod, !stats.counts(granularity).contains(where: { $0.start == selectedPeriod }) {
-                self.selectedPeriod = stats.latestActive(granularity)
+            if case .year(let year) = scope, !stats.watchedYears.contains(year) {
+                select(Self.defaultScope(for: stats))
+            } else if let selectedPeriod,
+                      !Self.scoped(stats, to: scope).counts(scope.granularity).contains(where: { $0.start == selectedPeriod }) {
+                self.selectedPeriod = Self.scoped(stats, to: scope).latestActive(scope.granularity)
             }
         }
     }
@@ -91,28 +126,32 @@ struct WatchedStatsView: View {
         let lookup = moviesByID
         let movie: (UUID) -> Movie? = { lookup[$0] }
         let open: (UUID) -> Void = { id in pushedMovie = lookup[id] }
-        let recapYear = stats.recapYear
-        let facts = recapYear.map { stats.facts(forYear: $0) }
+        let scoped = Self.scoped(stats, to: scope)
+        let granularity = scope.granularity
 
         VStack(alignment: .leading, spacing: 24) {
-            periodPicker
-            StatsHeroSection(stats: stats, granularity: granularity)
+            ScopePicker(years: stats.watchedYears, selection: Binding(get: { scope }, set: select))
 
-            if let facts, let year = recapYear {
-                YearRecapSection(stats: stats, facts: facts, personality: stats.personality(forYear: year),
-                                 written: $writtenRecap, movie: movie, onOpen: open)
-                    .id(year)
+            StatsHeroSection(stats: scoped, scope: scope, previousYearCount: previousYearCount)
+
+            if case .year(let year) = scope {
+                let facts = stats.facts(forYear: year)
+                if facts.count >= WatchedStats.recapMinimum {
+                    YearRecapSection(stats: stats, facts: facts, personality: stats.personality(forYear: year),
+                                     written: $writtenRecap, movie: movie, onOpen: open)
+                        .id(year)
+                }
             }
 
-            AchievementsSection(achievements: stats.achievements)
+            AchievementsSection(title: achievementsTitle, achievements: scoped.achievements)
 
             VStack(alignment: .leading, spacing: 16) {
-                ActivityChartSection(stats: stats, granularity: granularity, selection: $selectedPeriod)
+                ActivityChartSection(stats: scoped, granularity: granularity, selection: $selectedPeriod)
                 if let selectedPeriod {
                     // Overlapping layers, so the old and new period cross-fade
                     // in place instead of stacking.
                     ZStack(alignment: .topLeading) {
-                        PosterHistorySection(stats: stats, granularity: granularity, period: selectedPeriod,
+                        PosterHistorySection(stats: scoped, granularity: granularity, period: selectedPeriod,
                                              movie: movie, onOpen: open)
                             .id(selectedPeriod)
                             .transition(.opacity)
@@ -121,29 +160,80 @@ struct WatchedStatsView: View {
                 }
             }
 
-            if let facts {
-                ShareRecapSection(content: ShareRecapContent(
-                    facts: facts,
-                    headline: writtenRecap?.headline,
-                    topRatedMovie: facts.topRated.flatMap { lookup[$0.id] }))
+            if case .year(let year) = scope {
+                let facts = stats.facts(forYear: year)
+                if facts.count >= WatchedStats.recapMinimum {
+                    ShareRecapSection(content: ShareRecapContent(
+                        facts: facts,
+                        headline: writtenRecap?.headline,
+                        topRatedMovie: facts.topRated.flatMap { lookup[$0.id] }))
+                }
             }
         }
         .padding(20)
     }
 
-    private var periodPicker: some View {
-        Picker("Period", selection: $granularity) {
-            Text("By Month").tag(WatchedStats.Granularity.month)
-            Text("By Year").tag(WatchedStats.Granularity.year)
+    private var achievementsTitle: LocalizedStringKey {
+        switch scope {
+        case .year(let year): "Achievements in \(String(year))"
+        case .allTime: "Achievements"
         }
-        .pickerStyle(.segmented)
-        .labelsHidden()
-        .sensoryFeedback(.selection, trigger: granularity)
-        .onChange(of: granularity) {
-            withAnimation(.smooth(duration: 0.3)) {
-                selectedPeriod = stats.latestActive(granularity)
+    }
+
+    /// Movies watched the year before the selected one, when there were any.
+    private var previousYearCount: Int? {
+        guard case .year(let year) = scope else { return nil }
+        let count = stats.count(inYear: year - 1)
+        return count > 0 ? count : nil
+    }
+
+    private func select(_ newScope: Scope) {
+        guard newScope != scope else { return }
+        withAnimation(.smooth(duration: 0.3)) {
+            scope = newScope
+            writtenRecap = nil
+            selectedPeriod = Self.scoped(stats, to: newScope).latestActive(newScope.granularity)
+        }
+    }
+}
+
+/// All Time, then a chip for each year with movies watched, most recent first.
+private struct ScopePicker: View {
+
+    let years: [Int]
+    @Binding var selection: WatchedStatsView.Scope
+
+    var body: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 8) {
+                chip(String(localized: "All Time"), scope: .allTime)
+                ForEach(years, id: \.self) { year in
+                    chip(String(year), scope: .year(year))
+                }
             }
+            .padding(.vertical, 2)
         }
+        .scrollIndicators(.hidden)
+        .scrollClipDisabled()
+        .sensoryFeedback(.selection, trigger: selection)
+    }
+
+    private func chip(_ title: String, scope: WatchedStatsView.Scope) -> some View {
+        let isSelected = selection == scope
+        return Button { selection = scope } label: {
+            Text(title)
+                .font(.subheadline.weight(.semibold).monospacedDigit())
+                .foregroundStyle(isSelected ? .white : Palette.textSecondary)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background {
+                    Capsule().fill(isSelected ? AnyShapeStyle(Gradients.selectedRow) : AnyShapeStyle(Palette.card))
+                }
+                .overlay { Capsule().strokeBorder(isSelected ? .white.opacity(0.18) : Palette.hairline) }
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }
 

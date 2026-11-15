@@ -16,19 +16,29 @@ struct ActivityChartSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                Text(granularity == .month ? "Movies Watched per Month" : "Movies Watched per Year")
+                Text(title)
                     .font(.headline)
                     .foregroundStyle(Palette.textPrimary)
                 Spacer()
             }
             selectionSummary
-            // A fresh chart per granularity, so its bars grow in again and its
-            // scroll position starts at the end.
+            // A fresh chart per year (or all time), so its bars grow in again
+            // and its scroll position starts at the end.
             ActivityChart(stats: stats, granularity: granularity, selection: $selection)
-                .id(granularity)
+                .id(stats.span?.start)
         }
         .padding(16)
         .filmCard(cornerRadius: 20)
+    }
+
+    /// "Movies Watched in 2025", or per year for all time.
+    private var title: String {
+        if let span = stats.span {
+            return String(localized: "Movies Watched in \(span.start.formatted(.dateTime.year()))")
+        }
+        return granularity == .month
+            ? String(localized: "Movies Watched per Month")
+            : String(localized: "Movies Watched per Year")
     }
 
     /// "July 2026 · 8 movies" for the picked bar, so the selection isn't
@@ -101,7 +111,7 @@ private struct ActivityChart: View {
                     AxisGridLine().foregroundStyle(Palette.hairline)
                     AxisValueLabel(format: .dateTime.month(.narrow), centered: true)
                         .foregroundStyle(Palette.textSecondary)
-                    if let date = value.as(Date.self), stats.calendar.component(.month, from: date) == 1 {
+                    if stats.span == nil, let date = value.as(Date.self), stats.calendar.component(.month, from: date) == 1 {
                         AxisValueLabel(format: .dateTime.year(), centered: true, verticalSpacing: 14)
                             .foregroundStyle(Palette.textSecondary)
                     }

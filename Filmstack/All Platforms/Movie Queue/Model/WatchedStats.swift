@@ -52,19 +52,40 @@ nonisolated struct WatchedStats: Sendable {
     let calendar: Calendar
     let now: Date
 
-    /// Per month / per year, from the first watched period through the
-    /// current one, including empty periods.
+    /// Per month / per year, including empty periods: from the first watched
+    /// period through the current one, or across `span` when there is one.
     let months: [PeriodCount]
     let years: [PeriodCount]
 
-    init(entries: [WatchedEntry], calendar: Calendar = .current, now: Date = Date()) {
+    /// The stretch of time these statistics cover, when limited to one
+    /// (a single year); nil for everything.
+    let span: DateInterval?
+
+    init(entries: [WatchedEntry], calendar: Calendar = .current, now: Date = Date(),
+         span: DateInterval? = nil) {
+        let entries = span.map { span in entries.filter { span.contains($0.dateWatched) } } ?? entries
         self.entries = entries.sorted { lhs, rhs in
             lhs.dateWatched != rhs.dateWatched ? lhs.dateWatched > rhs.dateWatched : lhs.title < rhs.title
         }
         self.calendar = calendar
         self.now = now
-        self.months = Self.counts(entries, .month, calendar: calendar, now: now)
-        self.years = Self.counts(entries, .year, calendar: calendar, now: now)
+        self.span = span
+        self.months = Self.counts(entries, .month, calendar: calendar, now: now, span: span)
+        self.years = Self.counts(entries, .year, calendar: calendar, now: now, span: span)
+    }
+
+    /// Years with anything watched, most recent first.
+    var watchedYears: [Int] {
+        Array(Set(entries.map { calendar.component(.year, from: $0.dateWatched) })).sorted(by: >)
+    }
+
+    /// The same statistics for one calendar year: its months run January to
+    /// December, or to the current month for the current year.
+    func scoped(toYear year: Int) -> WatchedStats {
+        let start = calendar.date(from: DateComponents(year: year, month: 1, day: 1)) ?? now
+        let end = calendar.date(byAdding: .year, value: 1, to: start) ?? now
+        return WatchedStats(entries: entries, calendar: calendar, now: now,
+                            span: DateInterval(start: start, end: end))
     }
 
     // MARK: - Periods
@@ -300,13 +321,22 @@ nonisolated struct WatchedStats: Sendable {
     // MARK: - Helpers
 
     private static func counts(_ entries: [WatchedEntry], _ granularity: Granularity,
-                               calendar: Calendar, now: Date) -> [PeriodCount] {
+                               calendar: Calendar, now: Date, span: DateInterval?) -> [PeriodCount] {
         func start(_ date: Date) -> Date {
             calendar.dateInterval(of: granularity.component, for: date)?.start ?? date
         }
         let counts = Dictionary(grouping: entries) { start($0.dateWatched) }.mapValues(\.count)
-        guard let first = counts.keys.min() else { return [] }
-        let last = max(start(now), counts.keys.max() ?? first)
+        let first: Date
+        let last: Date
+        if let span {
+            // The whole span, but not past the current period.
+            first = start(span.start)
+            last = max(first, min(start(now), start(span.end.addingTimeInterval(-1))))
+        } else {
+            guard let earliest = counts.keys.min() else { return [] }
+            first = earliest
+            last = max(start(now), counts.keys.max() ?? first)
+        }
 
         var result: [PeriodCount] = []
         var date = first
