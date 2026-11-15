@@ -32,6 +32,14 @@ struct SettingsScreen: View {
                 Text("A separate list for movies you're not sure about yet.")
             }
 
+            Section {
+                Toggle("Depth of Field Blur", isOn: $appSettings.pickerDepthOfField)
+            } header: {
+                Text("Movie Picker")
+            } footer: {
+                Text("Softens cases away from the one in focus. Turn off for smoother scrolling on slower devices.")
+            }
+
             Section("Movie Database") {
                 NavigationLink {
                     TMDBKeySettings()

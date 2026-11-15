@@ -32,6 +32,9 @@ import KeyValueStore
         /// Whether the Maybe Later section is shown.
         case showsMaybeLater
 
+        /// Whether the movie picker blurs cases away from the focus.
+        case pickerDepthOfField
+
         // <-- (1 / 3) Add key for new property here
     }
 
@@ -72,6 +75,14 @@ import KeyValueStore
         }
     }
 
+    /// Whether the movie picker's shelf uses a depth-of-field blur on cases
+    /// away from the focus. On by default; turning it off renders faster.
+    public var pickerDepthOfField: Bool {
+        didSet {
+            store.save(pickerDepthOfField, for: .pickerDepthOfField)
+        }
+    }
+
     // <-- (2 / 3) Add property for new property here
 
     // MARK: Setup
@@ -91,6 +102,7 @@ import KeyValueStore
         releaseRegion = self.store.load(.releaseRegion, default: AppSettings.defaultRegion)
         letterboxdUsername = self.store.load(.letterboxdUsername, default: "")
         showsMaybeLater = self.store.load(.showsMaybeLater, default: false)
+        pickerDepthOfField = self.store.load(.pickerDepthOfField, default: true)
 
         // <-- (3 / 3) Add initializer for new property here.
     }

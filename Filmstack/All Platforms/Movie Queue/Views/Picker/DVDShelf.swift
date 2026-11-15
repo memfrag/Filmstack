@@ -175,6 +175,8 @@ private struct ProjectedCase: View, Animatable {
     let onTapBack: () -> Void
     let onOpenDetails: () -> Void
 
+    @Environment(AppSettings.self) private var appSettings
+
     var animatableData: AnimatablePair<CGFloat, AnimatablePair<CGFloat, CGFloat>> {
         get { AnimatablePair(intro, AnimatablePair(flip, pullOut)) }
         set {
@@ -199,25 +201,25 @@ private struct ProjectedCase: View, Animatable {
                 ForEach([ShelfGeometry.Face.top, .bottom, .edge], id: \.self) { face in
                     if geometry.isVisible(face, pose: pose) {
                         DVDEdgeFace(size: geometry.faceSize(face), shade: pose.shade, isTop: face == .top)
-                            .blur(radius: pose.blur)
+                            .modifier(DepthBlur(radius: pose.blur, isEnabled: appSettings.pickerDepthOfField))
                             .projectionEffect(geometry.projection(face, pose: pose))
                     }
                 }
                 if flip == 0, geometry.isVisible(.back, pose: pose) {
                     DVDEdgeFace(size: geometry.faceSize(.back), shade: pose.shade)
-                        .blur(radius: pose.blur)
+                        .modifier(DepthBlur(radius: pose.blur, isEnabled: appSettings.pickerDepthOfField))
                         .projectionEffect(geometry.projection(.back, pose: pose))
                 }
                 if geometry.isVisible(.spine, pose: pose) {
                     DVDSpineFace(movie: movie, position: position, size: geometry.faceSize(.spine))
                         .overlay { Color.black.opacity(0.18 + pose.shade) }
-                        .blur(radius: pose.blur)
+                        .modifier(DepthBlur(radius: pose.blur, isEnabled: appSettings.pickerDepthOfField))
                         .projectionEffect(geometry.projection(.spine, pose: pose))
                 }
                 if geometry.isVisible(.front, pose: pose) {
                     DVDFrontFace(movie: movie, size: geometry.faceSize(.front))
                         .overlay { Color.black.opacity(pose.shade) }
-                        .blur(radius: pose.blur)
+                        .modifier(DepthBlur(radius: pose.blur, isEnabled: appSettings.pickerDepthOfField))
                         .projectionEffect(geometry.projection(.front, pose: pose))
                 }
                 if flip > 0, geometry.isVisible(.back, pose: pose) {
@@ -243,6 +245,23 @@ private struct ProjectedCase: View, Animatable {
 /// plane. Only while a case is actually turning around (a flip) does it go on
 /// top. `flip` is animated, so the raise follows the turn frame by frame, in
 /// both directions, rather than the tap.
+/// The cases' depth-of-field blur. When turned off in Settings no blur filter
+/// is applied at all, which is cheaper to render than a zero radius. The
+/// setting can't change while the picker is open, so the branch never flips
+/// mid-animation (which would reset the faces' state).
+private struct DepthBlur: ViewModifier {
+    let radius: CGFloat
+    let isEnabled: Bool
+
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content.blur(radius: radius)
+        } else {
+            content
+        }
+    }
+}
+
 private struct DepthOrder: ViewModifier, Animatable {
 
     let u: CGFloat
