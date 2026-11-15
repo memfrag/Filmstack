@@ -210,7 +210,7 @@ private struct LetterboxdImportSection: View {
         } header: {
             Text("Import")
         } footer: {
-            Text("Adds the movies in diary.csv from Letterboxd's data export (Settings → Import & Export on letterboxd.com) as watched, with their dates and ratings and details from TMDB. Movies already watched on the same day are skipped.")
+            Text("Adds the movies in diary.csv from Letterboxd's data export (Settings → Import & Export on letterboxd.com) as watched, with their dates and ratings and details from TMDB. Movies already logged as watched within a few days of the diary date are skipped.")
         }
         .filmSettingsRows()
         .fileImporter(isPresented: $choosingFile, allowedContentTypes: [.commaSeparatedText, .plainText]) { picked in

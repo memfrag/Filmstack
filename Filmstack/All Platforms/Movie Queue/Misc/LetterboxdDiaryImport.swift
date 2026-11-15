@@ -10,8 +10,8 @@ import SwiftData
 ///
 /// Each row is looked up on TMDB for its details and poster, then added as
 /// watched on its diary date with its rating. Rows already in the library
-/// (same TMDB movie watched on the same day) are skipped, so running it
-/// twice is harmless. Movies are saved through SwiftData like any other add,
+/// (the same TMDB movie watched within a few days) are skipped, so running
+/// it twice is harmless. Movies are saved through SwiftData like any other add,
 /// so they sync to the other devices.
 enum LetterboxdDiaryImport {
 
@@ -110,6 +110,17 @@ enum LetterboxdDiaryImport {
 
     // MARK: - Import
 
+    /// Days apart that still count as the same viewing: the date logged in
+    /// Letterboxd and in Filmstack often differ by a day or two.
+    static let sameViewingDays = 3
+
+    /// Whether a library watch date and a diary date are the same viewing.
+    static func isSameViewing(_ libraryDate: Date, _ diaryDate: Date, calendar: Calendar = .current) -> Bool {
+        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: libraryDate),
+                                           to: calendar.startOfDay(for: diaryDate)).day ?? .max
+        return abs(days) <= sameViewingDays
+    }
+
     /// Imports the rows one at a time, calling `progress` after each.
     @MainActor
     static func run(_ rows: [Row], context: ModelContext, client: any MovieAPIClient, region: String?,
@@ -138,7 +149,7 @@ enum LetterboxdDiaryImport {
 
             let alreadyThere = existing.contains { movie in
                 movie.tmdbID == match.tmdbID && movie.status == .watched
-                    && movie.dateWatched.map { calendar.isDate($0, inSameDayAs: watchedDate) } == true
+                    && movie.dateWatched.map { isSameViewing($0, watchedDate, calendar: calendar) } == true
             }
             if alreadyThere {
                 summary.skipped += 1

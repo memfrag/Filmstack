@@ -234,5 +234,13 @@ struct LetterboxdDiaryImportTests {
         #expect(rows[1].rating == nil)
         #expect(rows[2].watched == DateComponents(year: 2025, month: 2, day: 2))  // falls back to Date
     }
-}
 
+    @Test func viewingsAFewDaysApartAreTheSame() {
+        let calendar = Calendar(identifier: .gregorian)
+        let day = calendar.date(from: DateComponents(year: 2026, month: 7, day: 6, hour: 12))!
+        func plus(_ days: Int) -> Date { calendar.date(byAdding: .day, value: days, to: day)! }
+        #expect(LetterboxdDiaryImport.isSameViewing(plus(1), day, calendar: calendar))
+        #expect(LetterboxdDiaryImport.isSameViewing(plus(-3), day, calendar: calendar))
+        #expect(!LetterboxdDiaryImport.isSameViewing(plus(4), day, calendar: calendar))
+    }
+}
