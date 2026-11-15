@@ -34,6 +34,7 @@ struct MovieListColumn: View {
     @State private var showingSearch = false
     @FocusState private var searchFocused: Bool
     @State private var draggingMovie: Movie?
+    @State private var showingPicker = false
     @AppStorage("filmstack.libraryViewMode") private var viewModeRaw = LibraryViewMode.list.rawValue
     #if os(iOS)
     @State private var showingSettings = false
@@ -142,6 +143,20 @@ struct MovieListColumn: View {
             AddMovieSheet(defaultStatus: section.defaultAddStatus ?? .queued)
         }
         #if os(iOS)
+        .fullScreenCover(isPresented: isPhone ? $showingPicker : .constant(false)) {
+            moviePicker
+        }
+        .sheet(isPresented: isPhone ? .constant(false) : $showingPicker) {
+            moviePicker
+                .presentationSizing(.page)
+        }
+        #else
+        .sheet(isPresented: $showingPicker) {
+            moviePicker
+                .frame(minWidth: 900, idealWidth: 960, minHeight: 640, idealHeight: 700)
+        }
+        #endif
+        #if os(iOS)
         .sheet(isPresented: $showingSettings) {
             NavigationStack {
                 SettingsScreen()
@@ -170,6 +185,21 @@ struct MovieListColumn: View {
             list
                 .transition(.opacity)
         }
+    }
+
+    // MARK: - Movie picker
+
+    #if os(iOS)
+    private var isPhone: Bool { UIDevice.current.userInterfaceIdiom == .phone }
+    #endif
+
+    private var moviePicker: some View {
+        MoviePickerView(
+            movies: filteredMovies,
+            title: section.title,
+            position: position(for:),
+            onOpenDetails: { selection = $0 }
+        )
     }
 
     // MARK: - Header
@@ -584,6 +614,16 @@ struct MovieListColumn: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+        if section == .queue, !filteredMovies.isEmpty {
+            ToolbarItem {
+                Button {
+                    showingPicker = true
+                } label: {
+                    Label("Pick a Movie", systemImage: "square.stack.3d.forward.dottedline")
+                }
+            }
+            ToolbarSpacer(.fixed)
+        }
         ToolbarItem {
             Button {
                 viewModeRaw = (viewMode == .grid ? LibraryViewMode.list : .grid).rawValue

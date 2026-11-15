@@ -23,6 +23,11 @@ enum Palette {
     static let textPrimary = Color(white: 0.97)
     static let textSecondary = Color(red: 0.72, green: 0.70, blue: 0.82)
 
+    /// DVD keep-case plastic, used by the movie picker shelf.
+    static let dvdCase = Color(white: 0.11)
+    /// Darker shade of the case plastic for spines and edges.
+    static let dvdCaseDark = Color(white: 0.03)
+
     static let separator = Color.white.opacity(0.10)
     static let hairline = Color.white.opacity(0.06)
 }
