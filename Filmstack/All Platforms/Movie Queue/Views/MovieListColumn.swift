@@ -351,14 +351,49 @@ struct MovieListColumn: View {
 
     private var list: some View {
         List(selection: $selection) {
-            ForEach(filteredMovies, id: \.persistentModelID) { movie in
-                row(for: movie)
+            if section == .watched {
+                ForEach(watchedMonths, id: \.month) { group in
+                    Section {
+                        ForEach(group.movies, id: \.persistentModelID) { movie in
+                            row(for: movie)
+                        }
+                    } header: {
+                        monthHeader(group.month)
+                    }
+                }
+            } else {
+                ForEach(filteredMovies, id: \.persistentModelID) { movie in
+                    row(for: movie)
+                }
+                .onMove(perform: moveHandler)
             }
-            .onMove(perform: moveHandler)
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .environment(\.defaultMinListRowHeight, 0)
+    }
+
+    /// Watched movies grouped by the month they were watched, newest first.
+    /// Movies without a watched date come last, under a `nil` month.
+    private var watchedMonths: [(month: Date?, movies: [Movie])] {
+        let calendar = Calendar.current
+        let groups = Dictionary(grouping: filteredMovies) { movie in
+            movie.dateWatched.flatMap { calendar.dateInterval(of: .month, for: $0)?.start }
+        }
+        return groups
+            .sorted { ($0.key ?? .distantPast) > ($1.key ?? .distantPast) }
+            .map { (month: $0.key, movies: $0.value) }
+    }
+
+    private func monthHeader(_ month: Date?) -> some View {
+        Text(month?.formatted(.dateTime.month(.wide).year()) ?? String(localized: "No Date"))
+            .font(.headline)
+            .foregroundStyle(Palette.textPrimary)
+            .padding(.horizontal, 22)
+            .padding(.top, 8)
+            .padding(.bottom, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .listRowInsets(EdgeInsets())
     }
 
     @ViewBuilder
