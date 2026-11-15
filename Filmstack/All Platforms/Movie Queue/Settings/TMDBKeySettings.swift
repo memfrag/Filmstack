@@ -34,6 +34,7 @@ struct TMDBKeySettings: View {
         Form {
             Section {
                 LabeledContent("Provider", value: "TMDB")
+                    .filmSettingsRow()
                 // A plain row rather than LabeledContent, which gave this
                 // one-line row a large empty area below it.
                 HStack {
@@ -49,6 +50,7 @@ struct TMDBKeySettings: View {
             Section {
                 SecureField("Paste Read Access Token", text: $model.tokenInput)
                     .disableAutocorrection(true)
+                    .filmSettingsRow()
                 HStack {
                     Button(model.isConfigured ? "Replace Key" : "Save Key") {
                         Task { await model.saveToken() }
@@ -72,6 +74,7 @@ struct TMDBKeySettings: View {
                     Task { await model.testConnection() }
                 }
                 .disabled(!model.isConfigured || model.isBusy)
+                .filmSettingsRow()
 
                 Button("Delete Key", role: .destructive) {
                     model.deleteToken()

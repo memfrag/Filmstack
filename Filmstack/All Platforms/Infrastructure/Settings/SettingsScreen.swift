@@ -22,6 +22,7 @@ struct SettingsScreen: View {
                 } label: {
                     Label("About Filmstack", systemImage: "info.circle")
                 }
+                .filmSettingsRow()
                 NavigationLink {
                     TMDBKeySettings()
                 } label: {
@@ -56,27 +57,61 @@ struct SettingsScreen: View {
 
 extension View {
 
-    /// On iOS, puts a settings form on the app's purple wash instead of the
-    /// system grouped background. A no-op on macOS (Settings window).
+    /// On iOS, puts a settings form on the app's dark base colour instead of
+    /// the system grouped background, with an inline (small) title. A no-op
+    /// on macOS (Settings window).
     func filmSettingsForm() -> some View {
         #if os(iOS)
         scrollContentBackground(.hidden)
-            .filmWindowBackground()
+            .background(Palette.base.ignoresSafeArea())
+            .navigationBarTitleDisplayMode(.inline)
         #else
         self
         #endif
     }
 
-    /// On iOS, gives a settings form section glassy rows that match the app's
-    /// cards, instead of the system's opaque grey ones. A no-op on macOS.
+    /// On iOS, gives a settings form section rows that match the app's cards
+    /// instead of the system's opaque grey ones, and hides the system
+    /// separators (rows draw their own; see `filmSettingsRow(separated:)`).
+    /// A no-op on macOS.
     func filmSettingsRows() -> some View {
         #if os(iOS)
-        listRowBackground(Palette.elevated.opacity(0.75))
+        listRowBackground(SettingsRowBackground(separated: false))
+            .listRowSeparator(.hidden)
+        #else
+        self
+        #endif
+    }
+
+    /// On iOS, draws a faint separator under this row that spans the row's
+    /// background edge to edge. Use on every row but the last in a section.
+    /// A no-op on macOS.
+    func filmSettingsRow(separated: Bool = true) -> some View {
+        #if os(iOS)
+        listRowBackground(SettingsRowBackground(separated: separated))
         #else
         self
         #endif
     }
 }
+
+#if os(iOS)
+/// A settings row's fill, optionally with a hairline along its bottom edge.
+private struct SettingsRowBackground: View {
+    let separated: Bool
+
+    var body: some View {
+        Palette.elevated.opacity(0.75)
+            .overlay(alignment: .bottom) {
+                if separated {
+                    Rectangle()
+                        .fill(Palette.hairline)
+                        .frame(height: 1)
+                }
+            }
+    }
+}
+#endif
 
 // MARK: - Preview
 

@@ -176,6 +176,9 @@ struct AboutScreen: View {
         NavigationStack {
             OpenSourceAttributions()
                 .navigationTitle("Licenses")
+                #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Done") { showingLicenses = false }
