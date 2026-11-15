@@ -729,8 +729,72 @@ struct MovieListColumn: View {
         return count == 1 ? "1 movie" : "\(count) movies"
     }
 
+    /// Where the view picker and search/filter go: the leading side.
+    private var leadingPlacement: ToolbarItemPlacement {
+        #if os(iOS)
+        .topBarLeading
+        #else
+        .navigation
+        #endif
+    }
+
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+        // Leading: how the section is shown, then search and filter.
+        if hasCalendar {
+            ToolbarItem(placement: leadingPlacement) {
+                Menu {
+                    Picker("View", selection: sectionLayout) {
+                        Label("List", systemImage: "list.bullet").tag(SectionLayout.list)
+                        Label("Grid", systemImage: "square.grid.2x2").tag(SectionLayout.grid)
+                        Label("Calendar", systemImage: "calendar").tag(SectionLayout.calendar)
+                    }
+                    .pickerStyle(.inline)
+                } label: {
+                    Label("View", systemImage: sectionLayout.wrappedValue.systemImage)
+                }
+            }
+        } else {
+            ToolbarItem(placement: leadingPlacement) {
+                Button {
+                    viewModeRaw = (viewMode == .grid ? LibraryViewMode.list : .grid).rawValue
+                } label: {
+                    Label(viewMode == .grid ? "List View" : "Grid View",
+                          systemImage: viewMode == .grid ? "list.bullet" : "square.grid.2x2")
+                }
+            }
+        }
+        ToolbarSpacer(.fixed, placement: leadingPlacement)
+        ToolbarItem(placement: leadingPlacement) {
+            Button {
+                toggleSearch()
+            } label: {
+                Label("Search", systemImage: showingSearch
+                      ? "magnifyingglass.circle.fill"
+                      : "magnifyingglass")
+            }
+        }
+        if hasFilters {
+            ToolbarItem(placement: leadingPlacement) {
+                Button {
+                    showingFilterPopover = true
+                } label: {
+                    Label("Filter", systemImage: filter.isActive
+                          ? "line.3.horizontal.decrease.circle.fill"
+                          : "line.3.horizontal.decrease")
+                }
+                .popover(isPresented: $showingFilterPopover, arrowEdge: .bottom) {
+                    FilterPopover(
+                        filter: $filter,
+                        genres: availableGenres,
+                        sources: availableSources,
+                        locations: availableLocations
+                    )
+                }
+            }
+        }
+
+        // Trailing: the section's own tools, then Add.
         if section == .queue, !filteredMovies.isEmpty {
             ToolbarItem {
                 Button {
@@ -751,59 +815,6 @@ struct MovieListColumn: View {
             }
             ToolbarSpacer(.fixed)
         }
-        if hasCalendar {
-            ToolbarItem {
-                Menu {
-                    Picker("View", selection: sectionLayout) {
-                        Label("List", systemImage: "list.bullet").tag(SectionLayout.list)
-                        Label("Grid", systemImage: "square.grid.2x2").tag(SectionLayout.grid)
-                        Label("Calendar", systemImage: "calendar").tag(SectionLayout.calendar)
-                    }
-                    .pickerStyle(.inline)
-                } label: {
-                    Label("View", systemImage: sectionLayout.wrappedValue.systemImage)
-                }
-            }
-        } else {
-            ToolbarItem {
-                Button {
-                    viewModeRaw = (viewMode == .grid ? LibraryViewMode.list : .grid).rawValue
-                } label: {
-                    Label(viewMode == .grid ? "List View" : "Grid View",
-                          systemImage: viewMode == .grid ? "list.bullet" : "square.grid.2x2")
-                }
-            }
-        }
-        ToolbarSpacer(.fixed)
-        ToolbarItem {
-            Button {
-                toggleSearch()
-            } label: {
-                Label("Search", systemImage: showingSearch
-                      ? "magnifyingglass.circle.fill"
-                      : "magnifyingglass")
-            }
-        }
-        if hasFilters {
-            ToolbarItem {
-                Button {
-                    showingFilterPopover = true
-                } label: {
-                    Label("Filter", systemImage: filter.isActive
-                          ? "line.3.horizontal.decrease.circle.fill"
-                          : "line.3.horizontal.decrease")
-                }
-                .popover(isPresented: $showingFilterPopover, arrowEdge: .bottom) {
-                    FilterPopover(
-                        filter: $filter,
-                        genres: availableGenres,
-                        sources: availableSources,
-                        locations: availableLocations
-                    )
-                }
-            }
-        }
-        ToolbarSpacer(.fixed)
         if section.defaultAddStatus != nil {
             ToolbarItem {
                 Button {
