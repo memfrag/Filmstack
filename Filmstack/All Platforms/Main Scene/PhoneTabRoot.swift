@@ -50,26 +50,42 @@ private struct BrowseTab: View {
         case letterboxd
     }
 
+    @Environment(AppSettings.self) private var appSettings
+    private let discover = DiscoverStore.shared
+    private let letterboxd = LetterboxdStore.shared
+
     var body: some View {
         NavigationStack {
-            List {
-                Section("Discover") {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    sectionHeader("Discover")
                     ForEach(DiscoverList.allCases, id: \.self) { list in
                         NavigationLink(value: Route.discover(list)) {
-                            Label(list.title, systemImage: list.systemImage)
+                            BrowseCard(
+                                title: list.title,
+                                subtitle: subtitle(for: list),
+                                systemImage: list.systemImage,
+                                posterURLs: posterURLs(for: list)
+                            )
                         }
-                        .listRowBackground(Color.clear)
+                        .buttonStyle(.plain)
                     }
-                }
-                Section("Miscellaneous") {
+
+                    sectionHeader("Miscellaneous")
+                        .padding(.top, 12)
                     NavigationLink(value: Route.letterboxd) {
-                        Label("Letterboxd", systemImage: "film.stack")
+                        BrowseCard(
+                            title: "Letterboxd",
+                            subtitle: letterboxdSubtitle,
+                            systemImage: "film.stack",
+                            posterURLs: letterboxdPosterURLs
+                        )
                     }
-                    .listRowBackground(Color.clear)
+                    .buttonStyle(.plain)
                 }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
             .filmWindowBackground()
             .navigationTitle("Browse")
             .navigationDestination(for: Route.self) { route in
@@ -80,7 +96,58 @@ private struct BrowseTab: View {
                     LetterboxdContent()
                 }
             }
+            .task { await loadPreviews() }
         }
+    }
+
+    private func sectionHeader(_ title: LocalizedStringKey) -> some View {
+        Text(title)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Palette.textSecondary)
+            .padding(.horizontal, 4)
+    }
+
+    // MARK: - Previews
+
+    /// Loads every list (from today's cache when there is one) and the
+    /// Letterboxd diary, so the cards can show posters.
+    private func loadPreviews() async {
+        await withTaskGroup(of: Void.self) { group in
+            for list in DiscoverList.allCases {
+                group.addTask { await discover.ensureLoaded(list, region: appSettings.releaseRegion) }
+            }
+            let username = appSettings.letterboxdUsername
+            if !username.isEmpty {
+                group.addTask { await letterboxd.ensureLoaded(username: username) }
+            }
+        }
+    }
+
+    private func posterURLs(for list: DiscoverList) -> [URL] {
+        guard case .loaded(let movies) = discover.phase(for: list) else { return [] }
+        return movies.prefix(3).compactMap { TMDBImage.posterURL(path: $0.posterPath, size: .queue) }
+    }
+
+    private func subtitle(for list: DiscoverList) -> String {
+        switch discover.phase(for: list) {
+        case .loaded(let movies):
+            movies.count == 1 ? String(localized: "1 movie") : String(localized: "\(movies.count) movies")
+        case .loading, .idle:
+            String(localized: "Loading…")
+        case .failed:
+            String(localized: "Couldn't load")
+        }
+    }
+
+    private var letterboxdPosterURLs: [URL] {
+        guard case .loaded(let entries) = letterboxd.phase else { return [] }
+        return entries.prefix(3).compactMap(\.posterURL)
+    }
+
+    private var letterboxdSubtitle: String {
+        let username = appSettings.letterboxdUsername
+        guard !username.isEmpty else { return String(localized: "Connect your diary") }
+        return String(localized: "\(username)'s diary")
     }
 }
 

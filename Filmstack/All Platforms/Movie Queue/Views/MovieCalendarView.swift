@@ -62,6 +62,7 @@ struct MovieCalendarView<MenuContent: View>: View {
             .frame(maxWidth: 760)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 16)
+            .padding(.top, 8)
             .padding(.bottom, 24)
         }
     }
