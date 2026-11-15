@@ -465,6 +465,7 @@ struct MovieListColumn: View {
                 applyReorder(difference)
             }
             .padding(.horizontal, 20)
+            .padding(.top, 2)
             .padding(.bottom, 16)
         }
     }
