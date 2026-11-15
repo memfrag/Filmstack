@@ -29,7 +29,7 @@ struct SettingsScreen: View {
                 NavigationLink {
                     TMDBKeySettings()
                 } label: {
-                    Label("TMDB API Key", systemImage: "film")
+                    Label("TMDB API Key", systemImage: "key.fill")
                 }
                 .filmSettingsRow()
                 LabeledContent {
