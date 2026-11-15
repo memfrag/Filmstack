@@ -20,6 +20,7 @@ struct MovieFormSheet: View {
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppSettings.self) private var appSettings
 
     @State private var title = ""
     @State private var year = ""
@@ -38,6 +39,14 @@ struct MovieFormSheet: View {
         title.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// Maybe Later is offered only when that section is enabled, or when the
+    /// movie is already there.
+    private var statusOptions: [MovieStatus] {
+        MovieStatus.allCases.filter {
+            $0 != .maybeLater || appSettings.showsMaybeLater || status == .maybeLater
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -51,7 +60,7 @@ struct MovieFormSheet: View {
 
                 Section("Optional") {
                     Picker("Status", selection: $status) {
-                        ForEach(MovieStatus.allCases, id: \.self) { status in
+                        ForEach(statusOptions, id: \.self) { status in
                             Text(status.title).tag(status)
                         }
                     }
@@ -170,6 +179,7 @@ private extension String {
 #if DEBUG
 #Preview("Add") {
     MovieFormSheet(mode: .add(defaultStatus: .queued))
+        .environment(AppSettings.mock())
         .modelContainer(MovieStore.previewContainer)
 }
 #endif

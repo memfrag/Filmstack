@@ -29,6 +29,9 @@ import KeyValueStore
         /// The user's Letterboxd username (for the diary RSS feed).
         case letterboxdUsername
 
+        /// Whether the Maybe Later section is shown.
+        case showsMaybeLater
+
         // <-- (1 / 3) Add key for new property here
     }
 
@@ -61,6 +64,14 @@ import KeyValueStore
         }
     }
 
+    /// Whether the Maybe Later section (and the actions that move movies there)
+    /// is shown. Off by default.
+    public var showsMaybeLater: Bool {
+        didSet {
+            store.save(showsMaybeLater, for: .showsMaybeLater)
+        }
+    }
+
     // <-- (2 / 3) Add property for new property here
 
     // MARK: Setup
@@ -79,6 +90,7 @@ import KeyValueStore
         colorScheme = self.store.load(.colorScheme, default: .system)
         releaseRegion = self.store.load(.releaseRegion, default: AppSettings.defaultRegion)
         letterboxdUsername = self.store.load(.letterboxdUsername, default: "")
+        showsMaybeLater = self.store.load(.showsMaybeLater, default: false)
 
         // <-- (3 / 3) Add initializer for new property here.
     }

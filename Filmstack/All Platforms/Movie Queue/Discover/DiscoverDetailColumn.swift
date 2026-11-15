@@ -257,7 +257,9 @@ struct DiscoverDetailColumn: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button("Add to Queue") { add(.queued) }
-                    Button("Add to Maybe Later") { add(.maybeLater) }
+                    if appSettings.showsMaybeLater {
+                        Button("Add to Maybe Later") { add(.maybeLater) }
+                    }
                 } label: {
                     Label("More", systemImage: "ellipsis")
                 }
@@ -272,13 +274,15 @@ struct DiscoverDetailColumn: View {
                 }
                 .disabled(details == nil)
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Button("Add to Maybe Later") { add(.maybeLater) }
-                } label: {
-                    Label("More", systemImage: "ellipsis")
+            if appSettings.showsMaybeLater {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button("Add to Maybe Later") { add(.maybeLater) }
+                    } label: {
+                        Label("More", systemImage: "ellipsis")
+                    }
+                    .disabled(details == nil)
                 }
-                .disabled(details == nil)
             }
         }
     }
@@ -301,7 +305,9 @@ struct DiscoverDetailColumn: View {
 
                 Menu {
                     Button("Add to Queue") { add(.queued) }
-                    Button("Add to Maybe Later") { add(.maybeLater) }
+                    if appSettings.showsMaybeLater {
+                        Button("Add to Maybe Later") { add(.maybeLater) }
+                    }
                 } label: {
                     Label("More", systemImage: "ellipsis")
                 }
@@ -318,15 +324,17 @@ struct DiscoverDetailColumn: View {
                 .buttonStyle(.filmAccent)
                 .disabled(details == nil)
 
-                Menu {
-                    Button("Add to Maybe Later") { add(.maybeLater) }
-                } label: {
-                    Label("More", systemImage: "ellipsis")
+                if appSettings.showsMaybeLater {
+                    Menu {
+                        Button("Add to Maybe Later") { add(.maybeLater) }
+                    } label: {
+                        Label("More", systemImage: "ellipsis")
+                    }
+                    .menuStyle(.button)
+                    .buttonStyle(.filmGlass)
+                    .fixedSize()
+                    .disabled(details == nil)
                 }
-                .menuStyle(.button)
-                .buttonStyle(.filmGlass)
-                .fixedSize()
-                .disabled(details == nil)
             }
             Spacer(minLength: 0)
         }

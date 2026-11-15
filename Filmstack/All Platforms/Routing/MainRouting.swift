@@ -20,6 +20,10 @@ struct MainRouting: Routing {
 
         /// Library sections.
         static let libraryCases: [Selectable] = [.queue, .upcoming, .watched, .maybeLater]
+        /// Library sections to show, leaving out Maybe Later unless enabled.
+        static func visibleLibraryCases(showingMaybeLater: Bool) -> [Selectable] {
+            showingMaybeLater ? libraryCases : libraryCases.filter { $0 != .maybeLater }
+        }
         /// Discover sections.
         static let discoverCases: [Selectable] = DiscoverList.allCases.map { .discover($0) }
         /// Miscellaneous sections.

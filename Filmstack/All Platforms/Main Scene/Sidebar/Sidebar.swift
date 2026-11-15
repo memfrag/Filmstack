@@ -13,6 +13,8 @@ struct Sidebar: View {
 
     @Binding var selection: MainRouting.Selectable
 
+    @Environment(AppSettings.self) private var appSettings
+
     @Query private var movies: [Movie]
 
     var body: some View {
@@ -21,7 +23,7 @@ struct Sidebar: View {
             set: { if let new = $0 { selection = new } }
         )) {
             Section {
-                ForEach(MainRouting.Selectable.libraryCases, id: \.self) { section in
+                ForEach(MainRouting.Selectable.visibleLibraryCases(showingMaybeLater: appSettings.showsMaybeLater), id: \.self) { section in
                     NavigationLink(value: section) {
                         Label(section.title, systemImage: section.systemImage)
                             .badge(count(for: section))
@@ -58,6 +60,9 @@ struct Sidebar: View {
         .background(Palette.sidebar)
         .tint(Palette.accent)
         .navigationTitle(Bundle.main.appName)
+        .onChange(of: appSettings.showsMaybeLater) { _, shows in
+            if !shows && selection == .maybeLater { selection = .queue }
+        }
         #if os(macOS)
         .navigationSplitViewColumnWidth(min: 200, ideal: 220, max: 280)
         .safeAreaInset(edge: .bottom) {
@@ -111,6 +116,7 @@ private extension Bundle {
     } detail: {
         Text("Detail")
     }
+    .environment(AppSettings.mock())
     .modelContainer(MovieStore.previewContainer)
 }
 #endif

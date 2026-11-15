@@ -25,6 +25,7 @@ struct MovieListColumn: View {
 
     @Environment(\.modelContext) private var context
     @Environment(\.openURL) private var openURL
+    @Environment(AppSettings.self) private var appSettings
     @Query private var movies: [Movie]
 
     @State private var searchText = ""
@@ -36,6 +37,8 @@ struct MovieListColumn: View {
     @State private var draggingMovie: Movie?
     @State private var showingPicker = false
     @AppStorage("filmstack.libraryViewMode") private var viewModeRaw = LibraryViewMode.list.rawValue
+    /// Upcoming only: show releases as a poster-wall calendar (the default) instead of list/grid.
+    @AppStorage("filmstack.upcomingCalendar") private var upcomingCalendar = true
     #if os(iOS)
     @State private var showingSettings = false
     #endif
@@ -43,6 +46,8 @@ struct MovieListColumn: View {
     private var viewMode: LibraryViewMode {
         LibraryViewMode(rawValue: viewModeRaw) ?? .list
     }
+
+    private var showsCalendar: Bool { section == .upcoming && upcomingCalendar }
 
     init(section: MainRouting.Selectable, selection: Binding<Movie?>) {
         self.section = section
@@ -131,6 +136,7 @@ struct MovieListColumn: View {
         .animation(.smooth(duration: 0.25), value: filter.isActive)
         .animation(.smooth(duration: 0.25), value: showingSearch)
         .animation(.smooth(duration: 0.3), value: viewMode)
+        .animation(.smooth(duration: 0.3), value: showsCalendar)
         .filmWindowBackground()
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -178,6 +184,11 @@ struct MovieListColumn: View {
             emptyState
         } else if filteredMovies.isEmpty {
             noMatchesState
+        } else if showsCalendar {
+            UpcomingCalendarView(movies: filteredMovies, selection: $selection) { movie in
+                rowMenu(for: movie)
+            }
+            .transition(.opacity)
         } else if viewMode == .grid {
             grid
                 .transition(.opacity)
@@ -483,7 +494,7 @@ struct MovieListColumn: View {
 
     @ViewBuilder
     private func leadingSwipeActions(for movie: Movie) -> some View {
-        if movie.status != .maybeLater {
+        if movie.status != .maybeLater && appSettings.showsMaybeLater {
             Button {
                 MovieActions.moveToMaybeLater(movie, in: context)
             } label: {
@@ -513,7 +524,7 @@ struct MovieListColumn: View {
         if movie.status != .queued {
             Button("Move to Queue") { MovieActions.moveBackToQueue(movie, in: context) }
         }
-        if movie.status != .maybeLater {
+        if movie.status != .maybeLater && appSettings.showsMaybeLater {
             Button("Move to Maybe Later") { MovieActions.moveToMaybeLater(movie, in: context) }
         }
         if movie.status != .watched {
@@ -607,6 +618,30 @@ struct MovieListColumn: View {
 
     // MARK: - Toolbar
 
+    private enum UpcomingLayout: Hashable {
+        case list, grid, calendar
+
+        var systemImage: String {
+            switch self {
+            case .list: "list.bullet"
+            case .grid: "square.grid.2x2"
+            case .calendar: "calendar"
+            }
+        }
+    }
+
+    /// Upcoming's layout: the shared list/grid mode, or its own calendar.
+    private var upcomingLayout: Binding<UpcomingLayout> {
+        Binding {
+            upcomingCalendar ? .calendar : (viewMode == .grid ? .grid : .list)
+        } set: { layout in
+            upcomingCalendar = layout == .calendar
+            if layout != .calendar {
+                viewModeRaw = (layout == .grid ? LibraryViewMode.grid : .list).rawValue
+            }
+        }
+    }
+
     private var countText: String {
         let count = filteredMovies.count
         return count == 1 ? "1 movie" : "\(count) movies"
@@ -624,12 +659,27 @@ struct MovieListColumn: View {
             }
             ToolbarSpacer(.fixed)
         }
-        ToolbarItem {
-            Button {
-                viewModeRaw = (viewMode == .grid ? LibraryViewMode.list : .grid).rawValue
-            } label: {
-                Label(viewMode == .grid ? "List View" : "Grid View",
-                      systemImage: viewMode == .grid ? "list.bullet" : "square.grid.2x2")
+        if section == .upcoming {
+            ToolbarItem {
+                Menu {
+                    Picker("View", selection: upcomingLayout) {
+                        Label("List", systemImage: "list.bullet").tag(UpcomingLayout.list)
+                        Label("Grid", systemImage: "square.grid.2x2").tag(UpcomingLayout.grid)
+                        Label("Calendar", systemImage: "calendar").tag(UpcomingLayout.calendar)
+                    }
+                    .pickerStyle(.inline)
+                } label: {
+                    Label("View", systemImage: upcomingLayout.wrappedValue.systemImage)
+                }
+            }
+        } else {
+            ToolbarItem {
+                Button {
+                    viewModeRaw = (viewMode == .grid ? LibraryViewMode.list : .grid).rawValue
+                } label: {
+                    Label(viewMode == .grid ? "List View" : "Grid View",
+                          systemImage: viewMode == .grid ? "list.bullet" : "square.grid.2x2")
+                }
             }
         }
         ToolbarSpacer(.fixed)
@@ -749,6 +799,7 @@ private struct MovieDropDelegate: DropDelegate {
     NavigationStack {
         MovieListColumn(section: .queue, selection: .constant(nil))
     }
+    .environment(AppSettings.mock())
     .modelContainer(MovieStore.previewContainer)
 }
 #endif

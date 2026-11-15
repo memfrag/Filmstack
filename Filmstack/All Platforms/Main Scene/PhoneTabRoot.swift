@@ -15,12 +15,13 @@ import AppRouting
 struct PhoneTabRoot: View {
 
     @Environment(Router<MainRouting>.self) private var router
+    @Environment(AppSettings.self) private var appSettings
 
     var body: some View {
         @Bindable var router = router
 
         TabView(selection: $router.activeSelectable) {
-            ForEach(MainRouting.Selectable.libraryCases, id: \.self) { section in
+            ForEach(MainRouting.Selectable.visibleLibraryCases(showingMaybeLater: appSettings.showsMaybeLater), id: \.self) { section in
                 Tab(section.title, systemImage: section.systemImage, value: section) {
                     MovieSectionStack(section: section)
                 }
@@ -29,6 +30,9 @@ struct PhoneTabRoot: View {
                 value: MainRouting.Selectable.discover(.nowPlaying)) {
                 BrowseTab()
             }
+        }
+        .onChange(of: appSettings.showsMaybeLater) { _, shows in
+            if !shows && router.activeSelectable == .maybeLater { router.activeSelectable = .queue }
         }
     }
 }

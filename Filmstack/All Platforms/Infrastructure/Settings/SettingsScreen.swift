@@ -24,6 +24,14 @@ struct SettingsScreen: View {
                 }
             }
 
+            Section {
+                Toggle("Show Maybe Later", isOn: $appSettings.showsMaybeLater)
+            } header: {
+                Text("Library")
+            } footer: {
+                Text("A separate list for movies you're not sure about yet.")
+            }
+
             Section("Movie Database") {
                 NavigationLink {
                     TMDBKeySettings()
