@@ -168,13 +168,14 @@ struct DVDBackFace: View {
             }
 
             if let overview = movie.overview, !overview.isEmpty {
-                ScrollView {
-                    Text(overview)
-                        .font(.caption)
-                        .foregroundStyle(.white.opacity(0.92))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .scrollIndicators(.hidden)
+                // Plain text, not a ScrollView: a scroll view is a separate
+                // platform layer that renders blurry under the 3D projection.
+                // Long synopses are truncated; Open Full Details has the rest.
+                Text(overview)
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.92))
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else {
                 Spacer(minLength: 0)
             }
