@@ -44,15 +44,11 @@ enum DiscoverRecommender {
         let pool = Array(candidates.filter { !owned.contains($0.tmdbID) }.prefix(30))
         guard !pool.isEmpty else { return [] }
 
-        guard let session = FilmstackAI.session(
-            preferCloud: true,
-            instructions: """
+        let preferCloud = true
+        let instructions = """
                 You recommend movies. Given movies a person loved and a list of \
                 candidates, pick the candidates they're most likely to enjoy.
                 """
-        ) else {
-            throw CancellationError()
-        }
 
         let taste = favorites
             .map { "- \($0.briefPromptDescription) — rated \($0.userRating.map { String(format: "%.1f", $0) } ?? "?")/5" }
@@ -69,7 +65,8 @@ enum DiscoverRecommender {
             .joined(separator: "\n")
         let prompt = "Movies they loved:\n\(taste)\n\nCandidates:\n\(list)"
 
-        let result = try await session.respond(to: prompt, generating: Recommendations.self).content
+        let result = try await FilmstackAI.respond(preferCloud: preferCloud, instructions: instructions,
+                                                to: prompt, generating: Recommendations.self)
         var seen = Set<Int>()
         return result.picks.compactMap { pick in
             guard pool.indices.contains(pick.number - 1) else { return nil }

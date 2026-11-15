@@ -32,7 +32,18 @@
 		FF585E231CFD6C3EBA83A77A /* CollectionKit in Frameworks */ = {isa = PBXBuildFile; productRef = 79ED503ED23F24D87C275F83 /* CollectionKit */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		D85228678C2C9AC094B47A7D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E44BBF3B359008C769140C87 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 51640C82865023B9C28F7B21;
+			remoteInfo = Filmstack;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		2720F1015BF14ABC6CADAB41 /* FilmstackTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FilmstackTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3CF4912844F18EA5492DA5B2 /* AppDesign */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AppDesign; path = Packages/AppDesign; sourceTree = SOURCE_ROOT; };
 		5B1F8F63915D1C9D7629FE72 /* Filmstack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Filmstack.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -55,6 +66,11 @@
 				261EEF15764006098B6E61FC /* Exceptions for "Filmstack" folder in "Filmstack" target */,
 			);
 			path = Filmstack;
+			sourceTree = "<group>";
+		};
+		C8687DF2B3466EF6B397638F /* FilmstackTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = FilmstackTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -90,6 +106,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		728BB6BFE47E0D1206BFAE70 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -97,6 +120,7 @@
 			isa = PBXGroup;
 			children = (
 				5B1F8F63915D1C9D7629FE72 /* Filmstack.app */,
+				2720F1015BF14ABC6CADAB41 /* FilmstackTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -113,6 +137,7 @@
 			isa = PBXGroup;
 			children = (
 				41A302DAB976A61695C9A5A6 /* Filmstack */,
+				C8687DF2B3466EF6B397638F /* FilmstackTests */,
 				BA6F6974FB323509CCBC944B /* Packages */,
 				301B921B896CADB2516CC495 /* Products */,
 			);
@@ -170,6 +195,29 @@
 			productReference = 5B1F8F63915D1C9D7629FE72 /* Filmstack.app */;
 			productType = "com.apple.product-type.application";
 		};
+		687AD22934079DF7340BC528 /* FilmstackTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E5898B96FADBEBBAA5334135 /* Build configuration list for PBXNativeTarget "FilmstackTests" */;
+			buildPhases = (
+				9BB58D62FE9969C55AF15B56 /* Sources */,
+				728BB6BFE47E0D1206BFAE70 /* Frameworks */,
+				E155DC1D877463E05CC77DED /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				79EC73AAFD6A5A989D5D603C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				C8687DF2B3466EF6B397638F /* FilmstackTests */,
+			);
+			name = FilmstackTests;
+			packageProductDependencies = (
+			);
+			productName = FilmstackTests;
+			productReference = 2720F1015BF14ABC6CADAB41 /* FilmstackTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -177,8 +225,13 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1430;
+				LastUpgradeCheck = 2720;
 				ORGANIZATIONNAME = "Apparata AB";
+				TargetAttributes = {
+					687AD22934079DF7340BC528 = {
+						TestTargetID = 51640C82865023B9C28F7B21;
+					};
+				};
 			};
 			buildConfigurationList = 3C42F3E103B728D3FE5967C2 /* Build configuration list for PBXProject "Filmstack" */;
 			developmentRegion = en;
@@ -218,12 +271,20 @@
 			projectRoot = "";
 			targets = (
 				51640C82865023B9C28F7B21 /* Filmstack */,
+				687AD22934079DF7340BC528 /* FilmstackTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		7D6DFD4DE7D918238CDF4202 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E155DC1D877463E05CC77DED /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -255,6 +316,13 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		9BB58D62FE9969C55AF15B56 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DA88000672316D5BFDC5CCBB /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -263,6 +331,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		79EC73AAFD6A5A989D5D603C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 51640C82865023B9C28F7B21 /* Filmstack */;
+			targetProxy = D85228678C2C9AC094B47A7D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		0D12EB3A67C57452854B3615 /* Debug */ = {
@@ -277,6 +353,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Filmstack/Preview Content\"";
 				DEVELOPMENT_TEAM = DR5YAK7GKS;
 				"ENABLE_APP_SANDBOX[sdk=macosx*]" = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				"ENABLE_OUTGOING_NETWORK_CONNECTIONS[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = YES;
 				"ENABLE_USER_SELECTED_FILES[sdk=macosx*]" = readwrite;
@@ -445,6 +522,26 @@
 			};
 			name = Debug;
 		};
+		2EBE3F3120160A3717279950 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DR5YAK7GKS;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.apparata.FilmstackTests;
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Filmstack.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Filmstack";
+			};
+			name = Release;
+		};
 		DE37E2C71A28881694891C85 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -457,6 +554,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Filmstack/Preview Content\"";
 				DEVELOPMENT_TEAM = DR5YAK7GKS;
 				"ENABLE_APP_SANDBOX[sdk=macosx*]" = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				"ENABLE_OUTGOING_NETWORK_CONNECTIONS[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = YES;
 				"ENABLE_USER_SELECTED_FILES[sdk=macosx*]" = readwrite;
@@ -488,6 +586,26 @@
 			};
 			name = Release;
 		};
+		F8E58B2EBEA7988B949DC32B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DR5YAK7GKS;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.apparata.FilmstackTests;
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Filmstack.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Filmstack";
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -505,6 +623,15 @@
 			buildConfigurations = (
 				1D608AB861CD486E3769020D /* Debug */,
 				1C0B7A476B706CCC0E5A65E5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E5898B96FADBEBBAA5334135 /* Build configuration list for PBXNativeTarget "FilmstackTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F8E58B2EBEA7988B949DC32B /* Debug */,
+				2EBE3F3120160A3717279950 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

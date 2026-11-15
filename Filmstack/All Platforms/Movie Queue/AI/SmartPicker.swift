@@ -23,21 +23,18 @@ enum SmartPicker {
     }
 
     static func pick(from movies: [Movie], request: String) async throws -> Result {
-        guard let session = FilmstackAI.session(
-            preferCloud: movies.count > 25,
-            instructions: """
+        let preferCloud = movies.count > 25
+        let instructions = """
                 You help a person choose one movie to watch tonight from their own \
                 watchlist. Pick the single best match for what they ask for.
                 """
-        ) else {
-            throw CancellationError()
-        }
         let list = movies.enumerated()
             // Overviews only fit the on-device model's context for short lists.
             .map { "\($0.offset + 1). \(movies.count > 15 ? $0.element.briefPromptDescription : $0.element.promptDescription)" }
             .joined(separator: "\n")
         let prompt = "Watchlist:\n\(list)\n\nWhat they're in the mood for: \(request)"
-        let pick = try await session.respond(to: prompt, generating: Pick.self).content
+        let pick = try await FilmstackAI.respond(preferCloud: preferCloud, instructions: instructions,
+                                                to: prompt, generating: Pick.self)
         let index = min(max(pick.number - 1, 0), movies.count - 1)
         return Result(index: index, reason: pick.reason)
     }

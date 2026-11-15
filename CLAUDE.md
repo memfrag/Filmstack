@@ -36,6 +36,8 @@ up automatically — **do not hand-edit `project.pbxproj` to add files.**
 - `Filmstack/iOS/`, `Filmstack/macOS/` — platform-specific scenes, menus, splash, etc.
 - `Packages/AppDesign/` — local design package.
 - `Scripts/` — release/build scripts. `docs/` — spec.
+- `FilmstackTests/` — unit tests (Swift Testing, `@testable import Filmstack`),
+  target **FilmstackTests**, also a synchronized folder; hosted by the app.
 
 ## Architecture notes
 
@@ -95,6 +97,14 @@ xcodebuild build -project Filmstack.xcodeproj -scheme 'Filmstack (Debug)' \
   -derivedDataPath /tmp/filmstack-dd-ios CODE_SIGNING_ALLOWED=NO
 ```
 
+- **Tests** run from the Debug scheme:
+  ```bash
+  xcodebuild test -project Filmstack.xcodeproj -scheme 'Filmstack (Debug)' \
+    -destination 'platform=macOS' -derivedDataPath /tmp/filmstack-dd-test \
+    CODE_SIGNING_ALLOWED=NO
+  ```
+  Keep logic worth testing in plain `nonisolated` value types (see
+  `WatchedStats`) rather than in views or SwiftData models.
 - **SourceKit diagnostics in this environment are unreliable** — false
   "No such module 'NukeUI'" and "Cannot find type" errors are common. Trust
   `xcodebuild`, not the inline diagnostics.

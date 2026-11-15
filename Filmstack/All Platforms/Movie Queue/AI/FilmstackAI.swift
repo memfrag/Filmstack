@@ -4,6 +4,7 @@
 
 import Foundation
 import FoundationModels
+import OSLog
 
 /// Access to Apple's language models for Filmstack's AI features.
 ///
@@ -53,6 +54,40 @@ enum FilmstackAI {
         }
         return nil
     }
+
+    /// Asks for structured output, trying each available model in turn:
+    /// Private Cloud Compute first when `preferCloud` (it can still refuse a
+    /// request, say offline or in the simulator), then the device.
+    static func respond<Content: Generable>(
+        preferCloud: Bool, instructions: String, to prompt: String, generating type: Content.Type
+    ) async throws -> Content {
+        var models: [(name: String, session: () -> LanguageModelSession)] = []
+        if preferCloud, isCloudAvailable {
+            models.append(("cloud", { LanguageModelSession(model: cloudModel, instructions: instructions) }))
+        }
+        if isDeviceAvailable {
+            models.append(("device", { LanguageModelSession(model: deviceModel, instructions: instructions) }))
+        }
+        if !preferCloud, isCloudAvailable {
+            models.append(("cloud", { LanguageModelSession(model: cloudModel, instructions: instructions) }))
+        }
+        guard !models.isEmpty else { throw CancellationError() }
+
+        var lastError: Error = CancellationError()
+        for model in models {
+            do {
+                return try await model.session().respond(to: prompt, generating: type).content
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                logger.error("\(model.name, privacy: .public) model failed: \(String(describing: error), privacy: .public)")
+                lastError = error
+            }
+        }
+        throw lastError
+    }
+
+    private static let logger = Logger(subsystem: "io.apparata.Filmstack", category: "AI")
 
     /// A session on a model that can see images, device first.
     static func visionSession(instructions: String) -> LanguageModelSession? {
