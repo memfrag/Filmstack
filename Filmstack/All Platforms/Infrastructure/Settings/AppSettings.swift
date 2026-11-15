@@ -76,7 +76,7 @@ import KeyValueStore
     }
 
     /// Whether the movie picker's shelf uses a depth-of-field blur on cases
-    /// away from the focus. On by default; turning it off renders faster.
+    /// away from the focus. Off by default, since the blur costs performance.
     public var pickerDepthOfField: Bool {
         didSet {
             store.save(pickerDepthOfField, for: .pickerDepthOfField)
@@ -102,7 +102,7 @@ import KeyValueStore
         releaseRegion = self.store.load(.releaseRegion, default: AppSettings.defaultRegion)
         letterboxdUsername = self.store.load(.letterboxdUsername, default: "")
         showsMaybeLater = self.store.load(.showsMaybeLater, default: false)
-        pickerDepthOfField = self.store.load(.pickerDepthOfField, default: true)
+        pickerDepthOfField = self.store.load(.pickerDepthOfField, default: false)
 
         // <-- (3 / 3) Add initializer for new property here.
     }

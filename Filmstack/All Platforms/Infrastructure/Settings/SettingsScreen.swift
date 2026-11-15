@@ -37,7 +37,7 @@ struct SettingsScreen: View {
             } header: {
                 Text("Movie Picker")
             } footer: {
-                Text("Softens cases away from the one in focus. Turn off for smoother scrolling on slower devices.")
+                Text("Softens cases away from the one in focus, like a camera lens. Scrolling may be less smooth on slower devices.")
             }
 
             Section("Movie Database") {
