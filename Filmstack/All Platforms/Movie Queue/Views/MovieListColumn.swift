@@ -707,8 +707,8 @@ struct MovieListColumn: View {
         }
     }
 
-    /// The section's layout: the shared list/grid mode, or its own calendar
-    /// (Upcoming and Watched only).
+    /// The section's layout: its list/grid mode, or its calendar (Upcoming
+    /// and Watched only).
     private var sectionLayout: Binding<SectionLayout> {
         Binding {
             showsCalendar ? .calendar : (viewMode == .grid ? .grid : .list)
@@ -740,28 +740,20 @@ struct MovieListColumn: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        // Leading: how the section is shown, then search and filter.
-        if hasCalendar {
-            ToolbarItem(placement: leadingPlacement) {
-                Menu {
-                    Picker("View", selection: sectionLayout) {
-                        Label("List", systemImage: "list.bullet").tag(SectionLayout.list)
-                        Label("Grid", systemImage: "square.grid.2x2").tag(SectionLayout.grid)
+        // Leading: how the section is shown, then search and filter. The same
+        // menu everywhere; Calendar is offered where the section has one.
+        ToolbarItem(placement: leadingPlacement) {
+            Menu {
+                Picker("View", selection: sectionLayout) {
+                    Label("List", systemImage: "list.bullet").tag(SectionLayout.list)
+                    Label("Grid", systemImage: "square.grid.2x2").tag(SectionLayout.grid)
+                    if hasCalendar {
                         Label("Calendar", systemImage: "calendar").tag(SectionLayout.calendar)
                     }
-                    .pickerStyle(.inline)
-                } label: {
-                    Label("View", systemImage: sectionLayout.wrappedValue.systemImage)
                 }
-            }
-        } else {
-            ToolbarItem(placement: leadingPlacement) {
-                Button {
-                    viewModeRaw = (viewMode == .grid ? LibraryViewMode.list : .grid).rawValue
-                } label: {
-                    Label(viewMode == .grid ? "List View" : "Grid View",
-                          systemImage: viewMode == .grid ? "list.bullet" : "square.grid.2x2")
-                }
+                .pickerStyle(.inline)
+            } label: {
+                Label("View", systemImage: sectionLayout.wrappedValue.systemImage)
             }
         }
         ToolbarSpacer(.fixed, placement: leadingPlacement)
