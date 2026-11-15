@@ -50,6 +50,17 @@ struct SettingsScreen: View {
             .filmSettingsRows()
 
             Section {
+                aiStatusRow("On Device", systemImage: "iphone", status: FilmstackAI.deviceStatus)
+                    .filmSettingsRow()
+                aiStatusRow("Private Cloud Compute", systemImage: "cloud", status: FilmstackAI.cloudStatus)
+            } header: {
+                Text("Apple Intelligence")
+            } footer: {
+                Text("Moods, smart search, Smart pick, photo lookup, For You and your year recap need Apple Intelligence. Turn it on in Settings → Apple Intelligence & Siri.")
+            }
+            .filmSettingsRows()
+
+            Section {
                 Toggle("Show Maybe Later", isOn: $appSettings.showsMaybeLater)
             } header: {
                 Text("Library")
@@ -83,6 +94,30 @@ struct SettingsScreen: View {
         #endif
         .formStyle(.grouped)
         .filmSettingsForm()
+    }
+
+    /// A model and whether it's ready, with the reason when it isn't.
+    private func aiStatusRow(_ title: LocalizedStringKey, systemImage: String,
+                             status: FilmstackAI.Status) -> some View {
+        HStack {
+            Label(title, systemImage: systemImage)
+            Spacer()
+            // Status text, then its icon (or a spinner while downloading; the
+            // model updates its availability when that ends, so this turns
+            // into "Ready" by itself).
+            HStack(spacing: 8) {
+                Text(status.text)
+                    .multilineTextAlignment(.trailing)
+                if status.isInProgress {
+                    ProgressView()
+                        .controlSize(.small)
+                } else {
+                    Image(systemName: status.isReady ? "checkmark.circle.fill" : "exclamationmark.circle")
+                }
+            }
+            .foregroundStyle(status.isReady ? Color.green : Color.secondary)
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 

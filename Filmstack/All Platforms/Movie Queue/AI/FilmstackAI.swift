@@ -71,6 +71,55 @@ enum FilmstackAI {
         return Locale(identifier: "en").localizedString(forLanguageCode: code)
     }
 
+    // MARK: - Status
+
+    /// Whether a model is ready, for the status shown in Profile.
+    struct Status {
+        let isReady: Bool
+        let text: String
+        /// Still getting ready on its own (the model is downloading).
+        var isInProgress = false
+    }
+
+    /// The on-device model's state, with the reason when it can't run.
+    static var deviceStatus: Status {
+        switch deviceModel.availability {
+        case .available:
+            return Status(isReady: true, text: String(localized: "Ready"))
+        case .unavailable(let reason):
+            switch reason {
+            case .appleIntelligenceNotEnabled:
+                return Status(isReady: false, text: String(localized: "Turned off in Settings"))
+            case .modelNotReady:
+                return Status(isReady: false, text: String(localized: "Downloading"), isInProgress: true)
+            case .deviceNotEligible:
+                return Status(isReady: false, text: String(localized: "Not supported on this device"))
+            @unknown default:
+                return Status(isReady: false, text: String(localized: "Unavailable"))
+            }
+        }
+    }
+
+    /// Private Cloud Compute's state.
+    static var cloudStatus: Status {
+        guard hasCloudEntitlement else {
+            return Status(isReady: false, text: String(localized: "Not enabled in this build"))
+        }
+        switch cloudModel.availability {
+        case .available:
+            return Status(isReady: true, text: String(localized: "Ready"))
+        case .unavailable(let reason):
+            switch reason {
+            case .deviceNotEligible:
+                return Status(isReady: false, text: String(localized: "Not supported on this device"))
+            case .systemNotReady:
+                return Status(isReady: false, text: String(localized: "Not ready yet"))
+            @unknown default:
+                return Status(isReady: false, text: String(localized: "Unavailable"))
+            }
+        }
+    }
+
     /// A user-facing message for a failed request.
     static func message(for error: Error) -> String {
         if let error = error as? LocalizedError, let description = error.errorDescription {
